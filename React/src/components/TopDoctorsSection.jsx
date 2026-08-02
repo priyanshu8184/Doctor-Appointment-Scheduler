@@ -1,9 +1,9 @@
 import React from 'react'
 
 const doctors = [
-  { name: 'Dr. Sarah Khan', specialty: 'Cardiology', rating: '4.9', availability: 'Next available: Today' },
-  { name: 'Dr. Daniel Brooks', specialty: 'Dermatology', rating: '4.8', availability: 'Next available: Tomorrow' },
-  { name: 'Dr. Aisha Patel', specialty: 'Pediatrics', rating: '5.0', availability: 'Next available: 2 PM' }
+  { name: 'Dr. Suyash Baoney', specialty: 'Oncology', rating: '4.9', availability: 'Next available: Today' },
+  { name: 'Dr. Sameer Ansari', specialty: 'Dermatology', rating: '4.8', availability: 'Next available: Tomorrow' },
+  { name: 'Dr. Deepak Sharma', specialty: 'Pediatrics', rating: '5.0', availability: 'Next available: 2 PM' }
 ]
 
 const TopDoctorsSection = () => {

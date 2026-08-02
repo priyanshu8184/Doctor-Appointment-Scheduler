@@ -7,9 +7,9 @@ const Footer = () => {
       <div>
         <div className="footer-brand">
           <img src="/heelpoint_logo.png" alt="HealPoint logo" className="footer-logo" />
-          {/* <h3>HealPoint</h3> */}
+          <h3>HealPoint</h3>
         </div>
-        <p>Find trusted doctors and reserve appointments in minutes.</p>
+        <p>Find trusted doctors and book appointments within Seconds.</p>
       </div>
 
       <div>
@@ -21,8 +21,8 @@ const Footer = () => {
 
       <div>
         <h4>Contact</h4>
-        <p>contact@healpoint.com</p>
-        <p>+1 (800) 555-0142</p>
+        <p>priyanshu@healpoint.com</p>
+        <p>+91 9546971110</p>
       </div>
     </footer>
   )

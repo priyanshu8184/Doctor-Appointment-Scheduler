@@ -35,7 +35,7 @@ const HeroSection = () => {
       <div className="hero-card" aria-label="Appointment preview">
         <div className="card-top">
           <span className="card-badge">Available Today</span>
-          <h3>Dr. Maya Chen</h3>
+          <h3>Dr. Priyanshu Kumar</h3>
           <p>General Physician • 2:30 PM</p>
         </div>
 

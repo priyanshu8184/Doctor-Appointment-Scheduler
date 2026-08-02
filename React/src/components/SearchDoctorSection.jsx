@@ -5,7 +5,7 @@ const SearchDoctorSection = () => {
     <section className="section-block" id="search-doctor">
       <div className="section-heading">
         <p className="eyebrow">Search Doctor</p>
-        <h2>Find the right doctor for your needs.</h2>
+        <h2>Find the right doctor as per your need.</h2>
       </div>
 
       <form className="search-card">
@@ -19,9 +19,14 @@ const SearchDoctorSection = () => {
             <option value="" disabled>
               Choose city
             </option>
-            <option value="new-york">New York</option>
-            <option value="los-angeles">Los Angeles</option>
-            <option value="chicago">Chicago</option>
+            <option value="Indore">Indore</option>
+            <option value="Bhopal">Bhopal</option>
+            <option value="Varansi">Varansi</option>
+            <option value="Patna">Patna</option>
+            <option value="Motihari">Motihari</option>
+            <option value="Lucknow">Lucknow</option>
+            <option value="Delhi">Delhi</option>
+            <option value="Ahmedabad">Ahmedabad</option>
           </select>
         </div>
         <div className="search-field">

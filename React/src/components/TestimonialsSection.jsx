@@ -1,9 +1,9 @@
 import React from 'react'
 
 const testimonials = [
-  { name: 'Mina R.', quote: 'I booked my checkup in minutes and the process was incredibly smooth.' },
-  { name: 'Jason P.', quote: 'The doctor recommendations were accurate and the reminders were very helpful.' },
-  { name: 'Priya S.', quote: 'HealPoint made finding a pediatrician easy for my family.' }
+  { name: 'Amit Raj', quote: 'Doctor bahut ache hain. Meri problem ko dhyan se suna aur sahi treatment diya. Ab kaafi better feel kar raha hu.' },
+  { name: 'Ajay G. Goswami', quote: 'Doctor ka behaviour bahut friendly tha. Kam time me hi meri problem solve ho gayi.' },
+  { name: 'Atharv Navlakhe', quote: 'Pehli baar itna achha medical experience hua. Doctor ne har question ka patiently answer diya.' }
 ]
 
 const TestimonialsSection = () => {

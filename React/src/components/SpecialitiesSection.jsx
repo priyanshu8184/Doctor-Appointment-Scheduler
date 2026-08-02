@@ -6,7 +6,10 @@ const specialties = [
   { title: 'Pediatrics', desc: 'Gentle and trusted care for children.' },
   { title: 'Orthopedics', desc: 'Joint and bone health support.' },
   { title: 'Neurology', desc: 'Specialized care for brain and nerves.' },
-  { title: 'Dental Care', desc: 'Preventive and cosmetic dental services.' }
+  { title: 'Dental Care', desc: 'Preventive and cosmetic dental services.' },
+  {title:'Oncology',desc:'Specialised Care and Treatment for Cancer'},
+  {title:'General Surgery',desc:'Surgery by Laser and Modern Equipment'},
+  {title:'Nephrology',desc:'Kidney Care with Modern equipment'}
 ]
 
 const SpecialitiesSection = () => {
