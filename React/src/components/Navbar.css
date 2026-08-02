@@ -19,11 +19,13 @@
   font-weight: 800;
   font-size: 1.15rem;
   color: #f8fafc;
+  position: relative;
+  z-index: 10;
 }
 
 .brand-logo {
-  width: clamp(7rem, 8vw, 9rem);
-  height: clamp(7rem, 8vw, 9rem);
+  width: clamp(4.2rem, 8vw, 9rem);
+  height: clamp(4.2rem, 8vw, 9rem);
   object-fit: contain;
   border-radius: 1rem;
   flex-shrink: 0;
@@ -49,15 +51,78 @@
   font-weight: 700;
 }
 
-@media (max-width: 640px) {
-  .navbar {
-    flex-wrap: wrap;
+/* Hamburger button */
+.nav-toggle {
+  display: none;
+  background: transparent;
+  border: 0;
+  padding: 0.4rem;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  right: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 9999;
+  pointer-events: auto;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  touch-action: manipulation;
+}
+
+.hamburger {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: #cbd5e1;
+  position: relative;
+  transition: all 0.22s ease;
+}
+.nav-toggle .hamburger { pointer-events: none }
+.hamburger::before,
+.hamburger::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 22px;
+  height: 2px;
+  background: #cbd5e1;
+  transition: all 0.22s ease;
+}
+.hamburger::before { top: -7px }
+.hamburger::after { top: 7px }
+.nav-toggle[aria-expanded="true"] .hamburger { background: transparent }
+.nav-toggle[aria-expanded="true"] .hamburger::before { transform: rotate(45deg) translate(4px,4px); top:0 }
+.nav-toggle[aria-expanded="true"] .hamburger::after { transform: rotate(-45deg) translate(4px,-4px); top:0 }
+
+.nav-links a { color: inherit }
+.nav-links .nav-cta { margin-top: 0.5rem }
+
+/* Desktop vs Mobile CTA visibility */
+.desktop-cta { display: inline-block }
+.mobile-cta { display: none }
+
+@media (max-width: 900px) {
+  .nav-toggle { display: flex }
+  .desktop-cta { display: none }
+  .mobile-cta { display: inline-block }
+
+  .nav-links { display: none }
+  .nav-links.open {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #0f172a;
+    padding: 1rem;
     gap: 0.8rem;
+    z-index: 30;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
   }
 
-  .nav-links {
-    width: 100%;
-    justify-content: center;
-    order: 3;
-  }
+  .navbar { flex-wrap: wrap; gap: 0.6rem }
 }
