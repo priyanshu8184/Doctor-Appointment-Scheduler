@@ -30,50 +30,6 @@ a {
   min-height: 100vh;
 }
 
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.5rem;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  border-bottom: 1px solid var(--border);
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-weight: 800;
-  font-size: 1.15rem;
-  color: var(--primary-dark);
-}
-
-.brand-logo,
-.footer-logo {
-  width: 9rem;
-  height: 9rem;
-  object-fit: contain;
-  border-radius: 1rem;
-}
-
-.footer-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  margin-bottom: 0.6rem;
-}
-
-.nav-links {
-  display: flex;
-  gap: 1.2rem;
-  color: var(--muted);
-}
-
-.nav-cta,
 .primary-btn {
   background: var(--primary);
   color: white;
@@ -327,27 +283,6 @@ a {
   border-bottom: 0;
 }
 
-.footer {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
-  padding: 2rem 1.5rem 2.5rem;
-  background: #0f172a;
-  color: #e2e8f0;
-  margin-top: 1rem;
-}
-
-.footer h3,
-.footer h4 {
-  margin-top: 0;
-}
-
-.footer a {
-  display: block;
-  margin: 0.35rem 0;
-  color: #cbd5e1;
-}
-
 @media (max-width: 900px) {
   .hero-section,
   .cards-grid,
@@ -360,10 +295,6 @@ a {
 
   .search-card {
     padding: 1rem;
-  }
-
-  .footer {
-    grid-template-columns: 1fr;
   }
 }
 

@@ -1,0 +1,55 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: var(--primary-dark);
+}
+
+.brand-logo {
+  width: 9rem;
+  height: 9rem;
+  object-fit: contain;
+  border-radius: 1rem;
+}
+
+.nav-links {
+  display: flex;
+  gap: 1.2rem;
+  color: var(--muted);
+}
+
+.nav-cta {
+  background: var(--primary);
+  color: white;
+  padding: 0.8rem 1.1rem;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .navbar {
+    flex-wrap: wrap;
+    gap: 0.8rem;
+  }
+
+  .nav-links {
+    width: 100%;
+    justify-content: center;
+    order: 3;
+  }
+}

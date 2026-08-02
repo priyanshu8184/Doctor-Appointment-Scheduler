@@ -1,0 +1,40 @@
+.footer {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  padding: 2rem 1.5rem 2.5rem;
+  background: #0f172a;
+  color: #e2e8f0;
+  margin-top: 1rem;
+}
+
+.footer h3,
+.footer h4 {
+  margin-top: 0;
+}
+
+.footer a {
+  display: block;
+  margin: 0.35rem 0;
+  color: #cbd5e1;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.6rem;
+}
+
+.footer-logo {
+  width: 9rem;
+  height: 9rem;
+  object-fit: contain;
+  border-radius: 1rem;
+}
+
+@media (max-width: 900px) {
+  .footer {
+    grid-template-columns: 1fr;
+  }
+}
