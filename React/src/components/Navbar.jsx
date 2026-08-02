@@ -4,7 +4,7 @@ const Navbar = () => {
   return (
     <header className="navbar">
       <a className="brand" href="#home">
-        <span className="brand-icon">✚</span>
+        <img src="/heelpoint_logo.png" alt="HealPoint logo" className="brand-logo" />
         <span>HealPoint</span>
       </a>
 
