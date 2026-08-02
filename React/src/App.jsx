@@ -1,15 +1,8 @@
 import React from 'react'
+import LandingPage from './pages/LandingPage'
 
 const App = () => {
-  return (
-    <div>
-      <div>
-        <h1>Welcome to HealPoint⚕️</h1>
-        <p>Your health is our priority.</p>
-      </div>
-    </div>
-  )
+  return <LandingPage />
 }
-
 
 export default App
