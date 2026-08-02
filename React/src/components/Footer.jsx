@@ -7,7 +7,7 @@ const Footer = () => {
       <div>
         <div className="footer-brand">
           <img src="/heelpoint_logo.png" alt="HealPoint logo" className="footer-logo" />
-          <h3>HealPoint</h3>
+          {/* <h3>HealPoint</h3> */}
         </div>
         <p>Find trusted doctors and reserve appointments in minutes.</p>
       </div>

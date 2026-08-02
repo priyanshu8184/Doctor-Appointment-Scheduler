@@ -3,12 +3,13 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  background: rgba(255, 255, 255, 0.95);
+  background: #0f172a;
+  color: #e2e8f0;
   backdrop-filter: blur(10px);
   position: sticky;
   top: 0;
   z-index: 10;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .brand {
@@ -17,28 +18,35 @@
   gap: 0.6rem;
   font-weight: 800;
   font-size: 1.15rem;
-  color: var(--primary-dark);
+  color: #f8fafc;
 }
 
 .brand-logo {
-  width: 9rem;
-  height: 9rem;
+  width: clamp(7rem, 8vw, 9rem);
+  height: clamp(7rem, 8vw, 9rem);
   object-fit: contain;
   border-radius: 1rem;
+  flex-shrink: 0;
+}
+
+.brand {
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
 }
 
 .nav-links {
   display: flex;
   gap: 1.2rem;
-  color: var(--muted);
+  color: #cbd5e1;
 }
 
 .nav-cta {
-  background: var(--primary);
-  color: white;
+  background: #34d399;
+  color: #0f172a;
   padding: 0.8rem 1.1rem;
   border-radius: 999px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 @media (max-width: 640px) {

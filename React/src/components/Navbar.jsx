@@ -6,7 +6,7 @@ const Navbar = () => {
     <header className="navbar">
       <a className="brand" href="#home">
         <img src="/heelpoint_logo.png" alt="HealPoint logo" className="brand-logo" />
-        <span>HealPoint</span>
+        {/* <span>HealPoint</span> */}
       </a>
 
       <nav className="nav-links" aria-label="Primary navigation">
