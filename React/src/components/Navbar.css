@@ -24,8 +24,8 @@
 }
 
 .brand-logo {
-  width: clamp(4.2rem, 8vw, 9rem);
-  height: clamp(4.2rem, 8vw, 9rem);
+  width: clamp(12rem, 8vw, 10rem);
+  height: clamp(4.2rem, 8vw, 10rem);
   object-fit: contain;
   border-radius: 1rem;
   flex-shrink: 0;
