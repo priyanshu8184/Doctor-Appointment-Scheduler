@@ -7,7 +7,7 @@ const AboutPage = ({ navigate }) => {
   const team = [
     {
       id: 1,
-      name: 'Dr. Sarah Johnson',
+      name: 'Dr. Priyanshu Kumar',
       role: 'Founder & CEO',
       bio: 'Medical doctor with 15+ years of experience in healthcare technology.',
     },
