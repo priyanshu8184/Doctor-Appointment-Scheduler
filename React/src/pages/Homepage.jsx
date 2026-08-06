@@ -10,10 +10,10 @@ import HowItWorksSection from '../components/HowItWorksSection'
 import TestimonialsSection from '../components/TestimonialsSection'
 import './Homepage.css'
 
-const Homepage = () => {
+const Homepage = ({ navigate }) => {
   return (
     <div className="landing-page" id="home">
-      <Navbar />
+      <Navbar onNavigate={navigate} />
 
       <main>
         <HeroSection />
@@ -25,7 +25,7 @@ const Homepage = () => {
         <TestimonialsSection />
       </main>
 
-      <Footer />
+      <Footer onNavigate={navigate} />
     </div>
   )
 }

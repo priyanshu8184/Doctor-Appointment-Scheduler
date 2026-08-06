@@ -46,10 +46,10 @@ const Navbar = ({ onNavigate }) => {
       </button>
 
       <nav className={`nav-links ${open ? 'open' : ''}`} aria-label="Primary navigation">
-        <a href="#services" onClick={() => setOpen(false)}>
+        <a href="/services" onClick={(e) => { e.preventDefault(); handleNavigate('/services') }}>
           Services
         </a>
-        <a href="#about" onClick={() => setOpen(false)}>
+        <a href="/about" onClick={(e) => { e.preventDefault(); handleNavigate('/about') }}>
           About
         </a>
         <a href="#contact" onClick={() => setOpen(false)}>

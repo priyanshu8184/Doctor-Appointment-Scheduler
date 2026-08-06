@@ -10,6 +10,7 @@
   top: 0;
   z-index: 10;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 1rem;
 }
 
 .brand {
@@ -21,6 +22,7 @@
   color: #f8fafc;
   position: relative;
   z-index: 10;
+  flex-shrink: 0;
 }
 
 .brand-logo {
@@ -29,26 +31,50 @@
   object-fit: contain;
   border-radius: 1rem;
   flex-shrink: 0;
-}
-
-.brand {
-  min-height: 2.5rem;
-  display: flex;
-  align-items: center;
+  display: block;
 }
 
 .nav-links {
   display: flex;
-  gap: 1.2rem;
+  gap: 0.8rem;
   color: #cbd5e1;
+  align-items: center;
+  flex: 1;
+  justify-content: center;
+}
+
+.nav-links a {
+  color: inherit;
+  padding: 0.5rem 0.8rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.nav-links a:hover {
+  background: rgba(52, 211, 153, 0.1);
+  color: #34d399;
 }
 
 .nav-cta {
   background: #34d399;
   color: #0f172a;
-  padding: 0.8rem 1.1rem;
-  border-radius: 999px;
+  padding: 0.6rem 1rem;
+  border-radius: 0.6rem;
   font-weight: 700;
+  font-size: 0.95rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.nav-cta:hover {
+  background: #2dd496;
+  transform: scale(1.02);
 }
 
 /* Hamburger button */
@@ -98,31 +124,56 @@
 .nav-toggle[aria-expanded="true"] .hamburger::after { transform: rotate(-45deg) translate(4px,-4px); top:0 }
 
 .nav-links a { color: inherit }
-.nav-links .nav-cta { margin-top: 0.5rem }
+.nav-links .nav-cta { margin-top: 0; padding: 0.6rem 1rem; }
 
 /* Desktop vs Mobile CTA visibility */
-.desktop-cta { display: inline-block }
-.mobile-cta { display: none }
+.desktop-cta { display: inline-block; }
+.mobile-cta { display: none; }
 
 @media (max-width: 900px) {
+  .navbar {
+    padding: 1rem 1rem;
+  }
+
   .nav-toggle { display: flex }
   .desktop-cta { display: none }
   .mobile-cta { display: inline-block }
 
-  .nav-links { display: none }
+  .nav-links { 
+    display: none;
+    flex-direction: column;
+  }
+  
   .nav-links.open {
     display: flex;
-    flex-direction: column;
     position: absolute;
     top: 100%;
     left: 0;
     right: 0;
     background: #0f172a;
-    padding: 1rem;
-    gap: 0.8rem;
+    padding: 0.8rem;
+    gap: 0.6rem;
     z-index: 30;
     border-bottom: 1px solid rgba(255,255,255,0.04);
   }
 
+  .nav-links a {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.9rem;
+  }
+
   .navbar { flex-wrap: wrap; gap: 0.6rem }
+}
+
+@media (max-width: 640px) {
+  .brand-logo {
+    width: clamp(10rem, 6vw, 9rem);
+    height: clamp(3.5rem, 8vw, 10rem);
+  }
+
+  .nav-links a,
+  .nav-cta {
+    padding: 0.5rem 0.7rem;
+    font-size: 0.85rem;
+  }
 }

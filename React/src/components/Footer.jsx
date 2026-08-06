@@ -1,7 +1,16 @@
 import React from 'react'
 import './Footer.css'
 
-const Footer = () => {
+const Footer = ({ onNavigate }) => {
+  const handleNavigate = (nextRoute) => {
+    if (onNavigate) {
+      onNavigate(nextRoute)
+      return
+    }
+
+    window.history.pushState({}, '', nextRoute)
+    window.location.reload()
+  }
   return (
     <footer className="footer" id="contact">
       <div>
@@ -14,9 +23,9 @@ const Footer = () => {
 
       <div>
         <h4>Quick Links</h4>
-        <a href="#services">Services</a>
-        <a href="#about">About</a>
-        <a href="#appointment">Book Appointment</a>
+        <a href="/services" onClick={(e) => { e.preventDefault(); handleNavigate('/services') }}>Services</a>
+        <a href="/about" onClick={(e) => { e.preventDefault(); handleNavigate('/about') }}>About</a>
+        <a href="/doctors" onClick={(e) => { e.preventDefault(); handleNavigate('/doctors') }}>Book Appointment</a>
       </div>
 
       <div>
