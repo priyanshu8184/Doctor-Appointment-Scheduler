@@ -12,8 +12,8 @@ const HeroSection = () => {
         </p>
 
         <div className="hero-actions">
-          <a className="primary-btn" href="#search-doctor">Book an Appointment</a>
-          <a className="secondary-btn" href="#why-choose-us">Learn More</a>
+          <a className="primary-btn" href="/signup">Get Started</a>
+          <a className="secondary-btn" href="/login">Log In</a>
         </div>
 
         <ul className="stats-list">

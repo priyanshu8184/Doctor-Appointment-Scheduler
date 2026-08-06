@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import './Navbar.css'
 
-const Navbar = () => {
+const Navbar = ({ onNavigate }) => {
   const [open, setOpen] = useState(false)
   const containerRef = useRef(null)
 
@@ -16,9 +16,21 @@ const Navbar = () => {
     return () => document.removeEventListener('pointerdown', onOutside)
   }, [open])
 
+  const handleNavigate = (nextRoute) => {
+    setOpen(false)
+
+    if (onNavigate) {
+      onNavigate(nextRoute)
+      return
+    }
+
+    window.history.pushState({}, '', nextRoute)
+    window.location.reload()
+  }
+
   return (
     <header className="navbar" ref={containerRef}>
-      <a className="brand" href="#home" onClick={() => setOpen(false)}>
+      <a className="brand" href="/" onClick={(e) => { e.preventDefault(); handleNavigate('/') }}>
         <img src="/heelpoint_logo.png" alt="HealPoint logo" className="brand-logo" />
       </a>
 
@@ -43,12 +55,18 @@ const Navbar = () => {
         <a href="#contact" onClick={() => setOpen(false)}>
           Contact
         </a>
-        <a className="nav-cta mobile-cta" href="#appointment" onClick={() => setOpen(false)}>
+        <a href="/login" onClick={(e) => { e.preventDefault(); handleNavigate('/login') }}>
+          Login
+        </a>
+        <a href="/signup" onClick={(e) => { e.preventDefault(); handleNavigate('/signup') }}>
+          Register
+        </a>
+        <a className="nav-cta mobile-cta" href="/signup" onClick={(e) => { e.preventDefault(); handleNavigate('/signup') }}>
           Book Now
         </a>
       </nav>
 
-      <a className="nav-cta desktop-cta" href="#appointment" onClick={() => setOpen(false)}>
+      <a className="nav-cta desktop-cta" href="/signup" onClick={(e) => { e.preventDefault(); handleNavigate('/signup') }}>
         Book Now
       </a>
     </header>
