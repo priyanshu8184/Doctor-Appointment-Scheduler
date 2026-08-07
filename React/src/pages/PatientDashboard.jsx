@@ -5,41 +5,41 @@ const PatientDashboard = () => {
   const [activeTab, setActiveTab] = useState('upcoming')
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
-  // Sample data
+  
   const upcomingAppointments = [
-    { id: 1, doctorName: 'Dr. Amina Rahman', specialization: 'Cardiology', date: 'Today · 4:00 PM', status: 'Confirmed', location: 'HealPoint Medical Center' },
-    { id: 2, doctorName: 'Dr. Saif Hossain', specialization: 'Neurology', date: 'Tomorrow · 10:30 AM', status: 'Confirmed', location: 'Dhaka Clinic' },
-    { id: 3, doctorName: 'Dr. Nabila Karim', specialization: 'Dermatology', date: 'Friday · 1:15 PM', status: 'Pending', location: 'Sylhet Medical' },
+    { id: 1, doctorName: 'Dr. Jhatka', specialization: 'Cardiology', date: 'Today · 4:00 PM', status: 'Confirmed', location: 'HealPoint Medical Center' },
+    { id: 2, doctorName: 'Dr. Jhasitaram', specialization: 'Neurology', date: 'Tomorrow · 10:30 AM', status: 'Confirmed', location: 'Dhaka Clinic' },
+    { id: 3, doctorName: 'Dr. Doremon', specialization: 'Dermatology', date: 'Friday · 1:15 PM', status: 'Pending', location: 'Sylhet Medical' },
   ]
 
   const appointmentHistory = [
-    { id: 1, doctorName: 'Dr. Tanvir Alam', specialization: 'Pediatrics', date: '2 weeks ago', notes: 'Regular check-up' },
-    { id: 2, doctorName: 'Dr. Sohana Iqbal', specialization: 'Orthopedics', date: '1 month ago', notes: 'Follow-up on knee injury' },
-    { id: 3, doctorName: 'Dr. Rafiq Chowdhury', specialization: 'General Medicine', date: '2 months ago', notes: 'Blood pressure consultation' },
-    { id: 4, doctorName: 'Dr. Amina Rahman', specialization: 'Cardiology', date: '3 months ago', notes: 'Cardiac check-up' },
+    { id: 1, doctorName: 'Dr. Chhota Bheem', specialization: 'Pediatrics', date: '2 weeks ago', notes: 'Regular check-up' },
+    { id: 2, doctorName: 'Dr. Ramu Kaka', specialization: 'Orthopedics', date: '1 month ago', notes: 'Follow-up on knee injury' },
+    { id: 3, doctorName: 'Dr. Gopal Das', specialization: 'General Medicine', date: '2 months ago', notes: 'Blood pressure consultation' },
+    { id: 4, doctorName: 'Dr. Jhatka', specialization: 'Cardiology', date: '3 months ago', notes: 'Cardiac check-up' },
   ]
 
   const payments = [
-    { id: 1, date: 'Aug 5, 2026', doctorName: 'Dr. Amina Rahman', amount: '৳ 2,500', status: 'Paid', method: 'Card' },
-    { id: 2, date: 'Jul 28, 2026', doctorName: 'Dr. Saif Hossain', amount: '৳ 1,800', status: 'Paid', method: 'Mobile Banking' },
-    { id: 3, date: 'Jul 15, 2026', doctorName: 'Dr. Nabila Karim', amount: '৳ 1,200', status: 'Pending', method: 'Card' },
+    { id: 1, date: 'Aug 5, 2026', doctorName: 'Dr. Jhatka', amount: '₹2,500', status: 'Paid', method: 'Card' },
+    { id: 2, date: 'Jul 28, 2026', doctorName: 'Dr. Jhasitaram', amount: '₹1,800', status: 'Paid', method: 'Mobile Banking' },
+    { id: 3, date: 'Jul 15, 2026', doctorName: 'Dr. Doremon', amount: '₹1,200', status: 'Pending', method: 'UPI' },
   ]
 
   const reviews = [
-    { id: 1, doctorName: 'Dr. Tanvir Alam', rating: 5, reviewText: 'Very professional and caring. Great experience overall.', date: '2 weeks ago' },
-    { id: 2, doctorName: 'Dr. Sohana Iqbal', rating: 4, reviewText: 'Good consultation, would recommend to others.', date: '1 month ago' },
-    { id: 3, doctorName: 'Dr. Rafiq Chowdhury', rating: 5, reviewText: 'Excellent care and attention to detail.', date: '2 months ago' },
+    { id: 1, doctorName: 'Dr. Chhota Bheem', rating: 5, reviewText: 'Very professional and caring. Great experience overall.', date: '2 weeks ago' },
+    { id: 2, doctorName: 'Dr. Ramu Kaka', rating: 4, reviewText: 'Good consultation, would recommend to others.', date: '1 month ago' },
+    { id: 3, doctorName: 'Dr. Gopal Das', rating: 5, reviewText: 'Excellent care and attention to detail.', date: '2 months ago' },
   ]
 
   const profileData = {
-    name: 'Md. Hassan Khan',
-    email: 'hassan.khan@email.com',
-    phone: '+880-1234-567890',
-    dateOfBirth: 'January 15, 1990',
+    name: 'Mr. Suyash baoney',
+    email: 'Suyansh5555@email.com',
+    phone: '+91-9876543210',
+    dateOfBirth: 'January 15, 2003',
     gender: 'Male',
     bloodGroup: 'O+',
-    address: 'Dhaka, Bangladesh',
-    emergencyContact: 'Fatima Khan (+880-1111-111111)',
+    address: 'Dhar, Madhya Pradesh, India',
+    emergencyContact: 'Mrs. Geeta Baoney (+91-9876543211)',
   }
 
   const renderContent = () => {

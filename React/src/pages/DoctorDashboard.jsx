@@ -7,15 +7,20 @@ const DoctorDashboard = () => {
 
   // Sample data
   const todayAppointments = [
-    { id: 1, patientName: 'Md. Hassan Khan', time: '10:00 AM', type: 'Consultation', status: 'Confirmed' },
-    { id: 2, patientName: 'Fatima Begum', time: '11:30 AM', type: 'Follow-up', status: 'Confirmed' },
-    { id: 3, patientName: 'Ravi Chowdhury', time: '2:00 PM', type: 'Check-up', status: 'Pending' },
+    { id: 1, patientName: 'Mr. Rahul Patel', time: '10:00 AM', type: 'Consultation', status: 'Confirmed' },
+    { id: 2, patientName: 'Ramu Kaka', time: '11:30 AM', type: 'Follow-up', status: 'Confirmed' },
+    { id: 3, patientName: 'Aman Khan', time: '2:00 PM', type: 'Check-up', status: 'Pending' },
+    { id: 4, patientName: 'Amit  raj', time:'2:50 PM',type:'Surgery',status:'Confirmed'},
+    { id: 5, patientName: 'Atharv Navlakhe', time:'3:50 PM',type:'Surgery',status:'Pending'},
+    { id: 6, patientName: 'Amit  raj', time:'4:50 PM',type:'Surgery',status:'Confirmed'},
   ]
 
   const upcomingAppointments = [
-    { id: 4, patientName: 'Asha Roy', time: 'Tomorrow · 9:00 AM', type: 'Consultation', status: 'Confirmed' },
-    { id: 5, patientName: 'Deepak Sharma', time: 'Thursday · 3:15 PM', type: 'Follow-up', status: 'Confirmed' },
-    { id: 6, patientName: 'Priya Nair', time: 'Friday · 10:45 AM', type: 'Check-up', status: 'Pending' },
+    { id: 7, patientName: 'Asha Roy', time: 'Tomorrow · 9:00 AM', type: 'Consultation', status: 'Confirmed' },
+    { id: 8, patientName: 'Deepak Sharma', time: 'Thursday · 3:15 PM', type: 'Follow-up', status: 'Confirmed' },
+    { id: 9, patientName: 'Patlu', time: 'Friday · 10:45 AM', type: 'Check-up', status: 'Pending' },
+    { id: 10, patientName: 'kaalia', time: 'Saturday · 10:45 AM', type: 'Check-up', status: 'Pending' },
+    { id: 11, patientName: 'Dholu', time: 'Saturday · 1:00 PM', type: 'Check-up', status: 'Pending' },
   ]
 
   const availabilitySlots = [
@@ -24,23 +29,24 @@ const DoctorDashboard = () => {
     { day: 'Wednesday', slots: '10:00 AM - 4:00 PM' },
     { day: 'Thursday', slots: '9:00 AM - 5:00 PM' },
     { day: 'Friday', slots: '9:00 AM - 5:00 PM' },
+    { day: 'Saturdayday', slots: '9:00 AM - 2:00 PM' },
   ]
 
   const patients = [
-    { id: 1, name: 'Md. Hassan Khan', visits: 3, lastVisit: '2 days ago' },
-    { id: 2, name: 'Fatima Begum', visits: 5, lastVisit: 'Today' },
-    { id: 3, name: 'Ravi Chowdhury', visits: 1, lastVisit: '1 week ago' },
-    { id: 4, name: 'Asha Roy', visits: 2, lastVisit: '3 days ago' },
+    { id: 1, name: 'Molu', visits: 3, lastVisit: '2 days ago' },
+    { id: 2, name: 'Golu', visits: 5, lastVisit: 'Today' },
+    { id: 3, name: 'Ravi kishan', visits: 1, lastVisit: '1 week ago' },
+    { id: 4, name: 'Manoj Tiwari', visits: 2, lastVisit: '3 days ago' },
   ]
 
   const profileData = {
-    name: 'Dr. Amina Rahman',
+    name: 'Dr. Priyanshu Kumar',
     specialization: 'Cardiology',
     experience: '12 years',
     education: 'MBBS, MD (Cardiology)',
-    clinic: 'HealPoint Medical Center, Dhaka',
-    phone: '+880-1234-567890',
-    email: 'dr.amina@healpoint.com',
+    clinic: 'HealPoint Medical Center, Indore',
+    phone: '+91-9546910005',
+    email: 'dr.priyanshu@healpoint.com',
     bio: 'Specializes in preventive heart care and advanced cardiac diagnostics with a focus on patient education.',
   }
 
