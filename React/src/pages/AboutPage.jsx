@@ -13,13 +13,13 @@ const AboutPage = ({ navigate }) => {
     },
     {
       id: 2,
-      name: 'Md. Ahmed Khan',
+      name: 'Dr. Riya Mehta',
       role: 'Chief Medical Officer',
       bio: 'Experienced physician dedicated to improving patient care through innovation.',
     },
     {
       id: 3,
-      name: 'Lisa Chen',
+      name: 'Ananya Sharma',
       role: 'CTO',
       bio: 'Tech visionary with expertise in healthcare software and digital solutions.',
     },
