@@ -132,7 +132,7 @@
 
 @media (max-width: 900px) {
   .navbar {
-    padding: 1rem 1rem;
+    padding: 1px 1px;
   }
 
   .nav-toggle { display: flex }
