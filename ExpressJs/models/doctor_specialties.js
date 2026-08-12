@@ -1,34 +1,31 @@
 const{DataTypes}= require("sequelize")
 const sequelize= require("../config/db")
 
-const DoctorSpecialties= sequelize.define("DoctorSpecialties",{
-    doctor_id:{
-        type:DataTypes.INTEGER,
-        allowNull:false
-    },
-    specialty_id:{
-        type:DataTypes.INTEGER,
-        allowNull:false
-    },
+
+const DoctorSpecialty = sequelize.define('DoctorSpecialty', {
     doctor_id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    references: {
-        model: 'doctors',
-        key: 'doctor_id'
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        primaryKey: true,
+        references: {
+            model: 'doctors',
+            key: 'doctor_id'
+        },
+        onDelete: 'CASCADE'
     },
-    onDelete: 'CASCADE'
-},
 
-specialty_id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    references: {
-        model: 'specialties',
-        key: 'specialty_id'
-    },
-    onDelete: 'CASCADE'
-}
-
-})
-module.exports=DoctorSpecialties;
+    specialty_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        primaryKey: true,
+        references: {
+            model: 'specialties',
+            key: 'specialty_id'
+        },
+        onDelete: 'CASCADE'
+    }
+}, {
+    tableName: 'doctor_specialties',
+    timestamps: false
+});
+module.exports=DoctorSpecialty;

@@ -1,18 +1,25 @@
 const{DataTypes}= require("sequelize")
 const sequelize= require("../config/db")
 
-const Specialties= sequelize.define("Specialties",{
-    specialty_id:{
-        type:DataTypes.INTEGER,
-        allowNull:false,
-        unique:true
+const Specialty = sequelize.define('Specialty', {
+    specialty_id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
     },
-    name:{
-        type:DataTypes.STRING,
-        allowNull:false
+
+    name: {
+        type: DataTypes.STRING(100),
+        unique: true,
+        allowNull: false
     },
-    description:{
-        type:DataTypes.STRING
+
+    description: {
+        type: DataTypes.TEXT,
+        allowNull: true
     }
-})
-module.exports=Specialties;
+}, {
+    tableName: 'specialties',
+    timestamps: false
+});
+module.exports=Specialty;

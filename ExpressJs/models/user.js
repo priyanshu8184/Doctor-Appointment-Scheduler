@@ -1,35 +1,45 @@
 const{DataTypes, ENUM}= require("sequelize")
 const sequelize= require("../config/db")
 
-const Users= sequelize.define("Users",{
-    user_id:{
-        type:DataTypes.INTEGER,
-        allowNull:false,
-        unique:true
+const User = sequelize.define('User', {
+    user_id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
     },
-    email:{
-        type:DataTypes.STRING,
-        allowNull:false,
-       unique:true 
+
+    email: {
+        type: DataTypes.STRING(255),
+        unique: true,
+        allowNull: false
     },
-    password_hash:{
-        type:DataTypes.STRING,
-        allowNull:false
+
+    password_hash: {
+        type: DataTypes.STRING(255),
+        allowNull: false
     },
+
     role: {
-        type: ENUM,
-        values: ['Admin', 'Doctor', 'Patient'],
-        allowNull:false
+        type: DataTypes.ENUM(
+            'ADMIN',
+            'DOCTOR',
+            'PATIENT'
+        ),
+        allowNull: false
     },
-    created_at:{
-        type:DataTypes.DATE,
-        defaultValue:DataTypes.NOW
+
+    created_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
     },
-    updated_at:{
-        type:DataTypes.DATE,
-        defaultValue:DataTypes.NOW
+
+    updated_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
     }
+}, {
+    tableName: 'users',
+    timestamps: false
+});
 
-})
-
-module.exports=Users;
+module.exports=User;
