@@ -2,9 +2,10 @@ const Appointment = require("../models/appointments");
 const Patient = require("../models/Patient");
 const Doctor = require("../models/Doctor");
 
-// Allowed appointment statuses
 const ALLOWED_STATUSES = [
     "SCHEDULED",
+    "ACCEPTED",
+    "REJECTED",
     "COMPLETED",
     "CANCELLED",
     "NO_SHOW"
@@ -61,7 +62,7 @@ const createAppointment = async (req, res) => {
         ) {
             return res.status(400).json({
                 message:
-                    "Invalid status. Allowed values: SCHEDULED, COMPLETED, CANCELLED, NO_SHOW"
+                    "Invalid status. Allowed values: SCHEDULED, ACCEPTED, REJECTED, COMPLETED, CANCELLED, NO_SHOW"
             });
         }
 

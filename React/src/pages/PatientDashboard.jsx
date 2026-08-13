@@ -23,6 +23,7 @@ const PatientDashboard = () => {
   const [profileData, setProfileData] = useState(null)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [profileForm, setProfileForm] = useState({})
+  const [profilePictureFile, setProfilePictureFile] = useState(null)
   
   const [reviewForm, setReviewForm] = useState({ appointmentId: '', rating: 5, comment: '' })
   const [paymentAppointmentId, setPaymentAppointmentId] = useState('')
@@ -131,18 +132,28 @@ const PatientDashboard = () => {
   const handleSaveProfile = async () => {
     try {
       const loggedInUser = JSON.parse(localStorage.getItem('user'))
-      await axios.put(`${API_BASE_URL}/patients/${loggedInUser.user_id}`, {
-        first_name: profileForm.firstName,
-        last_name: profileForm.lastName,
-        phone_number: profileForm.phone,
-        date_of_birth: profileForm.dateOfBirth,
-        gender: profileForm.gender,
-        blood_group: profileForm.bloodGroup,
-        address: profileForm.address,
-        emergency_contact: profileForm.emergencyContact
+      const payload = new FormData()
+      payload.append('first_name', profileForm.firstName || '')
+      payload.append('last_name', profileForm.lastName || '')
+      payload.append('date_of_birth', profileForm.dateOfBirth || '')
+      payload.append('phone_number', profileForm.phone || '')
+      payload.append('gender', profileForm.gender || '')
+      payload.append('blood_group', profileForm.bloodGroup || '')
+      payload.append('address', profileForm.address || '')
+      payload.append('emergency_contact', profileForm.emergencyContact || '')
+      
+      if (profilePictureFile) {
+        payload.append('profile_picture', profilePictureFile)
+      }
+
+      await axios.put(`${API_BASE_URL}/patients/${loggedInUser.user_id}`, payload, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       })
+      
+      // Update local state and close editor
       setProfileData({ ...profileData, ...profileForm, name: `${profileForm.firstName} ${profileForm.lastName}` })
       setIsEditingProfile(false)
+      window.location.reload()
     } catch (err) {
       alert("Failed to update profile")
       console.error(err)
@@ -222,7 +233,11 @@ const PatientDashboard = () => {
                         <p className="appointment-doctor">{apt.doctorName}</p>
                         <p className="appointment-specialty">{apt.specialization}</p>
                       </div>
-                      <span className={`appointment-status ${apt.status.toLowerCase()}`}>{apt.status}</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                        <span className={`appointment-status ${apt.status.toLowerCase()}`}>{apt.status}</span>
+                        {apt.status === 'REJECTED' && <span style={{ fontSize: '0.8rem', color: '#ef4444', marginTop: '4px' }}>You are on waiting list</span>}
+                        {apt.status === 'ACCEPTED' && <span style={{ fontSize: '0.8rem', color: '#10b981', marginTop: '4px' }}>Doctor confirmed</span>}
+                      </div>
                     </div>
 
                     <div className="appointment-details">
@@ -286,6 +301,10 @@ const PatientDashboard = () => {
 
               {isEditingProfile ? (
                 <div className="profile-grid">
+                  <div className="profile-item full-width">
+                    <label>Profile Picture</label>
+                    <input type="file" accept="image/*" onChange={(e) => setProfilePictureFile(e.target.files[0])} />
+                  </div>
                   <div className="profile-item">
                     <label>First Name</label>
                     <input type="text" name="firstName" value={profileForm.firstName || ''} onChange={handleProfileChange} />
@@ -515,6 +534,14 @@ const PatientDashboard = () => {
         )}
 
         <nav className="sidebar-nav">
+          <button
+            type="button"
+            className="nav-item"
+            onClick={() => window.location.href = '/doctors'}
+            style={{ backgroundColor: '#2563eb', color: 'white', fontWeight: 'bold' }}
+          >
+            🩺 Book Doctor
+          </button>
           <button
             type="button"
             className={`nav-item ${activeTab === 'upcoming' ? 'active' : ''}`}

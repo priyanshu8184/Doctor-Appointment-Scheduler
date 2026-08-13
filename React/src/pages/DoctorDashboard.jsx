@@ -22,6 +22,9 @@ const DoctorDashboard = () => {
   const [availabilitySlots, setAvailabilitySlots] = useState([])
   const [patients, setPatients] = useState([])
   const [profileData, setProfileData] = useState(null)
+  const [isEditingProfile, setIsEditingProfile] = useState(false)
+  const [profileForm, setProfileForm] = useState({})
+  const [profilePictureFile, setProfilePictureFile] = useState(null)
 
   // 2. Base API URL (pointing to your Express backend)
   const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'
@@ -47,11 +50,11 @@ const DoctorDashboard = () => {
         const dbDoctor = profileRes.data.doctor || {}
         setProfileData({
           name: `Dr. ${dbDoctor.first_name} ${dbDoctor.last_name}`,
-          specialization: 'General',
-          experience: 'N/A',
-          education: 'N/A',
+          specialization: dbDoctor.specialization || 'General',
+          experience: dbDoctor.experience || 'N/A',
+          education: dbDoctor.education || 'N/A',
           clinic: dbDoctor.location || 'N/A',
-          phone: 'N/A',
+          phone: dbDoctor.phone_number || 'N/A',
           email: loggedInUser.email,
           bio: dbDoctor.bio || 'No bio provided.',
           profilePicture: dbDoctor.profile_picture ? `${API_BASE_URL.replace('/api', '')}${dbDoctor.profile_picture}` : null
@@ -110,6 +113,49 @@ const DoctorDashboard = () => {
   if (error) return <p className="error-message">{error}</p>
   if (!profileData) return <p>No profile data found.</p>
 
+  const handleEditProfileClick = () => {
+    setProfileForm({
+      education: profileData.education !== 'N/A' ? profileData.education : '',
+      phone_number: profileData.phone !== 'N/A' ? profileData.phone : '',
+      experience: profileData.experience !== 'N/A' ? profileData.experience : '',
+      location: profileData.clinic !== 'N/A' ? profileData.clinic : '',
+      bio: profileData.bio !== 'No bio provided.' ? profileData.bio : ''
+    })
+    setIsEditingProfile(true)
+  }
+
+  const handleProfileChange = (e) => {
+    setProfileForm({ ...profileForm, [e.target.name]: e.target.value })
+  }
+
+  const handleSaveProfile = async () => {
+    try {
+      const loggedInUser = JSON.parse(localStorage.getItem('user'))
+      const payload = new FormData()
+      Object.keys(profileForm).forEach(key => payload.append(key, profileForm[key]))
+      if (profilePictureFile) payload.append('profile_picture', profilePictureFile)
+
+      await axios.put(`${API_BASE_URL}/doctors/${loggedInUser.user_id}`, payload, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      alert("Profile updated successfully!")
+      window.location.reload()
+    } catch (err) {
+      alert("Failed to update profile: " + (err.response?.data?.message || err.message))
+    }
+  }
+
+  const handleUpdateAppointmentStatus = async (appointmentId, status) => {
+    try {
+      await axios.patch(`${API_BASE_URL}/appointments/${appointmentId}/status`, { status });
+      // Refresh local state to reflect the change
+      setTodayAppointments(prev => prev.map(apt => apt.id === appointmentId ? { ...apt, status } : apt));
+      setUpcomingAppointments(prev => prev.map(apt => apt.id === appointmentId ? { ...apt, status } : apt));
+    } catch (err) {
+      alert("Failed to update appointment: " + (err.response?.data?.message || err.message));
+    }
+  }
+
   const renderContent = () => {
     switch (activeTab) {
       case 'today':
@@ -126,7 +172,14 @@ const DoctorDashboard = () => {
                     </div>
                     <div className="appointment-meta">
                       <span className="appointment-time">{apt.time}</span>
-                      <span className={`appointment-status ${apt.status.toLowerCase()}`}>{apt.status}</span>
+                      {apt.status === 'SCHEDULED' ? (
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button onClick={() => handleUpdateAppointmentStatus(apt.id, 'ACCEPTED')} className="primary-btn" style={{ padding: '4px 8px', fontSize: '0.8rem' }}>Accept</button>
+                          <button onClick={() => handleUpdateAppointmentStatus(apt.id, 'REJECTED')} className="secondary-btn" style={{ padding: '4px 8px', fontSize: '0.8rem' }}>Reject</button>
+                        </div>
+                      ) : (
+                        <span className={`appointment-status ${apt.status.toLowerCase()}`}>{apt.status}</span>
+                      )}
                     </div>
                   </div>
                 ))
@@ -149,8 +202,15 @@ const DoctorDashboard = () => {
                       <p className="appointment-type">{apt.type}</p>
                     </div>
                     <div className="appointment-meta">
-                      <span className="appointment-time">{apt.time}</span>
-                      <span className={`appointment-status ${apt.status.toLowerCase()}`}>{apt.status}</span>
+                      <span className="appointment-time">{apt.date.split('T')[0]} {apt.time}</span>
+                      {apt.status === 'SCHEDULED' ? (
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button onClick={() => handleUpdateAppointmentStatus(apt.id, 'ACCEPTED')} className="primary-btn" style={{ padding: '4px 8px', fontSize: '0.8rem' }}>Accept</button>
+                          <button onClick={() => handleUpdateAppointmentStatus(apt.id, 'REJECTED')} className="secondary-btn" style={{ padding: '4px 8px', fontSize: '0.8rem' }}>Reject</button>
+                        </div>
+                      ) : (
+                        <span className={`appointment-status ${apt.status.toLowerCase()}`}>{apt.status}</span>
+                      )}
                     </div>
                   </div>
                 ))
@@ -196,6 +256,44 @@ const DoctorDashboard = () => {
           </section>
         )
       case 'profile':
+        if (isEditingProfile) {
+          return (
+            <section className="dashboard-section">
+              <h2>Edit Profile</h2>
+              <form className="profile-form" style={{ display: 'flex', flexDirection: 'column', gap: '15px', maxWidth: '600px' }}>
+                <label>
+                  Profile Picture
+                  <input type="file" accept="image/*" onChange={(e) => setProfilePictureFile(e.target.files[0])} />
+                </label>
+                <label>
+                  Experience
+                  <input type="text" name="experience" value={profileForm.experience || ''} onChange={handleProfileChange} />
+                </label>
+                <label>
+                  Education
+                  <input type="text" name="education" value={profileForm.education || ''} onChange={handleProfileChange} />
+                </label>
+                <label>
+                  Clinic / Location
+                  <input type="text" name="location" value={profileForm.location || ''} onChange={handleProfileChange} />
+                </label>
+                <label>
+                  Phone Number
+                  <input type="text" name="phone_number" value={profileForm.phone_number || ''} onChange={handleProfileChange} />
+                </label>
+                <label>
+                  Bio
+                  <textarea name="bio" value={profileForm.bio || ''} onChange={handleProfileChange} rows="4"></textarea>
+                </label>
+                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                  <button type="button" className="primary-btn" onClick={handleSaveProfile}>Save Changes</button>
+                  <button type="button" className="secondary-btn" onClick={() => setIsEditingProfile(false)}>Cancel</button>
+                </div>
+              </form>
+            </section>
+          )
+        }
+
         return (
           <section className="dashboard-section">
             <h2>Your Profile</h2>
@@ -232,7 +330,7 @@ const DoctorDashboard = () => {
                 </div>
               </div>
 
-              <button type="button" className="primary-btn edit-profile-btn">Edit Profile</button>
+              <button type="button" className="primary-btn edit-profile-btn" onClick={handleEditProfileClick}>Edit Profile</button>
             </div>
           </section>
         )

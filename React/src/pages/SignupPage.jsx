@@ -20,7 +20,10 @@ const SignupPage = ({ navigate }) => {
     gender: '',
     bloodGroup: '',
     address: '',
-    emergencyContact: ''
+    emergencyContact: '',
+    education: '',
+    doctorPhone: '',
+    experience: ''
   })
   const [profilePicture, setProfilePicture] = useState(null)
   const [previewImage, setPreviewImage] = useState(null)
@@ -151,6 +154,9 @@ const SignupPage = ({ navigate }) => {
               doctorPayload.append('location', formData.location || '');
               doctorPayload.append('specialization', formData.specialization || 'General Medicine');
               doctorPayload.append('consultation_fee', Number(formData.consultationFee));
+              doctorPayload.append('education', formData.education || '');
+              doctorPayload.append('phone_number', formData.doctorPhone || '');
+              doctorPayload.append('experience', formData.experience || '');
 
               if (profilePicture) {
                 doctorPayload.append('profile_picture', profilePicture);
@@ -372,6 +378,41 @@ const SignupPage = ({ navigate }) => {
                     name="location"
                     placeholder="e.g. Indore, Madhya Pradesh"
                     value={formData.location}
+                    onChange={handleChange}
+                  />
+                </label>
+
+                <div style={{ display: 'flex', gap: '15px' }}>
+                  <label style={{ flex: 1 }}>
+                    Phone Number
+                    <input
+                      type="tel"
+                      name="doctorPhone"
+                      placeholder="e.g. 9876543210"
+                      value={formData.doctorPhone}
+                      onChange={handleChange}
+                    />
+                  </label>
+
+                  <label style={{ flex: 1 }}>
+                    Experience
+                    <input
+                      type="text"
+                      name="experience"
+                      placeholder="e.g. 5+ years"
+                      value={formData.experience}
+                      onChange={handleChange}
+                    />
+                  </label>
+                </div>
+
+                <label>
+                  Education / Qualifications
+                  <input
+                    type="text"
+                    name="education"
+                    placeholder="e.g. MBBS, MD - Dermatology"
+                    value={formData.education}
                     onChange={handleChange}
                   />
                 </label>

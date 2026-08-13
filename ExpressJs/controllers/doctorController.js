@@ -14,6 +14,9 @@ const createDoctor = async (req, res) => {
             bio,
             location,
             specialization,
+            education,
+            phone_number,
+            experience,
             consultation_fee
         } = req.body;
 
@@ -80,6 +83,9 @@ const createDoctor = async (req, res) => {
             bio,
             location,
             specialization,
+            education,
+            phone_number,
+            experience,
             consultation_fee,
             profile_picture
         });
@@ -175,6 +181,9 @@ const updateDoctor = async (req, res) => {
             bio,
             location,
             specialization,
+            education,
+            phone_number,
+            experience,
             consultation_fee
         } = req.body;
 
@@ -202,6 +211,18 @@ const updateDoctor = async (req, res) => {
 
         if (specialization !== undefined) {
             doctor.specialization = specialization;
+        }
+
+        if (education !== undefined) {
+            doctor.education = education;
+        }
+
+        if (phone_number !== undefined) {
+            doctor.phone_number = phone_number;
+        }
+
+        if (experience !== undefined) {
+            doctor.experience = experience;
         }
 
         if (consultation_fee !== undefined) {

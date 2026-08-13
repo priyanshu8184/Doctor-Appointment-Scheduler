@@ -21,7 +21,7 @@ router.get("/", getAllPatients);
 router.get("/:id", getPatientById);
 
 // Update patient
-router.put("/:id", updatePatient);
+router.put("/:id", upload.single("profile_picture"), updatePatient);
 
 // Delete patient
 router.delete("/:id", deletePatient);

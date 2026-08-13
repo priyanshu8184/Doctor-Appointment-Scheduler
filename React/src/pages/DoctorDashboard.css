@@ -421,3 +421,43 @@
     align-items: flex-start;
   }
 }
+
+/* Profile Form Styling */
+.profile-form {
+  background: #f8fafc;
+  padding: 1.5rem;
+  border-radius: 0.8rem;
+  border: 1px solid #e2e8f0;
+}
+
+.profile-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-weight: 600;
+  color: #334155;
+  font-size: 0.95rem;
+}
+
+.profile-form input,
+.profile-form textarea {
+  padding: 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.4rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  background-color: #fff;
+  transition: all 0.2s ease;
+}
+
+.profile-form input:focus,
+.profile-form textarea:focus {
+  outline: none;
+  border-color: #0f766e;
+  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.15);
+}
+
+.profile-form input[type="file"] {
+  padding: 0.5rem;
+  background-color: #f1f5f9;
+}
