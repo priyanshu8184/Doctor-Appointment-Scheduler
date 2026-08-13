@@ -1,4 +1,4 @@
-const { Payment, Appointment } = require("../models");
+const { Payment, Appointment } = require("../models/payments");
 
 // Allowed payment types
 const ALLOWED_PAYMENT_TYPES = [

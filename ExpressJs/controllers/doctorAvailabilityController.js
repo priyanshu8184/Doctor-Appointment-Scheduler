@@ -1,4 +1,4 @@
-const { DoctorAvailability, Doctor } = require("../models");
+const { DoctorAvailability, Doctor } = require("../models/Doctor");
 
 // ======================================================
 // CREATE AVAILABILITY

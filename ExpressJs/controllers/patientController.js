@@ -1,4 +1,4 @@
-const { Patient, User } = require("../models");
+const { Patient, User } = require("../models/Patient");
 
 // ======================================================
 // CREATE PATIENT

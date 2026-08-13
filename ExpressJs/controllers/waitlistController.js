@@ -1,4 +1,4 @@
-const { Waitlist, Doctor, Patient } = require("../models");
+const { Waitlist, Doctor, Patient } = require("../models/waitlist");
 
 // Allowed waitlist statuses
 const ALLOWED_STATUSES = [

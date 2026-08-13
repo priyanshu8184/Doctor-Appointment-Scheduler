@@ -3,7 +3,7 @@ const {
     Appointment,
     Patient,
     Doctor
-} = require("../models");
+} = require("../models/reviews");
 
 
 // ======================================================

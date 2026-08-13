@@ -3,7 +3,7 @@ const {
     Patient,
     Doctor,
     Appointment
-} = require("../models");
+} = require("../models/medical_records");
 
 
 // ======================================================

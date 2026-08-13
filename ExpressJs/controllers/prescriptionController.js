@@ -1,7 +1,7 @@
 const {
     Prescription,
     MedicalRecord
-} = require("../models");
+} = require("../models/prescriptions");
 
 
 // ======================================================

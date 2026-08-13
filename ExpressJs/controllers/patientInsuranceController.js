@@ -1,4 +1,4 @@
-const { PatientInsurance, Patient } = require("../models");
+const { PatientInsurance, Patient } = require("../models/patient_insurance");
 
 // Allowed eligibility statuses
 const ALLOWED_STATUSES = [

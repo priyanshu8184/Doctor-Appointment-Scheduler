@@ -1,4 +1,4 @@
-const { Appointment, Patient, Doctor } = require("../models");
+const { Appointment, Patient, Doctor } = require("../models/appointments");
 
 // Allowed appointment statuses
 const ALLOWED_STATUSES = [
@@ -92,6 +92,7 @@ const createAppointment = async (req, res) => {
 // ======================================================
 // GET ALL APPOINTMENTS
 // ======================================================
+
 const getAllAppointments = async (req, res) => {
     try {
         const appointments = await Appointment.findAll({

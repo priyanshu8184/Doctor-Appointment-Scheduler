@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 const port = 3001;
-
+const cors = require('cors');
 
 //middleware
 app.use(express.json());
@@ -39,7 +39,11 @@ app.use("/api/prescriptions", prescriptionRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/notifications", notificationRoutes);
 
-
+app.use(cors({
+    origin: '*', // Allow all origins
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow specific HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Allow specific headers
+}));
 
 // Home route
 app.get("/", (req, res) => {
