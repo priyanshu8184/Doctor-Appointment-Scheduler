@@ -92,6 +92,7 @@ const createPatient = async (req, res) => {
 // ======================================================
 // GET ALL PATIENTS
 // ======================================================
+
 const getAllPatients = async (req, res) => {
     try {
         const patients = await Patient.findAll();
@@ -115,6 +116,7 @@ const getAllPatients = async (req, res) => {
 // ======================================================
 // GET PATIENT BY ID
 // ======================================================
+
 const getPatientById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -203,6 +205,8 @@ const updatePatient = async (req, res) => {
 // ======================================================
 // DELETE PATIENT
 // ======================================================
+
+
 const deletePatient = async (req, res) => {
     try {
         const { id } = req.params;
@@ -235,6 +239,8 @@ const deletePatient = async (req, res) => {
 // ======================================================
 // EXPORT CONTROLLERS
 // ======================================================
+
+
 module.exports = {
     createPatient,
     getAllPatients,
