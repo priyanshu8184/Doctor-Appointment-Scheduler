@@ -1,4 +1,5 @@
-const { Patient, User } = require("../models/Patient");
+const Patient = require("../models/Patient");
+const User = require("../models/user");
 
 // ======================================================
 // CREATE PATIENT
@@ -11,8 +12,17 @@ const createPatient = async (req, res) => {
             first_name,
             last_name,
             date_of_birth,
-            phone_number
+            phone_number,
+            gender,
+            blood_group,
+            address,
+            emergency_contact
         } = req.body;
+
+        let profile_picture = null;
+        if (req.file) {
+            profile_picture = `/uploads/${req.file.filename}`;
+        }
 
         // Check required fields
         if (
@@ -70,7 +80,12 @@ const createPatient = async (req, res) => {
             first_name,
             last_name,
             date_of_birth,
-            phone_number
+            phone_number,
+            gender,
+            blood_group,
+            address,
+            emergency_contact,
+            profile_picture
         });
 
         res.status(201).json({
@@ -164,10 +179,19 @@ const updatePatient = async (req, res) => {
             first_name,
             last_name,
             date_of_birth,
-            phone_number
+            phone_number,
+            gender,
+            blood_group,
+            address,
+            emergency_contact
         } = req.body;
 
-        // Update only the fields provided
+        // Update profile picture if provided
+        if (req.file) {
+            patient.profile_picture = `/uploads/${req.file.filename}`;
+        }
+
+        // Update only supplied fields provided
         if (first_name !== undefined) {
             patient.first_name = first_name;
         }
@@ -182,6 +206,22 @@ const updatePatient = async (req, res) => {
 
         if (phone_number !== undefined) {
             patient.phone_number = phone_number;
+        }
+
+        if (gender !== undefined) {
+            patient.gender = gender;
+        }
+
+        if (blood_group !== undefined) {
+            patient.blood_group = blood_group;
+        }
+
+        if (address !== undefined) {
+            patient.address = address;
+        }
+
+        if (emergency_contact !== undefined) {
+            patient.emergency_contact = emergency_contact;
         }
 
         await patient.save();

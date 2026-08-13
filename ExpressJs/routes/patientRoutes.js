@@ -9,8 +9,10 @@ const {
     deletePatient
 } = require("../controllers/patientController");
 
+const upload = require("../middlewares/upload");
+
 // Create patient
-router.post("/", createPatient);
+router.post("/", upload.single("profile_picture"), createPatient);
 
 // Get all patients
 router.get("/", getAllPatients);

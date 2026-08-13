@@ -2,7 +2,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 5px;
+  padding: 0 10px;
   background: #0f172a;
   color: #e2e8f0;
   backdrop-filter: blur(10px);
@@ -26,12 +26,13 @@
 }
 
 .brand-logo {
-  width: clamp(12rem, 8vw, 10rem);
+  width: clamp(10rem, 8vw, 12rem);
   height: clamp(4.2rem, 8vw, 10rem);
   object-fit: contain;
   border-radius: 1rem;
   flex-shrink: 0;
   display: block;
+  margin: -15px 0;
 }
 
 .nav-links {

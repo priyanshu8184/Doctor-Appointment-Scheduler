@@ -1,4 +1,6 @@
-const { Payment, Appointment } = require("../models/payments");
+const Payment  = require("../models/payments");
+const Appointment = require("../models/appointments");
+const { Op } = require("sequelize");
 
 // Allowed payment types
 const ALLOWED_PAYMENT_TYPES = [
@@ -127,6 +129,51 @@ const getPaymentById = async (req, res) => {
 
         res.status(500).json({
             message: "Error fetching payment",
+            error: error.message
+        });
+    }
+};
+
+// ======================================================
+// GET PATIENT PAYMENTS
+// ======================================================
+const getPatientPayments = async (req, res) => {
+    try {
+        const { patient_id } = req.params;
+
+        const appointments = await Appointment.findAll({
+            where: { patient_id }
+        });
+
+        const appointmentIds = appointments.map(apt => apt.appointment_id);
+
+        if (appointmentIds.length === 0) {
+            return res.status(200).json({
+                message: "Patient payments fetched successfully",
+                payments: []
+            });
+        }
+
+        const payments = await Payment.findAll({
+            where: {
+                appointment_id: {
+                    [Op.in]: appointmentIds
+                }
+            },
+            order: [
+                ["created_at", "DESC"]
+            ]
+        });
+
+        res.status(200).json({
+            message: "Patient payments fetched successfully",
+            payments
+        });
+
+    } catch (error) {
+        console.error("Get Patient Payments Error:", error);
+        res.status(500).json({
+            message: "Error fetching patient payments",
             error: error.message
         });
     }
@@ -267,6 +314,7 @@ const refundPayment = async (req, res) => {
 module.exports = {
     createPayment,
     getPaymentById,
+    getPatientPayments,
     updatePaymentStatus,
     refundPayment
 };

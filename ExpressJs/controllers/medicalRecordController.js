@@ -1,9 +1,7 @@
-const {
-    MedicalRecord,
-    Patient,
-    Doctor,
-    Appointment
-} = require("../models/medical_records");
+const MedicalRecord = require("../models/medical_records");
+const Appointment = require("../models/appointments");
+const Doctor = require("../models/Doctor");
+const Patient = require("../models/Patient");
 
 
 // ======================================================

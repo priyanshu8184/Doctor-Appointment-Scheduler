@@ -35,6 +35,31 @@ const Patient = sequelize.define('Patient', {
     phone_number: {
         type: DataTypes.STRING(20),
         allowNull: true
+    },
+
+    gender: {
+        type: DataTypes.STRING(10),
+        allowNull: true
+    },
+
+    blood_group: {
+        type: DataTypes.STRING(5),
+        allowNull: true
+    },
+
+    address: {
+        type: DataTypes.STRING(255),
+        allowNull: true
+    },
+
+    emergency_contact: {
+        type: DataTypes.STRING(100),
+        allowNull: true
+    },
+
+    profile_picture: {
+        type: DataTypes.STRING(255),
+        allowNull: true
     }
 }, {
     tableName: 'patients',

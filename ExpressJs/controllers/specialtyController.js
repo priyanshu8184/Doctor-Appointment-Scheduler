@@ -1,4 +1,4 @@
-const { Specialty } = require("../models/specialties");
+const Specialty  = require("../models/specialties");
 
 // ======================================================
 // CREATE SPECIALTY

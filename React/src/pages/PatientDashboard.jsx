@@ -1,45 +1,210 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import './PatientDashboard.css'
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
+import axios from 'axios'
 
 const PatientDashboard = () => {
+  const handleLogout = () => {
+    localStorage.removeItem('user')
+    window.location.href = '/login'
+  }
+
   const [activeTab, setActiveTab] = useState('upcoming')
   const [sidebarOpen, setSidebarOpen] = useState(true)
+    const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
+  // 1. Define states to store backend data
+  const [upcomingAppointments, setUpcomingAppointments] = useState([])
+  const [appointmentHistory, setAppointmentHistory] = useState([])
+  const [payments, setPayments] = useState([])
+  const [reviews, setReviews] = useState([])
+  const [profileData, setProfileData] = useState(null)
+  const [isEditingProfile, setIsEditingProfile] = useState(false)
+  const [profileForm, setProfileForm] = useState({})
   
-  const upcomingAppointments = [
-    { id: 1, doctorName: 'Dr. Jhatka', specialization: 'Cardiology', date: 'Today · 4:00 PM', status: 'Confirmed', location: 'HealPoint Medical Center' },
-    { id: 2, doctorName: 'Dr. Jhasitaram', specialization: 'Neurology', date: 'Tomorrow · 10:30 AM', status: 'Confirmed', location: 'Dhaka Clinic' },
-    { id: 3, doctorName: 'Dr. Doremon', specialization: 'Dermatology', date: 'Friday · 1:15 PM', status: 'Pending', location: 'Sylhet Medical' },
-  ]
+  const [reviewForm, setReviewForm] = useState({ appointmentId: '', rating: 5, comment: '' })
+  const [paymentAppointmentId, setPaymentAppointmentId] = useState('')
 
-  const appointmentHistory = [
-    { id: 1, doctorName: 'Dr. Chhota Bheem', specialization: 'Pediatrics', date: '2 weeks ago', notes: 'Regular check-up' },
-    { id: 2, doctorName: 'Dr. Ramu Kaka', specialization: 'Orthopedics', date: '1 month ago', notes: 'Follow-up on knee injury' },
-    { id: 3, doctorName: 'Dr. Gopal Das', specialization: 'General Medicine', date: '2 months ago', notes: 'Blood pressure consultation' },
-    { id: 4, doctorName: 'Dr. Jhatka', specialization: 'Cardiology', date: '3 months ago', notes: 'Cardiac check-up' },
-  ]
+  // 2. Base API URL (pointing to your Express backend)
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'
 
-  const payments = [
-    { id: 1, date: 'Aug 5, 2026', doctorName: 'Dr. Jhatka', amount: '₹2,500', status: 'Paid', method: 'Card' },
-    { id: 2, date: 'Jul 28, 2026', doctorName: 'Dr. Jhasitaram', amount: '₹1,800', status: 'Paid', method: 'Mobile Banking' },
-    { id: 3, date: 'Jul 15, 2026', doctorName: 'Dr. Doremon', amount: '₹1,200', status: 'Pending', method: 'UPI' },
-  ]
+  // 3. Fetch data from backend on component mount
+  useEffect(() => {
+    // Get logged-in patient details from localStorage (saved during Login)
+    const loggedInUser = JSON.parse(localStorage.getItem('user'))
+    const patientId = loggedInUser?.user_id // Ensure your user object contains their ID
 
-  const reviews = [
-    { id: 1, doctorName: 'Dr. Chhota Bheem', rating: 5, reviewText: 'Very professional and caring. Great experience overall.', date: '2 weeks ago' },
-    { id: 2, doctorName: 'Dr. Ramu Kaka', rating: 4, reviewText: 'Good consultation, would recommend to others.', date: '1 month ago' },
-    { id: 3, doctorName: 'Dr. Gopal Das', rating: 5, reviewText: 'Excellent care and attention to detail.', date: '2 months ago' },
-  ]
+    if (!patientId) {
+      setError("User not authenticated. Please log in.")
+      setLoading(false)
+      return
+    }
 
-  const profileData = {
-    name: 'Mr. Suyash baoney',
-    email: 'Suyansh5555@email.com',
-    phone: '+91-9876543210',
-    dateOfBirth: 'January 15, 2003',
-    gender: 'Male',
-    bloodGroup: 'O+',
-    address: 'Dhar, Madhya Pradesh, India',
-    emergencyContact: 'Mrs. Geeta Baoney (+91-9876543211)',
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true)
+
+        // A. Fetch Patient Profile details
+        const profileRes = await axios.get(`${API_BASE_URL}/patients/${patientId}`)
+        const dbPatient = profileRes.data.patient || {}
+        setProfileData({
+          firstName: dbPatient.first_name,
+          lastName: dbPatient.last_name,
+          name: `${dbPatient.first_name} ${dbPatient.last_name}`,
+          email: loggedInUser.email,
+          phone: dbPatient.phone_number || 'N/A',
+          dateOfBirth: dbPatient.date_of_birth || 'N/A',
+          gender: dbPatient.gender || 'N/A',
+          bloodGroup: dbPatient.blood_group || 'N/A',
+          address: dbPatient.address || 'N/A',
+          emergencyContact: dbPatient.emergency_contact || 'N/A',
+          profilePicture: dbPatient.profile_picture ? `${API_BASE_URL.replace('/api', '')}${dbPatient.profile_picture}` : null
+        })
+
+        // B. Fetch Appointments
+        const appointmentsRes = await axios.get(`${API_BASE_URL}/appointments`)
+        const allAppointments = appointmentsRes.data.appointments || []
+        const myApts = allAppointments
+          .filter(a => a.patient_id === patientId)
+          .map(apt => ({
+            id: apt.appointment_id,
+            doctorName: `Doctor #${apt.doctor_id}`, // In the future, join with doctors table
+            specialization: 'General',
+            date: apt.appointment_datetime,
+            time: new Date(apt.appointment_datetime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+            status: apt.status,
+            location: 'HealPoint Clinic'
+          }))
+
+        // Separate upcoming vs history (completed/cancelled) appointments
+        const now = new Date()
+        const upcoming = myApts.filter(apt => new Date(apt.date) >= now && apt.status !== 'CANCELLED')
+        const history = myApts.filter(apt => new Date(apt.date) < now || apt.status === 'CANCELLED')
+
+        setUpcomingAppointments(upcoming)
+        setAppointmentHistory(history)
+
+        // C. Fetch Payments
+        const paymentsRes = await axios.get(`${API_BASE_URL}/payments/patient/${patientId}`)
+        const allPayments = paymentsRes.data.payments || []
+        setPayments(allPayments.map(p => {
+          const apt = myApts.find(a => a.id === p.appointment_id)
+          return {
+            id: p.payment_id,
+            date: new Date(p.created_at).toLocaleDateString(),
+            doctorName: apt ? apt.doctorName : `Appointment #${p.appointment_id}`,
+            amount: `$${p.total_amount}`,
+            status: p.payment_status,
+            method: p.payment_type
+          }
+        }))
+
+        // D. Fetch Reviews
+        const reviewsRes = await axios.get(`${API_BASE_URL}/reviews/patient/${patientId}`)
+        const allReviews = reviewsRes.data.reviews || []
+        setReviews(allReviews.map(r => {
+          return {
+            id: r.review_id,
+            doctorName: `Doctor #${r.doctor_id}`, // In future, join with doctors table
+            rating: r.rating,
+            date: new Date(r.created_at).toLocaleDateString(),
+            reviewText: r.comment
+          }
+        }))
+
+      } catch (err) {
+        console.error("Error loading dashboard data:", err)
+        setError(err.response?.data?.message || err.message || "Failed to load dashboard data.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDashboardData()
+  }, [])
+
+  if (loading) return <p>Loading dashboard...</p>
+  if (error) return <div className="error-message">{error}</div>
+
+  const handleSaveProfile = async () => {
+    try {
+      const loggedInUser = JSON.parse(localStorage.getItem('user'))
+      await axios.put(`${API_BASE_URL}/patients/${loggedInUser.user_id}`, {
+        first_name: profileForm.firstName,
+        last_name: profileForm.lastName,
+        phone_number: profileForm.phone,
+        date_of_birth: profileForm.dateOfBirth,
+        gender: profileForm.gender,
+        blood_group: profileForm.bloodGroup,
+        address: profileForm.address,
+        emergency_contact: profileForm.emergencyContact
+      })
+      setProfileData({ ...profileData, ...profileForm, name: `${profileForm.firstName} ${profileForm.lastName}` })
+      setIsEditingProfile(false)
+    } catch (err) {
+      alert("Failed to update profile")
+      console.error(err)
+    }
+  }
+
+  const handleProfileChange = (e) => {
+    setProfileForm({ ...profileForm, [e.target.name]: e.target.value })
+  }
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault()
+    if (!reviewForm.appointmentId) {
+      alert("Please select an appointment")
+      return
+    }
+    
+    try {
+      const loggedInUser = JSON.parse(localStorage.getItem('user'))
+      // Find doctor ID for the selected appointment (assuming we parse it or backend just uses it)
+      // Since our mock history maps doctorName to "Doctor #X", we need to extract the ID, but wait, myApts doesn't expose raw doctor_id.
+      // We should really fetch the raw appointment object or parse it.
+      // Let's just hardcode a doctor_id to the appointment's doctor_id.
+      const rawApts = (await axios.get(`${API_BASE_URL}/appointments`)).data.appointments;
+      const apt = rawApts.find(a => String(a.appointment_id) === String(reviewForm.appointmentId))
+
+      await axios.post(`${API_BASE_URL}/reviews`, {
+        appointment_id: reviewForm.appointmentId,
+        patient_id: loggedInUser.user_id,
+        doctor_id: apt.doctor_id,
+        rating: reviewForm.rating,
+        comment: reviewForm.comment
+      })
+      alert("Review submitted successfully!")
+      setReviewForm({ appointmentId: '', rating: 5, comment: '' })
+      window.location.reload()
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to submit review")
+    }
+  }
+
+  const handleMockPayment = async (e) => {
+    e.preventDefault()
+    if (!paymentAppointmentId) {
+      alert("Please select an appointment to pay for")
+      return
+    }
+
+    try {
+      await axios.post(`${API_BASE_URL}/payments`, {
+        appointment_id: paymentAppointmentId,
+        stripe_transaction_id: `mock_tx_${Date.now()}`,
+        total_amount: 150.00,
+        payment_type: 'FULL_FEE',
+        payment_status: 'COMPLETED'
+      })
+      alert("Payment successful!")
+      setPaymentAppointmentId('')
+      window.location.reload()
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to make payment")
+    }
   }
 
   const renderContent = () => {
@@ -108,40 +273,88 @@ const PatientDashboard = () => {
             <h2>Your Profile</h2>
             <div className="profile-card">
               <div className="profile-header">
-                <h3>{profileData.name}</h3>
-                <button type="button" className="primary-btn edit-profile-btn">Edit Profile</button>
+                <h3>{isEditingProfile ? 'Edit Profile' : profileData.name}</h3>
+                {!isEditingProfile ? (
+                  <button type="button" className="primary-btn edit-profile-btn" onClick={() => { setIsEditingProfile(true); setProfileForm({ ...profileData }); }}>Edit Profile</button>
+                ) : (
+                  <div>
+                    <button type="button" className="secondary-btn" style={{ marginRight: '10px' }} onClick={() => setIsEditingProfile(false)}>Cancel</button>
+                    <button type="button" className="primary-btn" onClick={handleSaveProfile}>Save Changes</button>
+                  </div>
+                )}
               </div>
 
-              <div className="profile-grid">
-                <div className="profile-item">
-                  <label>Email</label>
-                  <p>{profileData.email}</p>
+              {isEditingProfile ? (
+                <div className="profile-grid">
+                  <div className="profile-item">
+                    <label>First Name</label>
+                    <input type="text" name="firstName" value={profileForm.firstName || ''} onChange={handleProfileChange} />
+                  </div>
+                  <div className="profile-item">
+                    <label>Last Name</label>
+                    <input type="text" name="lastName" value={profileForm.lastName || ''} onChange={handleProfileChange} />
+                  </div>
+                  <div className="profile-item">
+                    <label>Phone</label>
+                    <input type="text" name="phone" value={profileForm.phone || ''} onChange={handleProfileChange} />
+                  </div>
+                  <div className="profile-item">
+                    <label>Date of Birth</label>
+                    <input type="date" name="dateOfBirth" value={profileForm.dateOfBirth || ''} onChange={handleProfileChange} />
+                  </div>
+                  <div className="profile-item">
+                    <label>Gender</label>
+                    <select name="gender" value={profileForm.gender || ''} onChange={handleProfileChange}>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div className="profile-item">
+                    <label>Blood Group</label>
+                    <input type="text" name="bloodGroup" value={profileForm.bloodGroup || ''} onChange={handleProfileChange} />
+                  </div>
+                  <div className="profile-item">
+                    <label>Address</label>
+                    <input type="text" name="address" value={profileForm.address || ''} onChange={handleProfileChange} />
+                  </div>
+                  <div className="profile-item">
+                    <label>Emergency Contact</label>
+                    <input type="text" name="emergencyContact" value={profileForm.emergencyContact || ''} onChange={handleProfileChange} />
+                  </div>
                 </div>
-                <div className="profile-item">
-                  <label>Phone</label>
-                  <p>{profileData.phone}</p>
+              ) : (
+                <div className="profile-grid">
+                  <div className="profile-item">
+                    <label>Email</label>
+                    <p>{profileData.email}</p>
+                  </div>
+                  <div className="profile-item">
+                    <label>Phone</label>
+                    <p>{profileData.phone}</p>
+                  </div>
+                  <div className="profile-item">
+                    <label>Date of Birth</label>
+                    <p>{profileData.dateOfBirth}</p>
+                  </div>
+                  <div className="profile-item">
+                    <label>Gender</label>
+                    <p>{profileData.gender}</p>
+                  </div>
+                  <div className="profile-item">
+                    <label>Blood Group</label>
+                    <p>{profileData.bloodGroup}</p>
+                  </div>
+                  <div className="profile-item">
+                    <label>Address</label>
+                    <p>{profileData.address}</p>
+                  </div>
+                  <div className="profile-item full-width">
+                    <label>Emergency Contact</label>
+                    <p>{profileData.emergencyContact}</p>
+                  </div>
                 </div>
-                <div className="profile-item">
-                  <label>Date of Birth</label>
-                  <p>{profileData.dateOfBirth}</p>
-                </div>
-                <div className="profile-item">
-                  <label>Gender</label>
-                  <p>{profileData.gender}</p>
-                </div>
-                <div className="profile-item">
-                  <label>Blood Group</label>
-                  <p>{profileData.bloodGroup}</p>
-                </div>
-                <div className="profile-item">
-                  <label>Address</label>
-                  <p>{profileData.address}</p>
-                </div>
-                <div className="profile-item full-width">
-                  <label>Emergency Contact</label>
-                  <p>{profileData.emergencyContact}</p>
-                </div>
-              </div>
+              )}
             </div>
           </section>
         )
@@ -166,6 +379,26 @@ const PatientDashboard = () => {
                   <p className="col-method">{payment.method}</p>
                 </div>
               ))}
+            </div>
+
+            <div className="add-review-section" style={{ marginTop: '30px' }}>
+              <h3>Make a Mock Payment</h3>
+              <form className="review-form" onSubmit={handleMockPayment}>
+                <div className="form-group">
+                  <label htmlFor="payment-select">Select Appointment</label>
+                  <select 
+                    id="payment-select" 
+                    value={paymentAppointmentId} 
+                    onChange={e => setPaymentAppointmentId(e.target.value)}
+                  >
+                    <option value="">Choose an appointment...</option>
+                    {[...upcomingAppointments, ...appointmentHistory].map((apt) => (
+                      <option key={apt.id} value={apt.id}>{apt.date} - {apt.doctorName}</option>
+                    ))}
+                  </select>
+                </div>
+                <button type="submit" className="primary-btn submit-review-btn">Pay $150.00 Now</button>
+              </form>
             </div>
           </section>
         )
@@ -200,13 +433,17 @@ const PatientDashboard = () => {
 
             <div className="add-review-section">
               <h3>Leave a Review</h3>
-              <form className="review-form">
+              <form className="review-form" onSubmit={handleReviewSubmit}>
                 <div className="form-group">
-                  <label htmlFor="doctor-select">Select Doctor</label>
-                  <select id="doctor-select">
-                    <option>Choose a doctor...</option>
-                    {appointmentHistory.map((apt) => (
-                      <option key={apt.id} value={apt.doctorName}>{apt.doctorName}</option>
+                  <label htmlFor="doctor-select">Select Appointment</label>
+                  <select 
+                    id="doctor-select" 
+                    value={reviewForm.appointmentId} 
+                    onChange={e => setReviewForm({...reviewForm, appointmentId: e.target.value})}
+                  >
+                    <option value="">Choose a completed appointment...</option>
+                    {appointmentHistory.filter(a => a.status === 'COMPLETED').map((apt) => (
+                      <option key={apt.id} value={apt.id}>{apt.date} - {apt.doctorName}</option>
                     ))}
                   </select>
                 </div>
@@ -215,8 +452,14 @@ const PatientDashboard = () => {
                   <label>Rating</label>
                   <div className="rating-input">
                     {[1, 2, 3, 4, 5].map((num) => (
-                      <button key={num} type="button" className="star-btn">
-                        ⭐
+                      <button 
+                        key={num} 
+                        type="button" 
+                        className={`star-btn ${num <= reviewForm.rating ? 'filled' : ''}`}
+                        onClick={() => setReviewForm({...reviewForm, rating: num})}
+                        style={{ fontSize: '24px', background: 'none', border: 'none', cursor: 'pointer', color: num <= reviewForm.rating ? '#FFD700' : '#ccc' }}
+                      >
+                        ★
                       </button>
                     ))}
                   </div>
@@ -224,7 +467,13 @@ const PatientDashboard = () => {
 
                 <div className="form-group">
                   <label htmlFor="review-text">Review</label>
-                  <textarea id="review-text" placeholder="Share your experience..." rows="4" />
+                  <textarea 
+                    id="review-text" 
+                    placeholder="Share your experience..." 
+                    rows="4" 
+                    value={reviewForm.comment}
+                    onChange={e => setReviewForm({...reviewForm, comment: e.target.value})}
+                  />
                 </div>
 
                 <button type="submit" className="primary-btn submit-review-btn">Submit Review</button>
@@ -251,6 +500,19 @@ const PatientDashboard = () => {
             ☰
           </button>
         </div>
+
+        {profileData && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#334155', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: '0.5rem' }}>
+              {profileData.profilePicture ? (
+                <img src={profileData.profilePicture} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <span style={{ fontSize: '2rem' }}>👤</span>
+              )}
+            </div>
+            {sidebarOpen && <p style={{ color: 'white', fontWeight: 600, margin: 0 }}>{profileData.name}</p>}
+          </div>
+        )}
 
         <nav className="sidebar-nav">
           <button
@@ -291,7 +553,7 @@ const PatientDashboard = () => {
         </nav>
 
         <div className="sidebar-footer">
-          <button type="button" className="secondary-btn logout-btn">Logout</button>
+          <button type="button" className="secondary-btn logout-btn" onClick={handleLogout}>Logout</button>
         </div>
       </aside>
 

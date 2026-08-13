@@ -1,5 +1,5 @@
 const bcrypt = require("bcrypt");
-const { User } = require("../models/user");
+const User = require("../models/user");
 
 // ======================================================
 // REGISTER USER
@@ -7,7 +7,7 @@ const { User } = require("../models/user");
 
 const registerUser = async (req, res) => {
     try {
-        const { email, password, role } = req.body;
+        const { email, password, role } = req.body; 
 
         // Check required fields
         if (!email || !password || !role) {

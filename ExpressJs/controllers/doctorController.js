@@ -1,4 +1,5 @@
-const { Doctor, User } = require("../models/Doctor");
+const Doctor = require("../models/Doctor");
+const User = require("../models/user");
 
 // ======================================================
 // CREATE DOCTOR
@@ -12,8 +13,14 @@ const createDoctor = async (req, res) => {
             last_name,
             bio,
             location,
+            specialization,
             consultation_fee
         } = req.body;
+
+        let profile_picture = null;
+        if (req.file) {
+            profile_picture = `/uploads/${req.file.filename}`;
+        }
 
         // Required fields
         if (
@@ -72,7 +79,9 @@ const createDoctor = async (req, res) => {
             last_name,
             bio,
             location,
-            consultation_fee
+            specialization,
+            consultation_fee,
+            profile_picture
         });
 
         res.status(201).json({
@@ -165,8 +174,14 @@ const updateDoctor = async (req, res) => {
             last_name,
             bio,
             location,
+            specialization,
             consultation_fee
         } = req.body;
+
+        // Update profile picture if provided
+        if (req.file) {
+            doctor.profile_picture = `/uploads/${req.file.filename}`;
+        }
 
         // Update only supplied fields
         if (first_name !== undefined) {
@@ -183,6 +198,10 @@ const updateDoctor = async (req, res) => {
 
         if (location !== undefined) {
             doctor.location = location;
+        }
+
+        if (specialization !== undefined) {
+            doctor.specialization = specialization;
         }
 
         if (consultation_fee !== undefined) {

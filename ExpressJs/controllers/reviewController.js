@@ -1,9 +1,7 @@
-const {
-    Review,
-    Appointment,
-    Patient,
-    Doctor
-} = require("../models/reviews");
+const Review= require("../models/reviews");
+const Appointment = require("../models/appointments");
+const Patient = require("../models/Patient");
+const Doctor = require("../models/Doctor");
 
 
 // ======================================================
@@ -177,6 +175,43 @@ const getDoctorReviews = async (req, res) => {
     }
 };
 
+// ======================================================
+// GET PATIENT REVIEWS
+// ======================================================
+const getPatientReviews = async (req, res) => {
+    try {
+        const { patient_id } = req.params;
+
+        const patient = await Patient.findByPk(patient_id);
+        if (!patient) {
+            return res.status(404).json({
+                message: "Patient not found"
+            });
+        }
+
+        const reviews = await Review.findAll({
+            where: {
+                patient_id
+            },
+            order: [
+                ["created_at", "DESC"]
+            ]
+        });
+
+        res.status(200).json({
+            message: "Patient reviews fetched successfully",
+            reviews
+        });
+
+    } catch (error) {
+        console.error("Get Patient Reviews Error:", error);
+        res.status(500).json({
+            message: "Error fetching patient reviews",
+            error: error.message
+        });
+    }
+};
+
 
 // ======================================================
 // GET REVIEW BY ID
@@ -300,6 +335,7 @@ const deleteReview = async (req, res) => {
 module.exports = {
     createReview,
     getDoctorReviews,
+    getPatientReviews,
     getReviewById,
     updateReview,
     deleteReview

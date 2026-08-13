@@ -4,6 +4,7 @@ const router = express.Router();
 const {
     createReview,
     getDoctorReviews,
+    getPatientReviews,
     getReviewById,
     updateReview,
     deleteReview
@@ -14,6 +15,9 @@ router.post("/", createReview);
 
 // Get reviews of a doctor
 router.get("/doctor/:doctor_id", getDoctorReviews);
+
+// Get reviews of a patient
+router.get("/patient/:patient_id", getPatientReviews);
 
 // Get review by ID
 router.get("/:id", getReviewById);

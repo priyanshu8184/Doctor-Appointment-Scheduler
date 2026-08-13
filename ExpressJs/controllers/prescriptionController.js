@@ -1,7 +1,5 @@
-const {
-    Prescription,
-    MedicalRecord
-} = require("../models/prescriptions");
+const Prescription = require("../models/prescriptions");
+const MedicalRecord = require("../models/medical_records");
 
 
 // ======================================================

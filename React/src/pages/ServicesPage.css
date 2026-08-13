@@ -57,6 +57,10 @@
   border-color: #cbd5e1;
 }
 
+.service-card.clickable {
+  cursor: pointer;
+}
+
 .service-icon {
   font-size: 3rem;
   margin-bottom: 1rem;

@@ -1,127 +1,71 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import './DoctorListingPage.css'
-
-const doctors = [
-  {
-    id: 1,
-    name: 'Dr. Amar Rajput',
-    specialization: 'Cardiology',
-    location: 'Motihari,Bihar',
-    availability: 'Today · 4:00 PM',
-    experience: '12 years',
-    rating: 4.9,
-    bio: 'Specializes in preventive heart care and advanced cardiac diagnostics.',
-  },
-  {
-    id: 2,
-    name: 'Dr. Nehal Singh',
-    specialization: 'Neurology',
-    location: 'Patna,Bihar',
-    availability: 'Tomorrow · 10:30 AM',
-    experience: '10 years',
-    rating: 4.8,
-    bio:'Focused on stroke recovery, migraine treatment, and neurological assessments.',
-  },
-  {
-    id: 3,
-    name: 'Dr. Jhatka',
-    specialization: 'Dermatology',
-    location: 'Phurphuri Nagar',
-    availability: 'Friday · 1:15 PM',
-    experience: '20 years',
-    rating: 4.7,
-    bio: 'Provides acne, allergy, and skin rejuvenation treatments with a patient-first approach.',
-  },
-  {
-    id: 4,
-    name: 'Dr. Ghasita Ram',
-    specialization: 'Pediatrics',
-    location: 'Indore,Madhya Pradesh',
-    availability: 'Saturday · 9:00 AM',
-    experience: '14 years',
-    rating: 4.9,
-    bio: 'Known for gentle, family-focused pediatric care and wellness counseling.',
-  },
-  {
-    id: 5,
-    name: 'Dr. MS Dhoni',
-    specialization: 'Orthopedics',
-    location: 'Ranchi,Jharkhand',
-    availability: 'Today · 6:45 PM',
-    experience: '9 years',
-    rating: 4.6,
-    bio: 'Treats joint pain, sports injuries, and post-surgery rehabilitation plans.',
-  },
-  {
-    id: 6,
-    name: 'Dr. Suyash Baoney',
-    specialization: 'General Medicine',
-    location: 'Dhar, Madhya Pradesh',
-    availability: 'Monday · 11:00 AM',
-    experience: '11 years',
-    rating: 4.8,
-    bio: 'Offers holistic primary care, chronic disease management, and preventive screenings.',
-  },
-  {
-    id: 7,
-    name: 'Dr. Priya Sharma',
-    specialization: 'Psychiatry',
-    location: 'Mumbai,Maharashtra',
-    availability: 'Tuesday · 2:30 PM',
-    experience: '15 years',
-    rating: 4.9,
-    bio: 'Provides comprehensive mental health services and therapeutic support.',
-  },
-  {
-    id: 8,
-    name: 'Dr. Sameer Ansari',
-    specialization: 'Ophthalmology',
-    location: 'Delhi,India',
-    availability: 'Wednesday · 3:15 PM',
-    experience: '18 years',
-    rating: 4.8,
-    bio: 'Specializes in cataract surgery, LASIK, and comprehensive eye care.',
-  },
-  {
-    id: 9,
-    name: 'Dr. Deepak Sharma',
-    specialization: 'ENT',
-    location: 'Jaipur,Rajasthan',
-    availability: 'Thursday · 10:00 AM',
-    experience: '16 years',
-    rating: 4.7,
-    bio: 'Expert in diagnosing and treating ear, nose, and throat conditions.',
-  },
-  {
-    id: 10,
-    name: 'Dr. Aisha Khan',
-    specialization: 'Gynecology',
-    location: 'Lucknow,Uttar Pradesh',
-    availability: 'Friday · 11:30 AM',
-    experience: '13 years',
-    rating: 4.8,
-    bio: 'Provides comprehensive women\'s health services and personalized care.',
-  }
-]
-
-const specializations = ['All', ...new Set(doctors.map((doctor) => doctor.specialization))]
-const locations = ['All', ...new Set(doctors.map((doctor) => doctor.location))]
-const availabilityOptions = ['All', 'Today', 'Tomorrow', 'Friday', 'Saturday', 'Monday']
+import axios from 'axios'
 
 const DoctorListingPage = ({ navigate }) => {
+  const [doctorsList, setDoctorsList] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
   const [searchTerm, setSearchTerm] = useState('')
+  const [selectedDoctorForBooking, setSelectedDoctorForBooking] = useState(null)
+  const [appointmentDate, setAppointmentDate] = useState('')
+  const [bookingStatus, setBookingStatus] = useState('')
   const [selectedSpecialization, setSelectedSpecialization] = useState('All')
   const [selectedLocation, setSelectedLocation] = useState('All')
   const [selectedAvailability, setSelectedAvailability] = useState('All')
   const [currentPage, setCurrentPage] = useState(1)
   const pageSize = 3
 
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'
+
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        setLoading(true)
+        const res = await axios.get(`${API_BASE_URL}/doctors`)
+        // Map backend DB properties to what the frontend expects
+        const mapped = (res.data.doctors || res.data || []).map(doc => ({
+          id: doc.doctor_id || doc.id,
+          name: doc.name || `Dr. ${doc.first_name} ${doc.last_name}`,
+          specialization: doc.specialization || 'General Medicine',
+          location: doc.location || 'Not Specified',
+          availability: doc.availability || 'Today · 4:00 PM',
+          experience: doc.experience || '5 years',
+          rating: doc.rating || 4.8,
+          bio: doc.bio || 'No biography details provided.',
+          profile_picture: doc.profile_picture ? `${API_BASE_URL.replace('/api', '')}${doc.profile_picture}` : null
+        }))
+        setDoctorsList(mapped)
+      } catch (err) {
+        console.error("Error loading doctors:", err)
+        setError("Failed to load doctors list.")
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchDoctors()
+  }, [])
+
+  // Dynamically calculate filter choices based on fetched doctors
+  const specializations = useMemo(() => {
+    return ['All', ...new Set(doctorsList.map((doctor) => doctor.specialization))]
+  }, [doctorsList])
+
+  const locations = useMemo(() => {
+    return ['All', ...new Set(doctorsList.map((doctor) => doctor.location))]
+  }, [doctorsList])
+
+  const availabilityOptions = useMemo(() => {
+    return ['All', ...new Set(doctorsList.map((doctor) => doctor.availability.split(' · ')[0]))]
+  }, [doctorsList])
+
   const filteredDoctors = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase()
 
-    return doctors.filter((doctor) => {
+    return doctorsList.filter((doctor) => {
       const matchesSearch = !normalizedSearch ||
         doctor.name.toLowerCase().includes(normalizedSearch) ||
         doctor.specialization.toLowerCase().includes(normalizedSearch) ||
@@ -145,6 +89,44 @@ const DoctorListingPage = ({ navigate }) => {
     setSelectedLocation('All')
     setSelectedAvailability('All')
     setCurrentPage(1)
+  }
+
+  const handleBookAppointment = async (e) => {
+    e.preventDefault()
+    setBookingStatus('Booking...')
+    try {
+      const userStr = localStorage.getItem('user')
+      if (!userStr) {
+        setBookingStatus('Please log in as a patient to book.')
+        return
+      }
+      const user = JSON.parse(userStr)
+      if (user.role !== 'PATIENT') {
+        setBookingStatus('Only patients can book appointments.')
+        return
+      }
+
+      const payload = {
+        patient_id: user.user_id,
+        doctor_id: selectedDoctorForBooking.id,
+        appointment_datetime: appointmentDate
+      }
+      
+      const res = await axios.post(`${API_BASE_URL}/appointments`, payload)
+      if (res.status === 201) {
+        setBookingStatus('Appointment booked successfully!')
+        setTimeout(() => {
+          setSelectedDoctorForBooking(null)
+          setBookingStatus('')
+          setAppointmentDate('')
+        }, 1500)
+      } else {
+        setBookingStatus('Failed to book appointment.')
+      }
+    } catch (err) {
+      console.error(err)
+      setBookingStatus(err.response?.data?.message || 'Failed to book appointment.')
+    }
   }
 
   return (
@@ -229,11 +211,28 @@ const DoctorListingPage = ({ navigate }) => {
         </section>
 
         <section className="doctor-cards" aria-label="Doctor cards">
-          {paginatedDoctors.length > 0 ? (
+          {loading ? (
+            <div className="empty-state">
+              <h2>Loading doctors...</h2>
+              <p>Please wait while we fetch the doctor directory.</p>
+            </div>
+          ) : error ? (
+            <div className="empty-state">
+              <h2>Error</h2>
+              <p>{error}</p>
+            </div>
+          ) : paginatedDoctors.length > 0 ? (
             paginatedDoctors.map((doctor) => (
               <article className="doctor-card" key={doctor.id}>
-                <div className="doctor-card-header">
-                  <div className="doctor-info">
+                <div className="doctor-card-header" style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                  <div style={{ width: '60px', height: '60px', borderRadius: '50%', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                    {doctor.profile_picture ? (
+                      <img src={doctor.profile_picture} alt={doctor.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <span style={{ fontSize: '1.5rem', color: '#94a3b8' }}>👨‍⚕️</span>
+                    )}
+                  </div>
+                  <div className="doctor-info" style={{ flex: 1 }}>
                     <h2 className="doctor-name">{doctor.name}</h2>
                     <span className="doctor-specialty-badge">{doctor.specialization}</span>
                   </div>
@@ -260,7 +259,7 @@ const DoctorListingPage = ({ navigate }) => {
                   </div>
                 </div>
 
-                <button type="button" className="primary-btn book-btn">Book Appointment</button>
+                <button type="button" className="primary-btn book-btn" onClick={() => setSelectedDoctorForBooking(doctor)}>Book Appointment</button>
               </article>
             ))
           ) : (
@@ -293,6 +292,34 @@ const DoctorListingPage = ({ navigate }) => {
           </button>
         </section>
       </main>
+
+      {selectedDoctorForBooking && (
+        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div className="modal-content" style={{ background: '#fff', padding: '2rem', borderRadius: '8px', maxWidth: '400px', width: '100%' }}>
+            <h2 style={{ marginTop: 0 }}>Book Appointment</h2>
+            <p style={{ color: '#475569', marginBottom: '1.5rem' }}>with {selectedDoctorForBooking.name}</p>
+            <form onSubmit={handleBookAppointment} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontWeight: 600 }}>
+                Date & Time
+                <input 
+                  type="datetime-local" 
+                  value={appointmentDate} 
+                  onChange={(e) => setAppointmentDate(e.target.value)} 
+                  required 
+                  style={{ width: '100%', padding: '0.78rem', borderRadius: '0.8rem', border: '1px solid #cbd5e1', font: 'inherit', boxSizing: 'border-box' }}
+                />
+              </label>
+              
+              {bookingStatus && <p style={{ margin: 0, color: bookingStatus.includes('success') ? '#10b981' : '#ef4444', fontWeight: 500 }}>{bookingStatus}</p>}
+              
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
+                <button type="button" className="secondary-btn" style={{ flex: 1, padding: '0.8rem' }} onClick={() => { setSelectedDoctorForBooking(null); setBookingStatus(''); setAppointmentDate(''); }}>Cancel</button>
+                <button type="submit" className="primary-btn" style={{ flex: 1, padding: '0.8rem' }}>Confirm</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <Footer onNavigate={navigate} />
     </div>

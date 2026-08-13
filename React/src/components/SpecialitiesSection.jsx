@@ -1,18 +1,31 @@
-import React from 'react'
-
-const specialties = [
-  { title: 'Cardiology', desc: 'Heart care with advanced diagnostics.' },
-  { title: 'Dermatology', desc: 'Skin and hair care tailored to you.' },
-  { title: 'Pediatrics', desc: 'Gentle and trusted care for children.' },
-  { title: 'Orthopedics', desc: 'Joint and bone health support.' },
-  { title: 'Neurology', desc: 'Specialized care for brain and nerves.' },
-  { title: 'Dental Care', desc: 'Preventive and cosmetic dental services.' },
-  {title:'Oncology',desc:'Specialised Care and Treatment for Cancer'},
-  {title:'General Surgery',desc:'Surgery by Laser and Modern Equipment'},
-  {title:'Nephrology',desc:'Kidney Care with Modern equipment'}
-]
+import React, { useState, useEffect } from 'react'
+import axios from 'axios'
 
 const SpecialitiesSection = () => {
+  const [specialties, setSpecialties] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'
+
+  useEffect(() => {
+    const fetchSpecialties = async () => {
+      try {
+        setLoading(true)
+        const res = await axios.get(`${API_BASE_URL}/specialties`)
+        const fetched = (res.data.specialties || res.data || []).map(spec => ({
+          title: spec.name,
+          desc: spec.description || 'No description provided.'
+        }))
+        setSpecialties(fetched)
+      } catch (err) {
+        console.error("Error fetching specialties:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchSpecialties()
+  }, [])
+
   return (
     <section className="section-block" id="specialties">
       <div className="section-heading">
@@ -21,12 +34,18 @@ const SpecialitiesSection = () => {
       </div>
 
       <div className="cards-grid">
-        {specialties.map((item) => (
-          <article className="info-card" key={item.title}>
-            <h3>{item.title}</h3>
-            <p>{item.desc}</p>
-          </article>
-        ))}
+        {loading ? (
+          <p>Loading specialties...</p>
+        ) : specialties.length > 0 ? (
+          specialties.map((item) => (
+            <article className="info-card" key={item.title}>
+              <h3>{item.title}</h3>
+              <p>{item.desc}</p>
+            </article>
+          ))
+        ) : (
+          <p>No specialties available at the moment.</p>
+        )}
       </div>
     </section>
   )

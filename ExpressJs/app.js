@@ -1,11 +1,26 @@
+require('dotenv').config();
 const express = require('express');
+const { connectDB } = require("./config/db");
+
 const app = express();
-const port = 3001;
+const port = process.env.port || 3001;
 const cors = require('cors');
+
+// Connect and sync database
+connectDB();
 
 //middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
+// enable CORS for all routes (must be before route registration)
+app.use(cors({
+    origin: '*', // Allow all origins
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow specific HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Allow specific headers
+}));
 
 //Routes
 const userRoutes = require("./routes/userRoutes");
@@ -39,11 +54,7 @@ app.use("/api/prescriptions", prescriptionRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/notifications", notificationRoutes);
 
-app.use(cors({
-    origin: '*', // Allow all origins
-    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow specific HTTP methods
-    allowedHeaders: ['Content-Type', 'Authorization'], // Allow specific headers
-}));
+
 
 // Home route
 app.get("/", (req, res) => {

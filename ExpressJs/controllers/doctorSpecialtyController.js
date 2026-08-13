@@ -1,4 +1,6 @@
-const { Doctor, Specialty, DoctorSpecialty } = require("../models/Doctor");
+const DoctorSpecialty  = require("../models/doctor_specialties");
+const Doctor = require("../models/Doctor");
+const Specialty = require("../models/specialties");
 
 // ======================================================
 // ADD SPECIALTY TO DOCTOR

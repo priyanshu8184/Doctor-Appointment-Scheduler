@@ -1,4 +1,5 @@
-const { DoctorAvailability, Doctor } = require("../models/Doctor");
+const DoctorAvailability = require("../models/doctor_availability");
+const Doctor = require("../models/Doctor");
 
 // ======================================================
 // CREATE AVAILABILITY

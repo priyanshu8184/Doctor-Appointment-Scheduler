@@ -1,4 +1,5 @@
-const { Notification, User } = require("../models/notifications");
+const Notification = require("../models/notifications");
+const User = require("../models/user");
 
 // Allowed notification types
 const ALLOWED_TYPES = [

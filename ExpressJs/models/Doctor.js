@@ -37,6 +37,16 @@ const Doctor = sequelize.define('Doctor', {
         allowNull: true
     },
 
+    specialization: {
+        type: DataTypes.STRING(255),
+        allowNull: true
+    },
+
+    profile_picture: {
+        type: DataTypes.STRING(255),
+        allowNull: true
+    },
+
     consultation_fee: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false

@@ -1,54 +1,114 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import './DoctorDashboard.css'
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
+import axios from 'axios'
 
 const DoctorDashboard = () => {
+  const handleLogout = () => {
+    localStorage.removeItem('user')
+    window.location.href = '/login'
+  }
+
   const [activeTab, setActiveTab] = useState('today')
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
-  // Sample data
-  const todayAppointments = [
-    { id: 1, patientName: 'Mr. Rahul Patel', time: '10:00 AM', type: 'Consultation', status: 'Confirmed' },
-    { id: 2, patientName: 'Ramu Kaka', time: '11:30 AM', type: 'Follow-up', status: 'Confirmed' },
-    { id: 3, patientName: 'Aman Khan', time: '2:00 PM', type: 'Check-up', status: 'Pending' },
-    { id: 4, patientName: 'Amit  raj', time:'2:50 PM',type:'Surgery',status:'Confirmed'},
-    { id: 5, patientName: 'Atharv Navlakhe', time:'3:50 PM',type:'Surgery',status:'Pending'},
-    { id: 6, patientName: 'Amit  raj', time:'4:50 PM',type:'Surgery',status:'Confirmed'},
-  ]
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  const upcomingAppointments = [
-    { id: 7, patientName: 'Asha Roy', time: 'Tomorrow · 9:00 AM', type: 'Consultation', status: 'Confirmed' },
-    { id: 8, patientName: 'Deepak Sharma', time: 'Thursday · 3:15 PM', type: 'Follow-up', status: 'Confirmed' },
-    { id: 9, patientName: 'Patlu', time: 'Friday · 10:45 AM', type: 'Check-up', status: 'Pending' },
-    { id: 10, patientName: 'kaalia', time: 'Saturday · 10:45 AM', type: 'Check-up', status: 'Pending' },
-    { id: 11, patientName: 'Dholu', time: 'Saturday · 1:00 PM', type: 'Check-up', status: 'Pending' },
-  ]
+  // 1. Define states to store backend data
+  const [todayAppointments, setTodayAppointments] = useState([])
+  const [upcomingAppointments, setUpcomingAppointments] = useState([])
+  const [availabilitySlots, setAvailabilitySlots] = useState([])
+  const [patients, setPatients] = useState([])
+  const [profileData, setProfileData] = useState(null)
 
-  const availabilitySlots = [
-    { day: 'Monday', slots: '9:00 AM - 5:00 PM' },
-    { day: 'Tuesday', slots: '9:00 AM - 5:00 PM' },
-    { day: 'Wednesday', slots: '10:00 AM - 4:00 PM' },
-    { day: 'Thursday', slots: '9:00 AM - 5:00 PM' },
-    { day: 'Friday', slots: '9:00 AM - 5:00 PM' },
-    { day: 'Saturdayday', slots: '9:00 AM - 2:00 PM' },
-  ]
+  // 2. Base API URL (pointing to your Express backend)
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'
 
-  const patients = [
-    { id: 1, name: 'Molu', visits: 3, lastVisit: '2 days ago' },
-    { id: 2, name: 'Golu', visits: 5, lastVisit: 'Today' },
-    { id: 3, name: 'Ravi kishan', visits: 1, lastVisit: '1 week ago' },
-    { id: 4, name: 'Manoj Tiwari', visits: 2, lastVisit: '3 days ago' },
-  ]
+  // 3. Fetch data from backend on component mount
+  useEffect(() => {
+    // Get logged-in doctor details from localStorage (saved during Login)
+    const loggedInUser = JSON.parse(localStorage.getItem('user'))
+    const doctorId = loggedInUser?.user_id // Ensure your user object contains their ID
 
-  const profileData = {
-    name: 'Dr. Priyanshu Kumar',
-    specialization: 'Cardiology',
-    experience: '12 years',
-    education: 'MBBS, MD (Cardiology)',
-    clinic: 'HealPoint Medical Center, Indore',
-    phone: '+91-9546910005',
-    email: 'dr.priyanshu@healpoint.com',
-    bio: 'Specializes in preventive heart care and advanced cardiac diagnostics with a focus on patient education.',
-  }
+    if (!doctorId) {
+      setError("User not authenticated. Please log in.")
+      setLoading(false)
+      return
+    }
+
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true)
+
+        // A. Fetch Doctor Profile details
+        const profileRes = await axios.get(`${API_BASE_URL}/doctors/${doctorId}`)
+        const dbDoctor = profileRes.data.doctor || {}
+        setProfileData({
+          name: `Dr. ${dbDoctor.first_name} ${dbDoctor.last_name}`,
+          specialization: 'General',
+          experience: 'N/A',
+          education: 'N/A',
+          clinic: dbDoctor.location || 'N/A',
+          phone: 'N/A',
+          email: loggedInUser.email,
+          bio: dbDoctor.bio || 'No bio provided.',
+          profilePicture: dbDoctor.profile_picture ? `${API_BASE_URL.replace('/api', '')}${dbDoctor.profile_picture}` : null
+        })
+
+        // B. Fetch Appointments for this doctor
+        const appointmentsRes = await axios.get(`${API_BASE_URL}/appointments`)
+        const allAppointments = appointmentsRes.data.appointments || []
+        
+        // Filter and map
+        const myApts = allAppointments
+          .filter(a => a.doctor_id === doctorId)
+          .map(apt => ({
+            id: apt.appointment_id,
+            patientName: `Patient #${apt.patient_id}`,
+            type: 'Consultation',
+            date: apt.appointment_datetime,
+            time: new Date(apt.appointment_datetime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+            status: apt.status
+          }))
+
+        const today = new Date().toDateString()
+        setTodayAppointments(myApts.filter(apt => new Date(apt.date).toDateString() === today))
+        setUpcomingAppointments(myApts.filter(apt => new Date(apt.date).toDateString() !== today))
+
+        // C. Fetch Availability Slots
+        const availabilityRes = await axios.get(`${API_BASE_URL}/doctor-availability/doctor/${doctorId}`)
+        const availabilityArray = availabilityRes.data.availability || []
+        setAvailabilitySlots(availabilityArray.map(slot => ({
+          day: slot.day_of_week,
+          slots: `${slot.start_time} - ${slot.end_time}`
+        })))
+
+        // D. Fetch Patients
+        const patientsRes = await axios.get(`${API_BASE_URL}/patients`)
+        const allPatients = patientsRes.data.patients || []
+        setPatients(allPatients.slice(0, 5).map(p => ({
+          id: p.patient_id,
+          name: `${p.first_name} ${p.last_name}`,
+          visits: 1,
+          lastVisit: 'Recent'
+        })))
+
+      } catch (err) {
+        console.error("Error loading dashboard data:", err)
+        setError(err.response?.data?.message || err.message || "Failed to load dashboard data.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDashboardData()
+  }, [])
+
+  if (loading) return <p>Loading dashboard...</p>
+  if (error) return <p className="error-message">{error}</p>
+  if (!profileData) return <p>No profile data found.</p>
 
   const renderContent = () => {
     switch (activeTab) {
@@ -196,6 +256,19 @@ const DoctorDashboard = () => {
           </button>
         </div>
 
+        {profileData && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#334155', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: '0.5rem' }}>
+              {profileData.profilePicture ? (
+                <img src={profileData.profilePicture} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <span style={{ fontSize: '2rem' }}>👨‍⚕️</span>
+              )}
+            </div>
+            {sidebarOpen && <p style={{ color: 'white', fontWeight: 600, margin: 0 }}>{profileData.name}</p>}
+          </div>
+        )}
+
         <nav className="sidebar-nav">
           <button
             type="button"
@@ -235,7 +308,7 @@ const DoctorDashboard = () => {
         </nav>
 
         <div className="sidebar-footer">
-          <button type="button" className="secondary-btn logout-btn">Logout</button>
+          <button type="button" className="secondary-btn logout-btn" onClick={handleLogout}>Logout</button>
         </div>
       </aside>
 

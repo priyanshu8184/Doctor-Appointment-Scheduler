@@ -1,66 +1,104 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import './ServicesPage.css'
 
 const ServicesPage = ({ navigate }) => {
-  const services = [
-    {
-      id: 1,
-      icon: '🔍',
-      title: 'Find Doctors',
-      description: 'Search and discover highly qualified doctors across various specializations in your area.',
-    },
-    {
-      id: 2,
-      icon: '📅',
-      title: 'Book Appointments',
-      description: 'Schedule appointments with your preferred doctors at times that work best for you.',
-    },
-    {
-      id: 3,
-      icon: '💬',
-      title: 'Online Consultation',
-      description: 'Connect with doctors remotely via video call for convenient medical consultations.',
-    },
-    {
-      id: 4,
-      icon: '📋',
-      title: 'Medical Records',
-      description: 'Securely store and manage your medical history, prescriptions, and test results in one place.',
-    },
-    {
-      id: 5,
-      icon: '💊',
-      title: 'Prescription Management',
-      description: 'Access your prescriptions digitally and get reminders for medication refills.',
-    },
-    {
-      id: 6,
-      icon: '⭐',
-      title: 'Doctor Reviews',
-      description: 'Read authentic reviews from patients and make informed decisions about your healthcare.',
-    },
-  ]
+  // Define states for services and features
+  const [services, setServices] = useState([])
+  const [features, setFeatures] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const features = [
-    {
-      title: 'Verified Professionals',
-      description: 'All doctors on our platform are verified healthcare professionals with valid credentials.',
-    },
-    {
-      title: 'Easy Scheduling',
-      description: 'Intuitive appointment booking with instant confirmation and reminders.',
-    },
-    {
-      title: 'Secure & Private',
-      description: 'Your health data is encrypted and protected with industry-standard security.',
-    },
-    {
-      title: '24/7 Support',
-      description: 'Our dedicated support team is available around the clock to assist you.',
-    },
-  ]
+  useEffect(() => {
+    // In a real application, you could fetch this marketing data from a backend CMS or configuration API.
+    // For now, we simulate a fetch from the local static configuration:
+    const loadServicesData = () => {
+      const servicesData = [
+        {
+          id: 1,
+          icon: '🔍',
+          title: 'Find Doctors',
+          description: 'Search and discover highly qualified doctors across various specializations in your area.',
+          path: '/doctors'
+        },
+        {
+          id: 2,
+          icon: '📅',
+          title: 'Book Appointments',
+          description: 'Schedule appointments with your preferred doctors at times that work best for you.',
+          path: '/doctors'
+        },
+        {
+          id: 3,
+          icon: '💬',
+          title: 'Online Consultation',
+          description: 'Connect with doctors remotely via video call for convenient medical consultations.',
+          path: '/patient-dashboard'
+        },
+        {
+          id: 4,
+          icon: '📋',
+          title: 'Medical Records',
+          description: 'Securely store and manage your medical history, prescriptions, and test results in one place.',
+          path: '/patient-dashboard'
+        },
+        {
+          id: 5,
+          icon: '💊',
+          title: 'Prescription Management',
+          description: 'Access your prescriptions digitally and get reminders for medication refills.',
+          path: '/patient-dashboard'
+        },
+        {
+          id: 6,
+          icon: '⭐',
+          title: 'Doctor Reviews',
+          description: 'Read authentic reviews from patients and make informed decisions about your healthcare.',
+          path: '/patient-dashboard'
+        },
+      ]
+
+      const featuresData = [
+        {
+          title: 'Verified Professionals',
+          description: 'All doctors on our platform are verified healthcare professionals with valid credentials.',
+        },
+        {
+          title: 'Easy Scheduling',
+          description: 'Intuitive appointment booking with instant confirmation and reminders.',
+        },
+        {
+          title: 'Secure & Private',
+          description: 'Your health data is encrypted and protected with industry-standard security.',
+        },
+        {
+          title: '24/7 Support',
+          description: 'Our dedicated support team is available around the clock to assist you.',
+        },
+      ]
+
+      setServices(servicesData)
+      setFeatures(featuresData)
+      setLoading(false)
+    }
+
+    loadServicesData()
+  }, [])
+
+  const handleServiceClick = (path) => {
+    if (path === '/patient-dashboard') {
+      const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
+      if (!user) {
+        navigate('/login')
+        return
+      }
+      if (user.role === 'DOCTOR') {
+        navigate('/doctor-dashboard')
+        return
+      }
+    }
+    navigate(path)
+  }
 
   return (
     <div className="services-page">
@@ -77,7 +115,13 @@ const ServicesPage = ({ navigate }) => {
 
         <section className="services-grid">
           {services.map((service) => (
-            <div key={service.id} className="service-card">
+            <div 
+              key={service.id} 
+              className="service-card clickable" 
+              onClick={() => handleServiceClick(service.path)}
+              role="button"
+              tabIndex={0}
+            >
               <div className="service-icon">{service.icon}</div>
               <h3 className="service-title">{service.title}</h3>
               <p className="service-description">{service.description}</p>

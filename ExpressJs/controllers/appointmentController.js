@@ -1,4 +1,6 @@
-const { Appointment, Patient, Doctor } = require("../models/appointments");
+const Appointment = require("../models/appointments");
+const Patient = require("../models/Patient");
+const Doctor = require("../models/Doctor");
 
 // Allowed appointment statuses
 const ALLOWED_STATUSES = [
