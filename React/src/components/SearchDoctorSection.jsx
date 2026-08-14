@@ -1,6 +1,22 @@
 import React from 'react'
 
-const SearchDoctorSection = () => {
+const SearchDoctorSection = ({ navigate }) => {
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const search = e.target[0].value;
+    const location = e.target[1].value;
+    const availability = e.target[2].value;
+
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (location) params.append('location', location);
+    if (availability) params.append('availability', availability);
+
+    if (navigate) {
+      navigate(`/doctors?${params.toString()}`);
+    }
+  };
+
   return (
     <section className="section-block" id="search-doctor">
       <div className="section-heading">
@@ -8,7 +24,7 @@ const SearchDoctorSection = () => {
         <h2>Find the right doctor as per your need.</h2>
       </div>
 
-      <form className="search-card">
+      <form className="search-card" onSubmit={handleSubmit}>
         <div className="search-field">
           <label>Doctor or specialty</label>
           <input type="text" placeholder="Cardiologist, dentist, pediatrics..." />

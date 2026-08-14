@@ -5,6 +5,10 @@ const Navbar = ({ onNavigate }) => {
   const [open, setOpen] = useState(false)
   const containerRef = useRef(null)
 
+  const userStr = localStorage.getItem('user')
+  const user = userStr ? JSON.parse(userStr) : null
+  const isDoctor = user?.role === 'DOCTOR'
+
   useEffect(() => {
     const onOutside = (e) => {
       if (open && containerRef.current && !containerRef.current.contains(e.target)) {
@@ -61,14 +65,18 @@ const Navbar = ({ onNavigate }) => {
         <a href="/signup" onClick={(e) => { e.preventDefault(); handleNavigate('/signup') }}>
           Register
         </a>
-        <a className="nav-cta mobile-cta" href="/signup" onClick={(e) => { e.preventDefault(); handleNavigate('/signup') }}>
-          Book Now
-        </a>
+        {!isDoctor && (
+          <a className="nav-cta mobile-cta" href="/signup" onClick={(e) => { e.preventDefault(); handleNavigate('/signup') }}>
+            Book Now
+          </a>
+        )}
       </nav>
 
-      <a className="nav-cta desktop-cta" href="/signup" onClick={(e) => { e.preventDefault(); handleNavigate('/signup') }}>
-        Book Now
-      </a>
+      {!isDoctor && (
+        <a className="nav-cta desktop-cta" href="/signup" onClick={(e) => { e.preventDefault(); handleNavigate('/signup') }}>
+          Book Now
+        </a>
+      )}
     </header>
   )
 }

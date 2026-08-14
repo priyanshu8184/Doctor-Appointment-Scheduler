@@ -1,6 +1,26 @@
-import React from 'react'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
 
-const HeroSection = () => {
+const HeroSection = ({ navigate }) => {
+  const [availableDoctor, setAvailableDoctor] = useState(null)
+
+  useEffect(() => {
+    const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'
+    
+    const fetchDoctors = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/doctors`)
+        const doctors = res.data.doctors || res.data || []
+        if (doctors.length > 0) {
+          setAvailableDoctor(doctors[0])
+        }
+      } catch (err) {
+        console.error("Error fetching available doctor:", err)
+      }
+    }
+    fetchDoctors()
+  }, [])
+
   return (
     <section className="hero-section" id="appointment">
       <div className="hero-copy">
@@ -32,19 +52,38 @@ const HeroSection = () => {
         </ul>
       </div>
 
-      <div className="hero-card" aria-label="Appointment preview">
-        <div className="card-top">
-          <span className="card-badge">Available Today</span>
-          <h3>Dr. Priyanshu Kumar</h3>
-          <p>General Physician • 2:30 PM</p>
-        </div>
+      {availableDoctor ? (
+        <div className="hero-card" aria-label="Appointment preview">
+          <div className="card-top">
+            <span className="card-badge">Available Today</span>
+            <h3>Dr. {availableDoctor.first_name} {availableDoctor.last_name}</h3>
+            <p>{availableDoctor.specialization || 'General Physician'} • 2:30 PM</p>
+          </div>
 
-        <div className="card-body">
-          <div className="mini-pill">Online consultation</div>
-          <div className="mini-pill">Same-day booking</div>
-          <div className="mini-pill">Insurance accepted</div>
+          <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
+              <div className="mini-pill">Online consultation</div>
+              <div className="mini-pill">Same-day booking</div>
+              <div className="mini-pill">Insurance accepted</div>
+            </div>
+            <button 
+              className="primary-btn" 
+              onClick={() => navigate('/doctors')} 
+              style={{ width: '100%', padding: '0.6rem', textAlign: 'center', fontSize: '1rem' }}
+            >
+              Book Appointment
+            </button>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="hero-card" aria-label="Appointment preview">
+          <div className="card-top">
+            <span className="card-badge">Available Today</span>
+            <h3>Finding Doctors...</h3>
+            <p>Please wait</p>
+          </div>
+        </div>
+      )}
     </section>
   )
 }

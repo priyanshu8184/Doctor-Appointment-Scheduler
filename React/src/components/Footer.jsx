@@ -18,7 +18,7 @@ const Footer = ({ onNavigate }) => {
           <img src="/heelpoint_logo.png" alt="HealPoint logo" className="footer-logo" />
           {/* <h3>HealPoint</h3> */}
         </div>
-        <p>Find trusted doctors and book appointments within Seconds.</p>
+        <p className="footer-description">Find trusted doctors and book appointments within Seconds.</p>
       </div>
 
       <div>

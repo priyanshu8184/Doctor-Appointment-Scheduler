@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import './AuthPage.css'
+import axios from 'axios' 
 
 const LoginPage = ({ navigate }) => {
   const [formData, setFormData] = useState({ email: '', password: '' })
@@ -55,7 +56,32 @@ const LoginPage = ({ navigate }) => {
     event.preventDefault()
 
     if (validateForm(formData)) {
-      setStatusMessage('Looks good. Your login details meet the required format.')
+      setStatusMessage('Logging in...')
+      axios.post('http://localhost:3001/api/users/login', formData)
+        .then(response => {
+          setStatusMessage('Login successful')
+          const user = response.data.user
+          localStorage.setItem('user', JSON.stringify(user))
+          
+          setTimeout(() => {
+            const role = user.role ? user.role.toUpperCase() : ''
+            if (role === 'ADMIN') {
+              navigate('/admin-dashboard')
+            } else if (role === 'DOCTOR') {
+              navigate('/doctor-dashboard')
+            } else {
+              navigate('/patient-dashboard')
+            }
+          }, 1000)
+        })
+        .catch(error => {
+          console.error('Login error:', error)
+          if (error.response && error.response.data && error.response.data.message) {
+            setStatusMessage(error.response.data.message)
+          } else {
+            setStatusMessage('Login failed. Please check your credentials.')
+          }
+        })
     }
   }
 

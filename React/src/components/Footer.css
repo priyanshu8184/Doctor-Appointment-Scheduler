@@ -33,6 +33,13 @@
   border-radius: 1rem;
 }
 
+.footer-description {
+  font-size: 0.875rem;
+  color: #94a3b8;
+  line-height: 1.5;
+  margin-top: 0;
+}
+
 @media (max-width: 900px) {
   .footer {
     grid-template-columns: 1fr;
