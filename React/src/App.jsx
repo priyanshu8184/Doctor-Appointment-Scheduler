@@ -9,6 +9,7 @@ import DoctorDashboard from './pages/DoctorDashboard'
 import PatientDashboard from './pages/PatientDashboard'
 import ServicesPage from './pages/ServicesPage'
 import AboutPage from './pages/AboutPage'
+import AdminDashboard from './pages/AdminDashboard'
 
 const App = () => {
   const [route, setRoute] = useState(window.location.pathname)
@@ -29,6 +30,7 @@ const App = () => {
     if (basePath === '/about') return <AboutPage navigate={navigate} />
     if (basePath === '/doctor-dashboard') return <DoctorDashboard navigate={navigate} />
     if (basePath === '/patient-dashboard') return <PatientDashboard navigate={navigate} />
+    if (basePath === '/admin-dashboard') return <AdminDashboard navigate={navigate} />
     return <Homepage navigate={navigate} />
   }
 

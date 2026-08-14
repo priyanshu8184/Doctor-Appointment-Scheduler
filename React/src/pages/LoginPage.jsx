@@ -64,8 +64,10 @@ const LoginPage = ({ navigate }) => {
           localStorage.setItem('user', JSON.stringify(user))
           
           setTimeout(() => {
-            // Role is saved in uppercase (DOCTOR, PATIENT) from database
-            if (user.role === 'DOCTOR') {
+            const role = user.role ? user.role.toUpperCase() : ''
+            if (role === 'ADMIN') {
+              navigate('/admin-dashboard')
+            } else if (role === 'DOCTOR') {
               navigate('/doctor-dashboard')
             } else {
               navigate('/patient-dashboard')
