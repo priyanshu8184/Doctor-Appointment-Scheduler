@@ -4,7 +4,7 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import axios from 'axios'
 
-const PatientDashboard = () => {
+const PatientDashboard = ({ navigate }) => {
   const handleLogout = () => {
     localStorage.removeItem('user')
     window.location.href = '/login'
@@ -27,6 +27,9 @@ const PatientDashboard = () => {
   
   const [reviewForm, setReviewForm] = useState({ appointmentId: '', rating: 5, comment: '' })
   const [paymentAppointmentId, setPaymentAppointmentId] = useState('')
+
+  const [rescheduleId, setRescheduleId] = useState(null)
+  const [rescheduleDate, setRescheduleDate] = useState("")
 
   // 2. Base API URL (pointing to your Express backend)
   const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'
@@ -218,6 +221,36 @@ const PatientDashboard = () => {
     }
   }
 
+  const handleCancelAppointment = async (id) => {
+    if (!window.confirm("Are you sure you want to cancel this appointment?")) return;
+    try {
+      await axios.patch(`${API_BASE_URL}/appointments/${id}/cancel`);
+      alert("Appointment cancelled successfully!");
+      window.location.reload();
+    } catch (err) {
+      alert("Failed to cancel appointment: " + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleReschedule = async (id) => {
+    if (!rescheduleDate) {
+      alert("Please select a new date and time.");
+      return;
+    }
+    try {
+      await axios.put(`${API_BASE_URL}/appointments/${id}`, {
+        appointment_datetime: rescheduleDate
+      });
+      await axios.patch(`${API_BASE_URL}/appointments/${id}/status`, {
+        status: 'SCHEDULED'
+      });
+      alert("Appointment rescheduled successfully!");
+      window.location.reload();
+    } catch (err) {
+      alert("Failed to reschedule appointment: " + (err.response?.data?.message || err.message));
+    }
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'upcoming':
@@ -246,8 +279,23 @@ const PatientDashboard = () => {
                     </div>
 
                     <div className="appointment-actions">
-                      <button type="button" className="secondary-btn">Reschedule</button>
-                      <button type="button" className="secondary-btn">Cancel</button>
+                      {rescheduleId === apt.id ? (
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <input 
+                            type="datetime-local" 
+                            value={rescheduleDate} 
+                            onChange={(e) => setRescheduleDate(e.target.value)} 
+                            style={{ padding: '0.4rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                          />
+                          <button type="button" className="primary-btn" onClick={() => handleReschedule(apt.id)} style={{ padding: '0.4rem 0.8rem', fontSize: '0.9rem' }}>Save</button>
+                          <button type="button" className="secondary-btn" onClick={() => setRescheduleId(null)} style={{ padding: '0.4rem 0.8rem', fontSize: '0.9rem' }}>Cancel</button>
+                        </div>
+                      ) : (
+                        <>
+                          <button type="button" className="secondary-btn" onClick={() => { setRescheduleId(apt.id); setRescheduleDate(''); }}>Reschedule</button>
+                          <button type="button" className="secondary-btn" onClick={() => handleCancelAppointment(apt.id)}>Cancel</button>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))
@@ -595,6 +643,15 @@ const PatientDashboard = () => {
             ☰
           </button>
           <h1 className="content-title">My Dashboard</h1>
+          <button 
+            type="button" 
+            onClick={() => navigate('/home')} 
+            style={{ marginLeft: 'auto', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            aria-label="Go to Home"
+            title="Go to Home"
+          >
+            🏠
+          </button>
         </div>
 
         {renderContent()}

@@ -9,13 +9,31 @@ const DoctorListingPage = ({ navigate }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const [searchTerm, setSearchTerm] = useState('')
+  const queryParams = new URLSearchParams(window.location.search)
+  const initialSearch = queryParams.get('search') || ''
+  const initialLocation = queryParams.get('location') || 'All'
+  const initialAvailability = queryParams.get('availability') || 'All'
+  const initialSpecialization = queryParams.get('specialization') || 'All'
+
+  const [searchTerm, setSearchTerm] = useState(initialSearch)
   const [selectedDoctorForBooking, setSelectedDoctorForBooking] = useState(null)
   const [appointmentDate, setAppointmentDate] = useState('')
   const [bookingStatus, setBookingStatus] = useState('')
-  const [selectedSpecialization, setSelectedSpecialization] = useState('All')
-  const [selectedLocation, setSelectedLocation] = useState('All')
-  const [selectedAvailability, setSelectedAvailability] = useState('All')
+  const [selectedSpecialization, setSelectedSpecialization] = useState(initialSpecialization)
+  const [selectedLocation, setSelectedLocation] = useState(initialLocation)
+  const [selectedAvailability, setSelectedAvailability] = useState(initialAvailability)
+  
+  const userStr = localStorage.getItem('user')
+  const user = userStr ? JSON.parse(userStr) : null
+  const isDoctor = user?.role === 'DOCTOR'
+  
+  const [activeFilters, setActiveFilters] = useState({
+    search: initialSearch,
+    specialization: initialSpecialization,
+    location: initialLocation,
+    availability: initialAvailability
+  })
+
   const [currentPage, setCurrentPage] = useState(1)
   const pageSize = 3
 
@@ -63,7 +81,7 @@ const DoctorListingPage = ({ navigate }) => {
   }, [doctorsList])
 
   const filteredDoctors = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase()
+    const normalizedSearch = activeFilters.search.trim().toLowerCase()
 
     return doctorsList.filter((doctor) => {
       const matchesSearch = !normalizedSearch ||
@@ -71,23 +89,39 @@ const DoctorListingPage = ({ navigate }) => {
         doctor.specialization.toLowerCase().includes(normalizedSearch) ||
         doctor.location.toLowerCase().includes(normalizedSearch)
 
-      const matchesSpecialization = selectedSpecialization === 'All' || doctor.specialization === selectedSpecialization
-      const matchesLocation = selectedLocation === 'All' || doctor.location === selectedLocation
-      const matchesAvailability = selectedAvailability === 'All' || doctor.availability.includes(selectedAvailability)
+      const matchesSpecialization = activeFilters.specialization === 'All' || doctor.specialization.toLowerCase() === activeFilters.specialization.toLowerCase()
+      const matchesLocation = activeFilters.location === 'All' || doctor.location.toLowerCase() === activeFilters.location.toLowerCase()
+      const matchesAvailability = activeFilters.availability === 'All' || doctor.availability.toLowerCase().includes(activeFilters.availability.toLowerCase())
 
       return matchesSearch && matchesSpecialization && matchesLocation && matchesAvailability
     })
-  }, [searchTerm, selectedSpecialization, selectedLocation, selectedAvailability])
+  }, [activeFilters, doctorsList])
 
   const totalPages = Math.max(1, Math.ceil(filteredDoctors.length / pageSize))
   const safePage = Math.min(currentPage, totalPages)
   const paginatedDoctors = filteredDoctors.slice((safePage - 1) * pageSize, safePage * pageSize)
+
+  const applyFilters = () => {
+    setActiveFilters({
+      search: searchTerm,
+      specialization: selectedSpecialization,
+      location: selectedLocation,
+      availability: selectedAvailability
+    })
+    setCurrentPage(1)
+  }
 
   const resetFilters = () => {
     setSearchTerm('')
     setSelectedSpecialization('All')
     setSelectedLocation('All')
     setSelectedAvailability('All')
+    setActiveFilters({
+      search: '',
+      specialization: 'All',
+      location: 'All',
+      availability: 'All'
+    })
     setCurrentPage(1)
   }
 
@@ -150,10 +184,7 @@ const DoctorListingPage = ({ navigate }) => {
               type="text"
               placeholder="Search by name or specialty"
               value={searchTerm}
-              onChange={(event) => {
-                setSearchTerm(event.target.value)
-                setCurrentPage(1)
-              }}
+              onChange={(event) => setSearchTerm(event.target.value)}
             />
           </div>
 
@@ -162,10 +193,7 @@ const DoctorListingPage = ({ navigate }) => {
             <select
               id="specialization"
               value={selectedSpecialization}
-              onChange={(event) => {
-                setSelectedSpecialization(event.target.value)
-                setCurrentPage(1)
-              }}
+              onChange={(event) => setSelectedSpecialization(event.target.value)}
             >
               {specializations.map((item) => (
                 <option key={item} value={item}>{item}</option>
@@ -178,10 +206,7 @@ const DoctorListingPage = ({ navigate }) => {
             <select
               id="location"
               value={selectedLocation}
-              onChange={(event) => {
-                setSelectedLocation(event.target.value)
-                setCurrentPage(1)
-              }}
+              onChange={(event) => setSelectedLocation(event.target.value)}
             >
               {locations.map((item) => (
                 <option key={item} value={item}>{item}</option>
@@ -194,10 +219,7 @@ const DoctorListingPage = ({ navigate }) => {
             <select
               id="availability"
               value={selectedAvailability}
-              onChange={(event) => {
-                setSelectedAvailability(event.target.value)
-                setCurrentPage(1)
-              }}
+              onChange={(event) => setSelectedAvailability(event.target.value)}
             >
               {availabilityOptions.map((item) => (
                 <option key={item} value={item}>{item}</option>
@@ -205,9 +227,14 @@ const DoctorListingPage = ({ navigate }) => {
             </select>
           </div>
 
-          <button type="button" className="secondary-btn reset-btn" onClick={resetFilters}>
-            Reset Filters
-          </button>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', paddingBottom: '2px' }}>
+            <button type="button" className="primary-btn search-btn" onClick={applyFilters} style={{ padding: '0.8rem 1.2rem', height: '100%' }}>
+              Find Doctor
+            </button>
+            <button type="button" className="secondary-btn reset-btn" onClick={resetFilters} style={{ padding: '0.8rem 1.2rem', height: '100%' }}>
+              Reset Filters
+            </button>
+          </div>
         </section>
 
         <section className="doctor-cards" aria-label="Doctor cards">
@@ -259,7 +286,9 @@ const DoctorListingPage = ({ navigate }) => {
                   </div>
                 </div>
 
-                <button type="button" className="primary-btn book-btn" onClick={() => setSelectedDoctorForBooking(doctor)}>Book Appointment</button>
+                {!isDoctor && (
+                  <button type="button" className="primary-btn book-btn" onClick={() => setSelectedDoctorForBooking(doctor)}>Book Appointment</button>
+                )}
               </article>
             ))
           ) : (

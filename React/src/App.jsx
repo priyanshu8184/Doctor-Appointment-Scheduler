@@ -17,13 +17,14 @@ const App = () => {
   }
 
   const currentPage = () => {
-    if (route === '/login') return <LoginPage navigate={navigate} />
-    if (route === '/signup') return <SignupPage navigate={navigate} />
-    if (route === '/doctors') return <DoctorListingPage navigate={navigate} />
-    if (route === '/services') return <ServicesPage navigate={navigate} />
-    if (route === '/about') return <AboutPage navigate={navigate} />
-    if (route === '/doctor-dashboard') return <DoctorDashboard />
-    if (route === '/patient-dashboard') return <PatientDashboard />
+    const basePath = route.split('?')[0]
+    if (basePath === '/login') return <LoginPage navigate={navigate} />
+    if (basePath === '/signup') return <SignupPage navigate={navigate} />
+    if (basePath === '/doctors') return <DoctorListingPage navigate={navigate} />
+    if (basePath === '/services') return <ServicesPage navigate={navigate} />
+    if (basePath === '/about') return <AboutPage navigate={navigate} />
+    if (basePath === '/doctor-dashboard') return <DoctorDashboard navigate={navigate} />
+    if (basePath === '/patient-dashboard') return <PatientDashboard navigate={navigate} />
     return <Homepage navigate={navigate} />
   }
 

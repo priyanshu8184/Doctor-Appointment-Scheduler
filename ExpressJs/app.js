@@ -18,7 +18,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 // enable CORS for all routes (must be before route registration)
 app.use(cors({
     origin: '*', // Allow all origins
-    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow specific HTTP methods
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], // Allow specific HTTP methods
     allowedHeaders: ['Content-Type', 'Authorization'], // Allow specific headers
 }));
 

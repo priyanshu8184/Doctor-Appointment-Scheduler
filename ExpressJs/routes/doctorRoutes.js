@@ -12,7 +12,7 @@ const {
 const upload = require("../middlewares/upload");
 
 // Create doctor
-router.post("/", upload.single("profile_picture"), createDoctor);
+router.post("/", upload.fields([{ name: "profile_picture", maxCount: 1 }, { name: "certificate", maxCount: 1 }]), createDoctor);
 
 // Get all doctors
 router.get("/", getAllDoctors);
@@ -21,7 +21,7 @@ router.get("/", getAllDoctors);
 router.get("/:id", getDoctorById);
 
 // Update doctor
-router.put("/:id", upload.single("profile_picture"), updateDoctor);
+router.put("/:id", upload.fields([{ name: "profile_picture", maxCount: 1 }, { name: "certificate", maxCount: 1 }]), updateDoctor);
 
 // Delete doctor
 router.delete("/:id", deleteDoctor);

@@ -4,7 +4,7 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import axios from 'axios'
 
-const DoctorDashboard = () => {
+const DoctorDashboard = ({ navigate }) => {
   const handleLogout = () => {
     localStorage.removeItem('user')
     window.location.href = '/login'
@@ -25,6 +25,15 @@ const DoctorDashboard = () => {
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [profileForm, setProfileForm] = useState({})
   const [profilePictureFile, setProfilePictureFile] = useState(null)
+  const [certificateFile, setCertificateFile] = useState(null)
+
+  // Availability form states
+  const [availFormType, setAvailFormType] = useState('SPECIFIC_DATE')
+  const [availFormDay, setAvailFormDay] = useState('MONDAY')
+  const [availFormDate, setAvailFormDate] = useState('')
+  const [availFormStatus, setAvailFormStatus] = useState('AVAILABLE')
+  const [availFormStart, setAvailFormStart] = useState('')
+  const [availFormEnd, setAvailFormEnd] = useState('')
 
   // 2. Base API URL (pointing to your Express backend)
   const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'
@@ -57,7 +66,8 @@ const DoctorDashboard = () => {
           phone: dbDoctor.phone_number || 'N/A',
           email: loggedInUser.email,
           bio: dbDoctor.bio || 'No bio provided.',
-          profilePicture: dbDoctor.profile_picture ? `${API_BASE_URL.replace('/api', '')}${dbDoctor.profile_picture}` : null
+          profilePicture: dbDoctor.profile_picture ? `${API_BASE_URL.replace('/api', '')}${dbDoctor.profile_picture}` : null,
+          certificate: dbDoctor.certificate ? `${API_BASE_URL.replace('/api', '')}${dbDoctor.certificate}` : null
         })
 
         // B. Fetch Appointments for this doctor
@@ -84,8 +94,10 @@ const DoctorDashboard = () => {
         const availabilityRes = await axios.get(`${API_BASE_URL}/doctor-availability/doctor/${doctorId}`)
         const availabilityArray = availabilityRes.data.availability || []
         setAvailabilitySlots(availabilityArray.map(slot => ({
-          day: slot.day_of_week,
-          slots: `${slot.start_time} - ${slot.end_time}`
+          id: slot.availability_id,
+          day: slot.specific_date ? `Date: ${slot.specific_date}` : `Every ${slot.day_of_week}`,
+          slots: slot.is_available ? `${slot.start_time} - ${slot.end_time}` : 'Unavailable (Blocked)',
+          is_available: slot.is_available
         })))
 
         // D. Fetch Patients
@@ -134,6 +146,7 @@ const DoctorDashboard = () => {
       const payload = new FormData()
       Object.keys(profileForm).forEach(key => payload.append(key, profileForm[key]))
       if (profilePictureFile) payload.append('profile_picture', profilePictureFile)
+      if (certificateFile) payload.append('certificate', certificateFile)
 
       await axios.put(`${API_BASE_URL}/doctors/${loggedInUser.user_id}`, payload, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -153,6 +166,44 @@ const DoctorDashboard = () => {
       setUpcomingAppointments(prev => prev.map(apt => apt.id === appointmentId ? { ...apt, status } : apt));
     } catch (err) {
       alert("Failed to update appointment: " + (err.response?.data?.message || err.message));
+    }
+  }
+
+  const handleAddAvailability = async (e) => {
+    e.preventDefault()
+    try {
+      const loggedInUser = JSON.parse(localStorage.getItem('user'))
+      const payload = {
+        doctor_id: loggedInUser.user_id,
+        is_available: availFormStatus === 'AVAILABLE'
+      }
+
+      if (availFormType === 'RECURRING') {
+        payload.day_of_week = availFormDay
+      } else {
+        payload.specific_date = availFormDate
+      }
+
+      if (payload.is_available) {
+        payload.start_time = availFormStart
+        payload.end_time = availFormEnd
+      }
+
+      await axios.post(`${API_BASE_URL}/doctor-availability`, payload)
+      alert("Availability added successfully!")
+      window.location.reload()
+    } catch (err) {
+      alert("Failed to add availability: " + (err.response?.data?.message || err.message))
+    }
+  }
+
+  const handleDeleteAvailability = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this availability rule?")) return;
+    try {
+      await axios.delete(`${API_BASE_URL}/doctor-availability/${id}`)
+      setAvailabilitySlots(prev => prev.filter(slot => slot.id !== id))
+    } catch (err) {
+      alert("Failed to delete availability: " + (err.response?.data?.message || err.message))
     }
   }
 
@@ -224,14 +275,78 @@ const DoctorDashboard = () => {
         return (
           <section className="dashboard-section">
             <h2>Your Availability</h2>
+            
+            <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '2rem' }}>
+              <h3 style={{ marginTop: 0, marginBottom: '1rem', fontSize: '1.1rem' }}>Add New Rule</h3>
+              <form onSubmit={handleAddAvailability} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontWeight: 600 }}>
+                  Rule Type
+                  <select value={availFormType} onChange={(e) => setAvailFormType(e.target.value)} style={{ padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
+                    <option value="SPECIFIC_DATE">Specific Date</option>
+                    <option value="RECURRING">Recurring Weekly</option>
+                  </select>
+                </label>
+
+                {availFormType === 'RECURRING' ? (
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontWeight: 600 }}>
+                    Day of Week
+                    <select value={availFormDay} onChange={(e) => setAvailFormDay(e.target.value)} style={{ padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
+                      <option value="MONDAY">Monday</option>
+                      <option value="TUESDAY">Tuesday</option>
+                      <option value="WEDNESDAY">Wednesday</option>
+                      <option value="THURSDAY">Thursday</option>
+                      <option value="FRIDAY">Friday</option>
+                      <option value="SATURDAY">Saturday</option>
+                      <option value="SUNDAY">Sunday</option>
+                    </select>
+                  </label>
+                ) : (
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontWeight: 600 }}>
+                    Select Date
+                    <input type="date" value={availFormDate} onChange={(e) => setAvailFormDate(e.target.value)} required style={{ padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
+                  </label>
+                )}
+
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontWeight: 600 }}>
+                  Status
+                  <select value={availFormStatus} onChange={(e) => setAvailFormStatus(e.target.value)} style={{ padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
+                    <option value="AVAILABLE">Available</option>
+                    <option value="UNAVAILABLE">Unavailable (Block)</option>
+                  </select>
+                </label>
+
+                {availFormStatus === 'AVAILABLE' ? (
+                  <div style={{ display: 'flex', gap: '1rem', gridColumn: '1 / -1' }}>
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontWeight: 600, flex: 1 }}>
+                      Start Time
+                      <input type="time" value={availFormStart} onChange={(e) => setAvailFormStart(e.target.value)} required style={{ padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
+                    </label>
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontWeight: 600, flex: 1 }}>
+                      End Time
+                      <input type="time" value={availFormEnd} onChange={(e) => setAvailFormEnd(e.target.value)} required style={{ padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
+                    </label>
+                  </div>
+                ) : null}
+
+                <div style={{ gridColumn: '1 / -1', marginTop: '0.5rem' }}>
+                  <button type="submit" className="primary-btn">Add Availability Rule</button>
+                </div>
+              </form>
+            </div>
+
             <div className="availability-grid">
               {availabilitySlots.map((slot, idx) => (
-                <div key={idx} className="availability-card">
+                <div key={idx} className="availability-card" style={{ display: 'flex', flexDirection: 'column' }}>
                   <p className="availability-day">{slot.day}</p>
-                  <p className="availability-time">{slot.slots}</p>
-                  <button type="button" className="secondary-btn edit-slot-btn">Edit</button>
+                  <p className="availability-time" style={{ color: slot.is_available ? '#334155' : '#ef4444', fontWeight: slot.is_available ? 500 : 700 }}>
+                    {slot.slots}
+                  </p>
+                  <button type="button" onClick={() => handleDeleteAvailability(slot.id)} className="secondary-btn edit-slot-btn" style={{ marginTop: 'auto', border: '1px solid #ef4444', color: '#ef4444', background: '#fef2f2' }}>Delete</button>
                 </div>
               ))}
+              {availabilitySlots.length === 0 && (
+                <p>No availability rules set.</p>
+              )}
             </div>
           </section>
         )
@@ -264,6 +379,10 @@ const DoctorDashboard = () => {
                 <label>
                   Profile Picture
                   <input type="file" accept="image/*" onChange={(e) => setProfilePictureFile(e.target.files[0])} />
+                </label>
+                <label>
+                  MBBS Certificate
+                  <input type="file" accept="image/*,.pdf" onChange={(e) => setCertificateFile(e.target.files[0])} />
                 </label>
                 <label>
                   Experience
@@ -327,6 +446,16 @@ const DoctorDashboard = () => {
                 <div className="profile-item">
                   <label>Bio</label>
                   <p>{profileData.bio}</p>
+                </div>
+                <div className="profile-item full-width" style={{ gridColumn: '1 / -1' }}>
+                  <label>MBBS Certificate</label>
+                  {profileData.certificate ? (
+                    <a href={profileData.certificate} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'underline' }}>
+                      View Uploaded Certificate
+                    </a>
+                  ) : (
+                    <p style={{ color: '#94a3b8' }}>No certificate uploaded</p>
+                  )}
                 </div>
               </div>
 
@@ -421,6 +550,15 @@ const DoctorDashboard = () => {
             ☰
           </button>
           <h1 className="content-title">Doctor Dashboard</h1>
+          <button 
+            type="button" 
+            onClick={() => navigate('/home')} 
+            style={{ marginLeft: 'auto', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            aria-label="Go to Home"
+            title="Go to Home"
+          >
+            🏠
+          </button>
         </div>
 
         {renderContent()}

@@ -28,22 +28,32 @@ const DoctorAvailability = sequelize.define('DoctorAvailability', {
             'SATURDAY',
             'SUNDAY'
         ),
-        allowNull: false
+        allowNull: true
     },
 
     start_time: {
         type: DataTypes.TIME,
-        allowNull: false
+        allowNull: true
     },
 
     end_time: {
         type: DataTypes.TIME,
-        allowNull: false
+        allowNull: true
     },
 
     slot_duration_minutes: {
         type: DataTypes.INTEGER,
         defaultValue: 30
+    },
+
+    specific_date: {
+        type: DataTypes.DATEONLY,
+        allowNull: true
+    },
+
+    is_available: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
     }
 }, {
     tableName: 'doctor_availability',

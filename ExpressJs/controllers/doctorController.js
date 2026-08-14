@@ -21,8 +21,14 @@ const createDoctor = async (req, res) => {
         } = req.body;
 
         let profile_picture = null;
-        if (req.file) {
-            profile_picture = `/uploads/${req.file.filename}`;
+        let certificate = null;
+
+        if (req.files && req.files['profile_picture']) {
+            profile_picture = `/uploads/${req.files['profile_picture'][0].filename}`;
+        }
+        
+        if (req.files && req.files['certificate']) {
+            certificate = `/uploads/${req.files['certificate'][0].filename}`;
         }
 
         // Required fields
@@ -31,11 +37,12 @@ const createDoctor = async (req, res) => {
             !user_id ||
             !first_name ||
             !last_name ||
-            consultation_fee === undefined
+            consultation_fee === undefined ||
+            !certificate
         ) {
             return res.status(400).json({
                 message:
-                    "doctor_id, user_id, first_name, last_name and consultation_fee are required"
+                    "doctor_id, user_id, first_name, last_name, consultation_fee, and certificate are required"
             });
         }
 
@@ -87,7 +94,8 @@ const createDoctor = async (req, res) => {
             phone_number,
             experience,
             consultation_fee,
-            profile_picture
+            profile_picture,
+            certificate
         });
 
         res.status(201).json({
@@ -187,9 +195,13 @@ const updateDoctor = async (req, res) => {
             consultation_fee
         } = req.body;
 
-        // Update profile picture if provided
-        if (req.file) {
-            doctor.profile_picture = `/uploads/${req.file.filename}`;
+        // Update files if provided
+        if (req.files && req.files['profile_picture']) {
+            doctor.profile_picture = `/uploads/${req.files['profile_picture'][0].filename}`;
+        }
+        
+        if (req.files && req.files['certificate']) {
+            doctor.certificate = `/uploads/${req.files['certificate'][0].filename}`;
         }
 
         // Update only supplied fields

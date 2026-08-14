@@ -27,6 +27,7 @@ const SignupPage = ({ navigate }) => {
   })
   const [profilePicture, setProfilePicture] = useState(null)
   const [previewImage, setPreviewImage] = useState(null)
+  const [certificateFile, setCertificateFile] = useState(null)
   const [errors, setErrors] = useState({})
   const [statusMessage, setStatusMessage] = useState('')
 
@@ -108,6 +109,11 @@ const SignupPage = ({ navigate }) => {
     event.preventDefault()
 
     if (validateForm(formData)) {
+      if (role === 'DOCTOR' && !certificateFile) {
+        setStatusMessage('MBBS Certificate is required for Doctor registration.')
+        return
+      }
+
       setStatusMessage('Creating account...')
       
       const payload = {
@@ -160,6 +166,9 @@ const SignupPage = ({ navigate }) => {
 
               if (profilePicture) {
                 doctorPayload.append('profile_picture', profilePicture);
+              }
+              if (certificateFile) {
+                doctorPayload.append('certificate', certificateFile);
               }
 
               return axios.post(`${BACKEND_BASE}/doctors`, doctorPayload, { headers: { 'Content-Type': 'multipart/form-data' } })
@@ -461,6 +470,25 @@ const SignupPage = ({ navigate }) => {
                     }}
                   />
                 </label>
+                
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px' }}>
+                    MBBS Certificate (Required) *
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={(e) => setCertificateFile(e.target.files[0])}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: '1px solid #d1d5db',
+                      backgroundColor: '#fff'
+                    }}
+                  />
+                  {!certificateFile && <p className="field-error" style={{marginTop: '4px'}}>Certificate is mandatory to proceed as a doctor.</p>}
+                </div>
               </>
             )}
 

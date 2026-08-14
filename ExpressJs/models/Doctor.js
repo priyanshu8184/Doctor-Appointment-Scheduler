@@ -47,6 +47,11 @@ const Doctor = sequelize.define('Doctor', {
         allowNull: true
     },
 
+    certificate: {
+        type: DataTypes.STRING(255),
+        allowNull: true
+    },
+
     education: {
         type: DataTypes.STRING(255),
         allowNull: true

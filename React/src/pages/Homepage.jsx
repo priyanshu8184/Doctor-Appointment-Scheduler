@@ -1,4 +1,3 @@
-import React from 'react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import HeroSection from '../components/HeroSection'
@@ -16,8 +15,8 @@ const Homepage = ({ navigate }) => {
       <Navbar onNavigate={navigate} />
 
       <main>
-        <HeroSection />
-        <SearchDoctorSection />
+        <HeroSection navigate={navigate} />
+        <SearchDoctorSection navigate={navigate} />
         <SpecialitiesSection />
         <TopDoctorsSection />
         <WhyChooseUsSection />

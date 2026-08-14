@@ -11,20 +11,21 @@ const createAvailability = async (req, res) => {
             day_of_week,
             start_time,
             end_time,
-            slot_duration_minutes
+            slot_duration_minutes,
+            specific_date,
+            is_available = true
         } = req.body;
 
-        // Required fields
-        if (
-            !doctor_id ||
-            !day_of_week ||
-            !start_time ||
-            !end_time
-        ) {
-            return res.status(400).json({
-                message:
-                    "doctor_id, day_of_week, start_time and end_time are required"
-            });
+        if (!doctor_id) {
+            return res.status(400).json({ message: "doctor_id is required" });
+        }
+        
+        if (!day_of_week && !specific_date) {
+            return res.status(400).json({ message: "Either day_of_week or specific_date is required" });
+        }
+
+        if (is_available && (!start_time || !end_time)) {
+            return res.status(400).json({ message: "start_time and end_time are required when available" });
         }
 
         // Check doctor exists
@@ -37,7 +38,7 @@ const createAvailability = async (req, res) => {
         }
 
         // Validate time
-        if (start_time >= end_time) {
+        if (is_available && start_time >= end_time) {
             return res.status(400).json({
                 message: "start_time must be before end_time"
             });
@@ -46,9 +47,11 @@ const createAvailability = async (req, res) => {
         // Create availability
         const availability = await DoctorAvailability.create({
             doctor_id,
-            day_of_week,
-            start_time,
-            end_time,
+            day_of_week: day_of_week || null,
+            specific_date: specific_date || null,
+            is_available,
+            start_time: is_available ? start_time : null,
+            end_time: is_available ? end_time : null,
             slot_duration_minutes:
                 slot_duration_minutes !== undefined
                     ? slot_duration_minutes
@@ -92,6 +95,7 @@ const getDoctorAvailability = async (req, res) => {
                 doctor_id
             },
             order: [
+                ["specific_date", "ASC"],
                 ["day_of_week", "ASC"],
                 ["start_time", "ASC"]
             ]
