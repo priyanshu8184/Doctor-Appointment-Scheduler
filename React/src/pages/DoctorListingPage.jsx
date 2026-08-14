@@ -18,6 +18,7 @@ const DoctorListingPage = ({ navigate }) => {
   const [searchTerm, setSearchTerm] = useState(initialSearch)
   const [selectedDoctorForBooking, setSelectedDoctorForBooking] = useState(null)
   const [appointmentDate, setAppointmentDate] = useState('')
+  const [appointmentType, setAppointmentType] = useState('VIDEO')
   const [bookingStatus, setBookingStatus] = useState('')
   const [selectedSpecialization, setSelectedSpecialization] = useState(initialSpecialization)
   const [selectedLocation, setSelectedLocation] = useState(initialLocation)
@@ -143,7 +144,8 @@ const DoctorListingPage = ({ navigate }) => {
       const payload = {
         patient_id: user.user_id,
         doctor_id: selectedDoctorForBooking.id,
-        appointment_datetime: appointmentDate
+        appointment_datetime: appointmentDate,
+        appointment_type: appointmentType
       }
       
       const res = await axios.post(`${API_BASE_URL}/appointments`, payload)
@@ -337,6 +339,19 @@ const DoctorListingPage = ({ navigate }) => {
                   required 
                   style={{ width: '100%', padding: '0.78rem', borderRadius: '0.8rem', border: '1px solid #cbd5e1', font: 'inherit', boxSizing: 'border-box' }}
                 />
+              </label>
+
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontWeight: 600 }}>
+                Appointment Type
+                <select 
+                  value={appointmentType}
+                  onChange={(e) => setAppointmentType(e.target.value)}
+                  style={{ width: '100%', padding: '0.78rem', borderRadius: '0.8rem', border: '1px solid #cbd5e1', font: 'inherit', boxSizing: 'border-box', backgroundColor: '#fff' }}
+                >
+                  <option value="MESSAGING">Telemedicine via Live Messaging</option>
+                  <option value="AUDIO">Telemedicine via Audio Call</option>
+                  <option value="VIDEO">Telemedicine via Video Call</option>
+                </select>
               </label>
               
               {bookingStatus && <p style={{ margin: 0, color: bookingStatus.includes('success') ? '#10b981' : '#ef4444', fontWeight: 500 }}>{bookingStatus}</p>}

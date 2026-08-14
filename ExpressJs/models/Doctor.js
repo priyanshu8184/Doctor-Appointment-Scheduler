@@ -70,6 +70,16 @@ const Doctor = sequelize.define('Doctor', {
     consultation_fee: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false
+    },
+    
+    medical_license_number: {
+        type: DataTypes.STRING(100),
+        allowNull: false
+    },
+    
+    status: {
+        type: DataTypes.ENUM('PENDING', 'APPROVED', 'REJECTED'),
+        defaultValue: 'PENDING'
     }
 }, {
     tableName: 'doctors',

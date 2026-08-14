@@ -22,6 +22,7 @@ const createAppointment = async (req, res) => {
             appointment_datetime,
             status,
             telemedicine_url,
+            appointment_type,
             calendar_sync_id
         } = req.body;
 
@@ -73,6 +74,7 @@ const createAppointment = async (req, res) => {
             appointment_datetime,
             status: status || "SCHEDULED",
             telemedicine_url,
+            appointment_type: appointment_type || "VIDEO",
             calendar_sync_id
         });
 

@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import './PatientDashboard.css'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import axios from 'axios'
+import { io } from 'socket.io-client'
+import Peer from 'peerjs'
 
 const PatientDashboard = ({ navigate }) => {
   const handleLogout = () => {
@@ -30,6 +32,7 @@ const PatientDashboard = ({ navigate }) => {
 
   const [rescheduleId, setRescheduleId] = useState(null)
   const [rescheduleDate, setRescheduleDate] = useState("")
+  const [joinedConsultation, setJoinedConsultation] = useState(null)
 
   // 2. Base API URL (pointing to your Express backend)
   const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'
@@ -79,6 +82,7 @@ const PatientDashboard = ({ navigate }) => {
             date: apt.appointment_datetime,
             time: new Date(apt.appointment_datetime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
             status: apt.status,
+            type: apt.appointment_type,
             location: 'HealPoint Clinic'
           }))
 
@@ -264,7 +268,7 @@ const PatientDashboard = ({ navigate }) => {
                     <div className="appointment-top">
                       <div>
                         <p className="appointment-doctor">{apt.doctorName}</p>
-                        <p className="appointment-specialty">{apt.specialization}</p>
+                        <p className="appointment-specialty">{apt.specialization} • {apt.type}</p>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                         <span className={`appointment-status ${apt.status.toLowerCase()}`}>{apt.status}</span>
@@ -279,6 +283,16 @@ const PatientDashboard = ({ navigate }) => {
                     </div>
 
                     <div className="appointment-actions">
+                      {apt.status === 'ACCEPTED' && (
+                        <button 
+                          type="button" 
+                          className="primary-btn" 
+                          onClick={() => setJoinedConsultation(apt)}
+                          style={{ padding: '0.4rem 0.8rem', fontSize: '0.9rem', marginRight: '8px', background: '#0f766e' }}
+                        >
+                          Join Consultation
+                        </button>
+                      )}
                       {rescheduleId === apt.id ? (
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                           <input 
@@ -553,6 +567,14 @@ const PatientDashboard = ({ navigate }) => {
     }
   }
 
+  if (joinedConsultation) {
+    return (
+      <div className="patient-dashboard" style={{ display: 'block', padding: '20px' }}>
+        <ConsultationArea appointment={joinedConsultation} role="PATIENT" onBack={() => setJoinedConsultation(null)} />
+      </div>
+    )
+  }
+
   return (
     <div className="patient-dashboard">
       <aside className={`dashboard-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
@@ -661,3 +683,258 @@ const PatientDashboard = ({ navigate }) => {
 }
 
 export default PatientDashboard
+
+const ConsultationArea = ({ appointment, role, onBack }) => {
+  const [messages, setMessages] = useState([])
+  const [inputText, setInputText] = useState('')
+  const [callStatus, setCallStatus] = useState('Disconnected')
+  const [peerInstance, setPeerInstance] = useState(null)
+  const [activeCall, setActiveCall] = useState(null)
+  
+  const localVideoRef = useRef(null)
+  const remoteVideoRef = useRef(null)
+  const localAudioRef = useRef(null)
+  const remoteAudioRef = useRef(null)
+  const socketRef = useRef(null)
+  const localStreamRef = useRef(null)
+
+  const user = JSON.parse(localStorage.getItem('user'))
+
+  useEffect(() => {
+    // 1. Fetch Message History
+    axios.get(`http://localhost:3001/api/messages/${appointment.id}`)
+      .then(res => setMessages(res.data.messages || []))
+      .catch(err => console.error("Error fetching message history:", err))
+
+    // 2. Initialize Socket.io
+    const socket = io('http://localhost:3001')
+    socketRef.current = socket
+
+    socket.emit('join_room', { appointmentId: appointment.id })
+
+    socket.on('receive_message', (data) => {
+      setMessages(prev => [...prev, data])
+    })
+
+    // 3. Initialize PeerJS (WebRTC) for Audio/Video
+    if (appointment.type === 'AUDIO' || appointment.type === 'VIDEO') {
+      const myPeerId = `appointment_${appointment.id}_${role.toLowerCase()}`
+      const peer = new Peer(myPeerId)
+      setPeerInstance(peer)
+
+      peer.on('open', (id) => {
+        console.log('PeerJS open with ID:', id)
+        setCallStatus('Ready to connect')
+      })
+
+      peer.on('error', (err) => {
+        console.error('PeerJS error:', err)
+        setCallStatus(`Error: ${err.type}`)
+      })
+
+      peer.on('call', async (incomingCall) => {
+        console.log('Answering incoming call from:', incomingCall.peer)
+        try {
+          const stream = await getLocalStream()
+          incomingCall.answer(stream)
+          setActiveCall(incomingCall)
+          setCallStatus('Connected')
+
+          incomingCall.on('stream', (remoteStream) => {
+            attachRemoteStream(remoteStream)
+          })
+
+          incomingCall.on('close', () => {
+            handleCallEnded()
+          })
+        } catch (err) {
+          console.error("Failed to answer call:", err)
+        }
+      })
+    }
+
+    return () => {
+      if (socketRef.current) socketRef.current.disconnect()
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(track => track.stop())
+      }
+    }
+  }, [appointment.id])
+
+  const getLocalStream = async () => {
+    if (localStreamRef.current) return localStreamRef.current
+    
+    const constraints = {
+      video: appointment.type === 'VIDEO',
+      audio: true
+    }
+    const stream = await navigator.mediaDevices.getUserMedia(constraints)
+    localStreamRef.current = stream
+
+    if (appointment.type === 'VIDEO' && localVideoRef.current) {
+      localVideoRef.current.srcObject = stream
+    }
+    return stream
+  }
+
+  const attachRemoteStream = (remoteStream) => {
+    if (appointment.type === 'VIDEO' && remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = remoteStream
+    } else if (appointment.type === 'AUDIO' && remoteAudioRef.current) {
+      remoteAudioRef.current.srcObject = remoteStream
+    }
+  }
+
+  const handleStartCall = async () => {
+    const targetPeerId = `appointment_${appointment.id}_${role === 'DOCTOR' ? 'patient' : 'doctor'}`
+    setCallStatus('Calling...')
+    try {
+      const stream = await getLocalStream()
+      const call = peerInstance.call(targetPeerId, stream)
+      setActiveCall(call)
+
+      call.on('stream', (remoteStream) => {
+        attachRemoteStream(remoteStream)
+        setCallStatus('Connected')
+      })
+
+      call.on('close', () => {
+        handleCallEnded()
+      })
+      
+      call.on('error', (err) => {
+        console.error('Call error:', err)
+        setCallStatus('Failed to connect')
+      })
+    } catch (err) {
+      console.error("Failed to make call:", err)
+      setCallStatus('Failed to get media devices')
+    }
+  }
+
+  const handleEndCall = () => {
+    if (activeCall) activeCall.close()
+    handleCallEnded()
+  }
+
+  const handleCallEnded = () => {
+    setActiveCall(null)
+    setCallStatus('Call ended')
+    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null
+    if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null
+  }
+
+  const handleSendMessage = (e) => {
+    e.preventDefault()
+    if (!inputText.trim()) return
+
+    socketRef.current.emit('send_message', {
+      appointmentId: appointment.id,
+      senderId: user.user_id,
+      senderRole: role,
+      messageText: inputText,
+      senderEmail: user.email
+    })
+    setInputText('')
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '80vh', backgroundColor: '#f8fafc', borderRadius: '12px', overflow: 'hidden', border: '1px solid #cbd5e1' }}>
+      {/* Header */}
+      <div style={{ padding: '16px', background: '#0f766e', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <button onClick={onBack} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', marginRight: '10px', fontSize: '1.1rem' }}>⬅ Back</button>
+          <span style={{ fontWeight: 'bold' }}>Consultation with {role === 'DOCTOR' ? appointment.patientName : appointment.doctorName}</span>
+          <span style={{ marginLeft: '12px', background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>{appointment.type}</span>
+        </div>
+        <div>
+          {appointment.type !== 'MESSAGING' && (
+            <span>Status: <strong>{callStatus}</strong></span>
+          )}
+        </div>
+      </div>
+
+      {/* Main body */}
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        {/* Media Pane */}
+        {appointment.type !== 'MESSAGING' && (
+          <div style={{ flex: 1.5, background: '#1e293b', display: 'flex', flexDirection: 'column', padding: '20px', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+            {appointment.type === 'VIDEO' ? (
+              <div style={{ display: 'flex', gap: '20px', width: '100%', height: '80%', justifyContent: 'center' }}>
+                {/* Remote Stream */}
+                <div style={{ flex: 1, background: '#0f172a', borderRadius: '8px', overflow: 'hidden', position: 'relative' }}>
+                  <video ref={remoteVideoRef} autoPlay playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <span style={{ position: 'absolute', bottom: '10px', left: '10px', color: 'white', background: 'rgba(0,0,0,0.5)', padding: '2px 8px', borderRadius: '4px' }}>
+                    {role === 'DOCTOR' ? 'Patient' : 'Doctor'}
+                  </span>
+                </div>
+                {/* Local Stream */}
+                <div style={{ width: '150px', height: '110px', background: '#0f172a', borderRadius: '8px', overflow: 'hidden', position: 'absolute', top: '30px', right: '30px', border: '2px solid white' }}>
+                  <video ref={localVideoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <span style={{ position: 'absolute', bottom: '5px', left: '5px', color: 'white', background: 'rgba(0,0,0,0.5)', padding: '1px 4px', borderRadius: '2px', fontSize: '0.7rem' }}>
+                    You
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div style={{ color: 'white', textAlign: 'center' }}>
+                <div style={{ fontSize: '4rem', marginBottom: '10px' }}>📞</div>
+                <h3>Audio Call</h3>
+                <audio ref={remoteAudioRef} autoPlay />
+                <audio ref={localAudioRef} autoPlay muted />
+              </div>
+            )}
+
+            {/* Media Controls */}
+            <div style={{ marginTop: '20px', display: 'flex', gap: '15px' }}>
+              {!activeCall ? (
+                <button onClick={handleStartCall} className="primary-btn" style={{ background: '#10b981', padding: '10px 20px' }}>Connect Call</button>
+              ) : (
+                <button onClick={handleEndCall} className="secondary-btn" style={{ background: '#ef4444', color: 'white', border: 'none', padding: '10px 20px' }}>Disconnect</button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Chat Pane */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', borderLeft: '1px solid #cbd5e1', background: 'white' }}>
+          <div style={{ padding: '10px', borderBottom: '1px solid #cbd5e1', fontWeight: 'bold', color: '#1e293b' }}>Chat Messages</div>
+          
+          {/* Messages list */}
+          <div style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {messages.map((msg, idx) => {
+              const isMe = msg.sender_id === user.user_id;
+              return (
+                <div key={idx} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', textAlign: isMe ? 'right' : 'left', marginBottom: '2px' }}>
+                    {isMe ? 'You' : msg.User?.email || msg.sender_role}
+                  </div>
+                  <div style={{
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    backgroundColor: isMe ? '#0f766e' : '#f1f5f9',
+                    color: isMe ? 'white' : '#1e293b'
+                  }}>
+                    {msg.message_text}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSendMessage} style={{ padding: '12px', borderTop: '1px solid #cbd5e1', display: 'flex', gap: '8px' }}>
+            <input
+              type="text"
+              placeholder="Type a message..."
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+            />
+            <button type="submit" className="primary-btn" style={{ padding: '8px 16px', background: '#0f766e' }}>Send</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}

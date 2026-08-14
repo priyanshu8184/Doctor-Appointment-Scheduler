@@ -37,7 +37,8 @@ const medicalRecordRoutes = require("./routes/medicalRecordRoutes");
 const prescriptionRoutes = require("./routes/prescriptionRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
-
+const adminRoutes = require("./routes/adminRoutes");
+const messageRoutes = require("./routes/messageRoutes");
 
 app.use("/api/users", userRoutes);
 app.use("/api/patients", patientRoutes);
@@ -53,7 +54,8 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/prescriptions", prescriptionRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/notifications", notificationRoutes);
-
+app.use("/api/admin", adminRoutes);
+app.use("/api/messages", messageRoutes);
 
 
 // Home route
@@ -71,8 +73,57 @@ app.use((req, res) => {
 });
 
 
+const http = require('http');
+const server = http.createServer(app);
+const { Server } = require('socket.io');
+const io = new Server(server, {
+    cors: {
+        origin: '*',
+        methods: ['GET', 'POST', 'PUT', 'DELETE']
+    }
+});
+
+const Message = require("./models/Message");
+io.on('connection', (socket) => {
+    console.log('User connected to socket:', socket.id);
+
+    socket.on('join_room', (data) => {
+        socket.join(`room_${data.appointmentId}`);
+        console.log(`User joined room_${data.appointmentId}`);
+    });
+
+    socket.on('send_message', async (data) => {
+        try {
+            const savedMsg = await Message.create({
+                appointment_id: data.appointmentId,
+                sender_id: data.senderId,
+                sender_role: data.senderRole,
+                message_text: data.messageText
+            });
+
+            io.to(`room_${data.appointmentId}`).emit('receive_message', {
+                message_id: savedMsg.message_id,
+                appointment_id: savedMsg.appointment_id,
+                sender_id: savedMsg.sender_id,
+                sender_role: savedMsg.sender_role,
+                message_text: savedMsg.message_text,
+                created_at: savedMsg.created_at,
+                User: {
+                    email: data.senderEmail
+                }
+            });
+        } catch (e) {
+            console.error("Error saving socket message:", e);
+        }
+    });
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected from socket:', socket.id);
+    });
+});
+
 module.exports = app;
 
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });

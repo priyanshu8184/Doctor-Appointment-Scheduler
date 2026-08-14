@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/user");
-
+const Doctor = require("../models/Doctor");
 // ======================================================
 // REGISTER USER
 // ======================================================
@@ -97,6 +97,23 @@ const loginUser = async (req, res) => {
             return res.status(401).json({
                 message: "Invalid email or password"
             });
+        }
+
+        // Check if doctor is approved
+        if (user.role === 'DOCTOR') {
+            const doctor = await Doctor.findOne({ where: { user_id: user.user_id } });
+            if (doctor) {
+                if (doctor.status === 'PENDING') {
+                    return res.status(403).json({
+                        message: "Your registration is pending admin approval."
+                    });
+                }
+                if (doctor.status === 'REJECTED') {
+                    return res.status(403).json({
+                        message: "Your registration was rejected by an admin."
+                    });
+                }
+            }
         }
 
         res.status(200).json({

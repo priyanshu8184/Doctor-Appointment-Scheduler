@@ -17,7 +17,8 @@ const createDoctor = async (req, res) => {
             education,
             phone_number,
             experience,
-            consultation_fee
+            consultation_fee,
+            medical_license_number
         } = req.body;
 
         let profile_picture = null;
@@ -38,11 +39,12 @@ const createDoctor = async (req, res) => {
             !first_name ||
             !last_name ||
             consultation_fee === undefined ||
+            !medical_license_number ||
             !certificate
         ) {
             return res.status(400).json({
                 message:
-                    "doctor_id, user_id, first_name, last_name, consultation_fee, and certificate are required"
+                    "doctor_id, user_id, first_name, last_name, consultation_fee, medical_license_number, and certificate are required"
             });
         }
 
@@ -95,7 +97,8 @@ const createDoctor = async (req, res) => {
             experience,
             consultation_fee,
             profile_picture,
-            certificate
+            certificate,
+            medical_license_number
         });
 
         res.status(201).json({
@@ -192,7 +195,8 @@ const updateDoctor = async (req, res) => {
             education,
             phone_number,
             experience,
-            consultation_fee
+            consultation_fee,
+            medical_license_number
         } = req.body;
 
         // Update files if provided
@@ -239,6 +243,10 @@ const updateDoctor = async (req, res) => {
 
         if (consultation_fee !== undefined) {
             doctor.consultation_fee = consultation_fee;
+        }
+
+        if (medical_license_number !== undefined) {
+            doctor.medical_license_number = medical_license_number;
         }
 
         await doctor.save();

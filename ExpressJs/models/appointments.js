@@ -48,6 +48,12 @@ const Appointment = sequelize.define('Appointment', {
         allowNull: true
     },
 
+    appointment_type: {
+        type: DataTypes.ENUM('MESSAGING', 'AUDIO', 'VIDEO'),
+        allowNull: false,
+        defaultValue: 'VIDEO'
+    },
+
     calendar_sync_id: {
         type: DataTypes.STRING(255),
         allowNull: true
