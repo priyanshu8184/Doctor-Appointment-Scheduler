@@ -3,7 +3,7 @@ const express = require('express');
 const { connectDB } = require("./config/db");
 
 const app = express();
-const port = process.env.port || 3001;
+const port = process.env.PORT || process.env.port;
 const cors = require('cors');
 
 // Connect and sync database
@@ -125,5 +125,5 @@ io.on('connection', (socket) => {
 module.exports = app;
 
 server.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+    console.log(`Server is running on port ${port}`);
 });
