@@ -134,5 +134,5 @@ io.on('connection', (socket) => {
 module.exports = app;
 
 server.listen(port, () => {
-    console.log("Server is running on port");
+    console.log(`Server is running on port ${port}`);
 });
