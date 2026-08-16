@@ -1,34 +1,54 @@
-const{Sequelize}= require("sequelize")   //nodejs ko sql ke sath connect krwata hai
+﻿const { Sequelize } = require("sequelize");
 
-//database kes sath connect kr rhe h aur create kr rhe hai
+// Determine dialect from environment variable (default to 'mysql')
+const dialect = process.env.db_dialect || 'mysql';
 
-const sequelize= new Sequelize(
-    process.env.db_name,
-    process.env.db_user,
-    process.env.db_password,{
-        host:process.env.db_host,
-        dialect:"mysql"  // this tell which company database type is that
-    }
-);
+let sequelize;
 
-const connectDB= async()=>{
-    try{
+if (process.env.DATABASE_URL) {
+    // For deployments (like Render) that use a single connection string
+    sequelize = new Sequelize(process.env.DATABASE_URL, {
+        dialect: dialect,
+        dialectOptions: dialect === 'postgres' ? {
+            ssl: {
+                require: true,
+                rejectUnauthorized: false
+            }
+        } : {}
+    });
+} else {
+    // For local development or separate env variables
+    sequelize = new Sequelize(
+        process.env.db_name,
+        process.env.db_user,
+        process.env.db_password,
+        {
+            host: process.env.db_host,
+            dialect: dialect,
+            dialectOptions: dialect === 'postgres' ? {
+                ssl: {
+                    require: true,
+                    rejectUnauthorized: false
+                }
+            } : {}
+        }
+    );
+}
+
+const connectDB = async () => {
+    try {
         await sequelize.authenticate();
         console.log("connected to database");
 
         await sequelize.sync();
-        console.log("all model synchronised")
+        console.log("all model synchronised");
 
-    }catch(error){
+    } catch (error) {
         console.log("error connecting to database");
         console.log(error.message);
-        process.exit(1)
+        process.exit(1);
     }
-}
+};
 
-module.exports=sequelize;        //connection pbject ko export krdo
-module.exports.connectDB= connectDB;
-
-
-//this file will be used for connecting the backend with sql server
-// npm i express dotenv mysql2 sequelize for connection with sql
+module.exports = sequelize;
+module.exports.connectDB = connectDB;
