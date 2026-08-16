@@ -5,8 +5,8 @@ const HeroSection = ({ navigate }) => {
   const [availableDoctor, setAvailableDoctor] = useState(null)
 
   useEffect(() => {
-    const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || `${import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'}`
-    
+    const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || `${import.meta.env.VITE_BACKEND_BASE_URL}`
+
     const fetchDoctors = async () => {
       try {
         const res = await axios.get(`${API_BASE_URL}/doctors`)
@@ -66,9 +66,9 @@ const HeroSection = ({ navigate }) => {
               <div className="mini-pill">Same-day booking</div>
               <div className="mini-pill">Insurance accepted</div>
             </div>
-            <button 
-              className="primary-btn" 
-              onClick={() => navigate('/doctors')} 
+            <button
+              className="primary-btn"
+              onClick={() => navigate('/doctors')}
               style={{ width: '100%', padding: '0.6rem', textAlign: 'center', fontSize: '1rem' }}
             >
               Book Appointment
