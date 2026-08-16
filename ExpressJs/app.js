@@ -1,4 +1,4 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 const express = require('express');
 const { connectDB } = require("./config/db");
 
@@ -17,9 +17,13 @@ app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // enable CORS for all routes (must be before route registration)
 app.use(cors({
-    origin: '*', // Allow all origins
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], // Allow specific HTTP methods
-    allowedHeaders: ['Content-Type', 'Authorization'], // Allow specific headers
+    origin: function (origin, callback) {
+        // Allow all origins dynamically (required when credentials are true)
+        callback(null, true);
+    },
+    credentials: true, // Allow cookies, authorization headers, etc.
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], // Allow specific HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'], // Allow specific headers
 }));
 
 //Routes
@@ -78,8 +82,11 @@ const server = http.createServer(app);
 const { Server } = require('socket.io');
 const io = new Server(server, {
     cors: {
-        origin: '*',
-        methods: ['GET', 'POST', 'PUT', 'DELETE']
+        origin: function (origin, callback) {
+            callback(null, true);
+        },
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
     }
 });
 
@@ -88,8 +95,9 @@ io.on('connection', (socket) => {
     console.log('User connected to socket:', socket.id);
 
     socket.on('join_room', (data) => {
-        socket.join(`room_${data.appointmentId}`);
-        console.log(`User joined room_${data.appointmentId}`);
+        socket.join(
+            oom_ + data.appointmentId);
+        console.log("User joined room_ + data.appointmentId");
     });
 
     socket.on('send_message', async (data) => {
@@ -101,17 +109,18 @@ io.on('connection', (socket) => {
                 message_text: data.messageText
             });
 
-            io.to(`room_${data.appointmentId}`).emit('receive_message', {
-                message_id: savedMsg.message_id,
-                appointment_id: savedMsg.appointment_id,
-                sender_id: savedMsg.sender_id,
-                sender_role: savedMsg.sender_role,
-                message_text: savedMsg.message_text,
-                created_at: savedMsg.created_at,
-                User: {
-                    email: data.senderEmail
-                }
-            });
+            io.to(
+                oom_ + data.appointmentId).emit('receive_message', {
+                    message_id: savedMsg.message_id,
+                    appointment_id: savedMsg.appointment_id,
+                    sender_id: savedMsg.sender_id,
+                    sender_role: savedMsg.sender_role,
+                    message_text: savedMsg.message_text,
+                    created_at: savedMsg.created_at,
+                    User: {
+                        email: data.senderEmail
+                    }
+                });
         } catch (e) {
             console.error("Error saving socket message:", e);
         }
@@ -125,5 +134,5 @@ io.on('connection', (socket) => {
 module.exports = app;
 
 server.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+    console.log("Server is running on port");
 });
