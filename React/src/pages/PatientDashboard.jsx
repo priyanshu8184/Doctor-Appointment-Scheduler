@@ -35,7 +35,7 @@ const PatientDashboard = ({ navigate }) => {
   const [joinedConsultation, setJoinedConsultation] = useState(null)
 
   // 2. Base API URL (pointing to your Express backend)
-  const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || `${import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'}`
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'
 
   // 3. Fetch data from backend on component mount
   useEffect(() => {

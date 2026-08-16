@@ -38,7 +38,7 @@ const DoctorListingPage = ({ navigate }) => {
   const [currentPage, setCurrentPage] = useState(1)
   const pageSize = 3
 
-  const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || `${import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'}`
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'
 
   useEffect(() => {
     const fetchDoctors = async () => {
