@@ -35,7 +35,7 @@ const PatientDashboard = ({ navigate }) => {
   const [joinedConsultation, setJoinedConsultation] = useState(null)
 
   // 2. Base API URL (pointing to your Express backend)
-  const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || `${import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'}`
 
   // 3. Fetch data from backend on component mount
   useEffect(() => {
@@ -702,12 +702,12 @@ const ConsultationArea = ({ appointment, role, onBack }) => {
 
   useEffect(() => {
     // 1. Fetch Message History
-    axios.get(`http://localhost:3001/api/messages/${appointment.id}`)
+    axios.get(`${import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'}/messages/${appointment.id}`)
       .then(res => setMessages(res.data.messages || []))
       .catch(err => console.error("Error fetching message history:", err))
 
     // 2. Initialize Socket.io
-    const socket = io('http://localhost:3001')
+    const socket = io(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}`)
     socketRef.current = socket
 
     socket.emit('join_room', { appointmentId: appointment.id })

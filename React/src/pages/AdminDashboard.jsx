@@ -29,7 +29,7 @@ const AdminDashboard = ({ navigate }) => {
   const fetchPendingDoctors = async () => {
     setLoading(true)
     try {
-      const response = await axios.get('http://localhost:3001/api/admin/pending-doctors')
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'}/admin/pending-doctors`)
       setPendingDoctors(response.data.doctors)
     } catch (error) {
       console.error("Failed to fetch pending doctors:", error)
@@ -41,7 +41,7 @@ const AdminDashboard = ({ navigate }) => {
 
   const handleApprove = async (doctorId) => {
     try {
-      await axios.put(`http://localhost:3001/api/admin/approve-doctor/${doctorId}`)
+      await axios.put(`${import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'}/admin/approve-doctor/${doctorId}`)
       setStatusMessage("Doctor approved successfully.")
       fetchPendingDoctors() // Refresh the list
     } catch (error) {
@@ -54,7 +54,7 @@ const AdminDashboard = ({ navigate }) => {
     if (!window.confirm("Are you sure you want to reject this registration?")) return
     
     try {
-      await axios.put(`http://localhost:3001/api/admin/reject-doctor/${doctorId}`)
+      await axios.put(`${import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'}/admin/reject-doctor/${doctorId}`)
       setStatusMessage("Doctor rejected successfully.")
       fetchPendingDoctors() // Refresh the list
     } catch (error) {

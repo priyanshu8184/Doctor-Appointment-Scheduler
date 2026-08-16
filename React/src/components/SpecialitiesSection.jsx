@@ -5,7 +5,7 @@ const SpecialitiesSection = () => {
   const [specialties, setSpecialties] = useState([])
   const [loading, setLoading] = useState(true)
 
-  const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || `${import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'}`
 
   useEffect(() => {
     const fetchSpecialties = async () => {

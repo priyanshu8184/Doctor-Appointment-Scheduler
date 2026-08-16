@@ -57,7 +57,7 @@ const LoginPage = ({ navigate }) => {
 
     if (validateForm(formData)) {
       setStatusMessage('Logging in...')
-      axios.post('http://localhost:3001/api/users/login', formData)
+      axios.post(`${import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'}/users/login`, formData)
         .then(response => {
           setStatusMessage('Login successful')
           const user = response.data.user

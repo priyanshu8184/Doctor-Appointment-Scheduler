@@ -5,7 +5,7 @@ const HeroSection = ({ navigate }) => {
   const [availableDoctor, setAvailableDoctor] = useState(null)
 
   useEffect(() => {
-    const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'
+    const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || `${import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'}`
     
     const fetchDoctors = async () => {
       try {

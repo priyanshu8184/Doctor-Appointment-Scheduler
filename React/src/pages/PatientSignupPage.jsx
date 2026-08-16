@@ -102,7 +102,7 @@ const PatientSignupPage = ({ navigate }) => {
       }
 
       const BACKEND_BASE =
-        import.meta?.env?.VITE_BACKEND_BASE_URL || import.meta?.env?.BACKEND_BASE_URL || 'http://localhost:3001/api'
+        import.meta?.env?.VITE_BACKEND_BASE_URL || import.meta?.env?.BACKEND_BASE_URL || `${import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'}`
 
       axios
         .post(`${BACKEND_BASE}/users/register`, payload)
