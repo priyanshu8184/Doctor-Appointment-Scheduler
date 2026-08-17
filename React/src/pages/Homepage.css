@@ -327,3 +327,20 @@ a {
     width: 100%;
   }
 }
+
+/* Card Content Rotation Fade Transition */
+.fade-transition {
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  will-change: opacity, transform;
+}
+
+.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fade-out {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
