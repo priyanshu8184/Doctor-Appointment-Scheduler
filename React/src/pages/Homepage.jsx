@@ -17,7 +17,7 @@ const Homepage = ({ navigate }) => {
       <main>
         <HeroSection navigate={navigate} />
         <SearchDoctorSection navigate={navigate} />
-        <SpecialitiesSection />
+        <SpecialitiesSection navigate={navigate} />
         <TopDoctorsSection />
         <WhyChooseUsSection />
         <HowItWorksSection />

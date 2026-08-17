@@ -344,3 +344,49 @@ a {
   transform: translateY(6px);
 }
 
+/* Specialty Card Premium Styling */
+.specialty-card {
+  padding: 1.6rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.specialty-card:hover {
+  transform: translateY(-6px);
+  border-color: #0f766e;
+  box-shadow: 0 16px 36px rgba(15, 118, 110, 0.08);
+}
+
+.specialty-icon {
+  font-size: 2.2rem;
+  margin-bottom: 1rem;
+}
+
+.specialty-card h3 {
+  margin: 0.5rem 0;
+  font-size: 1.2rem;
+  color: #0f172a;
+}
+
+.specialty-card p {
+  color: #475569;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 1.25rem;
+}
+
+.view-more-link {
+  margin-top: auto;
+  font-weight: 600;
+  color: #0f766e;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.specialty-card:hover .view-more-link {
+  text-decoration: underline;
+}
