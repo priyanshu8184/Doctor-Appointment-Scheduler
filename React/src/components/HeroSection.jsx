@@ -49,6 +49,13 @@ const HeroSection = ({ navigate }) => {
 
         <div className="hero-actions">
           <a className="primary-btn" href="/signup">Get Started</a>
+          <button 
+            type="button" 
+            className="ai-hero-btn"
+            onClick={() => window.dispatchEvent(new CustomEvent('openHealPointAi', { detail: { query: 'Find me a doctor for my symptoms' } }))}
+          >
+            ✨ Ask HealPoint AI
+          </button>
           <a className="secondary-btn" href="/login">Log In</a>
         </div>
 

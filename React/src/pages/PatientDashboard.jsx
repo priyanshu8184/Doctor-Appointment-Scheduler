@@ -5,6 +5,7 @@ import Footer from '../components/Footer'
 import axios from 'axios'
 import { io } from 'socket.io-client'
 import Peer from 'peerjs'
+import AiDashboardBanner from '../components/ai/AiDashboardBanner'
 
 const PatientDashboard = ({ navigate }) => {
   const handleLogout = () => {
@@ -675,6 +676,12 @@ const PatientDashboard = ({ navigate }) => {
             🏠
           </button>
         </div>
+
+        <AiDashboardBanner 
+          onTriggerAiAction={(query) => {
+            window.dispatchEvent(new CustomEvent('openHealPointAi', { detail: { query } }))
+          }} 
+        />
 
         {renderContent()}
       </main>

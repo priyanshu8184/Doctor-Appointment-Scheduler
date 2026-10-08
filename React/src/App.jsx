@@ -11,6 +11,8 @@ import ServicesPage from './pages/ServicesPage'
 import AboutPage from './pages/AboutPage'
 import AdminDashboard from './pages/AdminDashboard'
 
+import HealPointAiChat from './components/ai/HealPointAiChat'
+
 const App = () => {
   const [route, setRoute] = useState(window.location.pathname)
 
@@ -34,7 +36,12 @@ const App = () => {
     return <Homepage navigate={navigate} />
   }
 
-  return currentPage()
+  return (
+    <>
+      {currentPage()}
+      <HealPointAiChat navigate={navigate} />
+    </>
+  )
 }
 
 export default App

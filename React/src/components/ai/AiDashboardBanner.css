@@ -1,0 +1,86 @@
+/* AI Dashboard Banner Styles */
+.ai-dashboard-banner {
+  background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%);
+  border-radius: 16px;
+  padding: 24px;
+  color: #ffffff;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 15px -3px rgba(2, 132, 199, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-dashboard-banner::after {
+  content: '✨';
+  position: absolute;
+  right: 20px;
+  bottom: 10px;
+  font-size: 120px;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.ai-banner-content {
+  position: relative;
+  z-index: 2;
+}
+
+.ai-banner-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.ai-sparkle {
+  font-size: 14px;
+}
+
+.ai-banner-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+  color: #ffffff;
+}
+
+.ai-banner-subtitle {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 650px;
+  margin: 0 0 16px 0;
+  line-height: 1.5;
+}
+
+.ai-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ai-banner-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ai-banner-btn:hover {
+  background: #ffffff;
+  color: #0284c7;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
