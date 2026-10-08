@@ -6,6 +6,7 @@ import axios from 'axios'
 import { io } from 'socket.io-client'
 import Peer from 'peerjs'
 import AiDashboardBanner from '../components/ai/AiDashboardBanner'
+import AiLabReportAnalyzer from '../components/ai/AiLabReportAnalyzer'
 
 const PatientDashboard = ({ navigate }) => {
   const handleLogout = () => {
@@ -258,9 +259,95 @@ const PatientDashboard = ({ navigate }) => {
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'lab-reports':
+        return (
+          <AiLabReportAnalyzer 
+            patientId={JSON.parse(localStorage.getItem('user'))?.user_id || 1} 
+            onAppointmentBooked={fetchDashboardData} 
+          />
+        );
       case 'upcoming':
         return (
           <section className="dashboard-section">
+            {/* Prominent AI Lab Report Analyzer Card on Patient Dashboard */}
+            <div 
+              className="lab-analyzer-dashboard-hero" 
+              onClick={() => setActiveTab('lab-reports')}
+              style={{
+                background: 'linear-gradient(135deg, #0f766e 0%, #0d9488 60%, #14b8a6 100%)',
+                color: '#ffffff',
+                padding: '1.5rem 1.75rem',
+                borderRadius: '16px',
+                marginBottom: '1.75rem',
+                cursor: 'pointer',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                boxShadow: '0 10px 25px -5px rgba(13, 148, 136, 0.3)',
+                flexWrap: 'wrap',
+                gap: '16px'
+              }}
+            >
+              <div style={{ flex: '1', minWidth: '280px' }}>
+                <span style={{
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  backdropFilter: 'blur(8px)',
+                  padding: '3px 10px',
+                  borderRadius: '20px',
+                  fontSize: '0.75rem',
+                  fontWeight: '700',
+                  textTransform: 'uppercase',
+                  display: 'inline-block',
+                  marginBottom: '8px'
+                }}>
+                  ✨ AI Medical Intelligence
+                </span>
+                <h3 style={{ margin: '0 0 6px 0', fontSize: '1.35rem', fontWeight: '700' }}>🧪 AI Lab Report Analyzer</h3>
+                <p style={{ margin: '0 0 14px 0', fontSize: '0.9rem', color: '#e6fffa', lineHeight: '1.5' }}>
+                  <strong>Understand your lab report with HealPoint AI.</strong> Upload your medical/lab report (CBC, Blood Sugar, Lipid, Thyroid, Kidney/Liver, Vitamins) and our AI will summarize important findings, highlight abnormal values, and suggest which specialist you may want to consult.
+                </p>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  <button 
+                    type="button" 
+                    onClick={(e) => { e.stopPropagation(); setActiveTab('lab-reports'); }}
+                    style={{
+                      background: '#ffffff',
+                      color: '#0f766e',
+                      border: 'none',
+                      padding: '0.55rem 1.2rem',
+                      borderRadius: '8px',
+                      fontWeight: '700',
+                      fontSize: '0.85rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    📤 Upload Lab Report
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={(e) => { e.stopPropagation(); setActiveTab('lab-reports'); }}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.15)',
+                      color: '#ffffff',
+                      border: '1px solid rgba(255, 255, 255, 0.4)',
+                      padding: '0.55rem 1.2rem',
+                      borderRadius: '8px',
+                      fontWeight: '600',
+                      fontSize: '0.85rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    ⚡ Try Demo Report (1-Click)
+                  </button>
+                </div>
+              </div>
+              <div style={{ textAlign: 'center', background: 'rgba(255, 255, 255, 0.12)', padding: '16px 20px', borderRadius: '12px' }}>
+                <div style={{ fontSize: '2.5rem' }}>📄</div>
+                <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#ccfbf1', marginTop: '4px' }}>PDF • JPG • PNG</div>
+                <div style={{ fontSize: '0.75rem', color: '#e6fffa' }}>Max 10MB</div>
+              </div>
+            </div>
+
             <h2>Upcoming Appointments</h2>
             <div className="appointments-list">
               {upcomingAppointments.length > 0 ? (
@@ -612,6 +699,14 @@ const PatientDashboard = ({ navigate }) => {
             style={{ backgroundColor: '#2563eb', color: 'white', fontWeight: 'bold' }}
           >
             🩺 Book Doctor
+          </button>
+          <button
+            type="button"
+            className={`nav-item ${activeTab === 'lab-reports' ? 'active' : ''}`}
+            onClick={() => setActiveTab('lab-reports')}
+            style={activeTab === 'lab-reports' ? { backgroundColor: '#0f766e', color: 'white', fontWeight: 'bold' } : { color: '#2dd4bf' }}
+          >
+            🧪 AI Lab Analyzer
           </button>
           <button
             type="button"

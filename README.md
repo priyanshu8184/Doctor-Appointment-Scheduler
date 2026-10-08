@@ -1,149 +1,253 @@
-# 🩺 HealPoint — Doctor Appointment & Telemedicine Platform
+# 🩺 HealPoint — AI-Powered Healthcare Appointment, Telemedicine & Intelligent Lab Report Assistant
 
-HealPoint is a full-stack web application designed to simplify healthcare by connecting patients with qualified doctors for both in-person and online video consultations. It brings doctor discovery, real-time appointment scheduling, browser-based video calling, digital prescriptions, and medical record management together in one clean, easy-to-use platform.
+[![React](https://img.shields.io/badge/Frontend-React%2019%20%7C%20Vite-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![Node](https://img.shields.io/badge/Backend-Node.js%20%7C%20Express.js-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Database](https://img.shields.io/badge/Database-MySQL-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![WebRTC](https://img.shields.io/badge/Telemedicine-WebRTC%20%7C%20PeerJS%20%7C%20Socket.IO-333333?logo=webrtc&logoColor=white)](https://webrtc.org/)
+[![AI](https://img.shields.io/badge/AI%20Engine-Clinical%20Biomarker%20%26%20Report%20Analyzer-0f766e)](./AI)
+
+**HealPoint** is a next-generation, AI-powered healthcare ecosystem that bridges the gap between laboratory diagnostic reports, specialist medical discovery, real-time appointment scheduling, and browser-based WebRTC telemedicine consultations.
+
+> **Core Value Proposition:**
+> **Upload Lab Report ➔ Understand Important Findings ➔ Identify Conditions Worth Discussing ➔ Find the Right Specialist ➔ One-Click Appointment Booking & Telemedicine Consultation.**
 
 ---
 
 ## 📖 Table of Contents
-- [About The Project](#-about-the-project)
-- [Why HealPoint? (Problem & Solution)](#-why-healpoint-problem--solution)
-- [Core Features](#-core-features)
-  - [For Patients](#-for-patients)
-  - [For Doctors](#-for-doctors)
-  - [For Administrators](#-for-administrators)
-- [How It Works (Step-by-Step Flow)](#-how-it-works-step-by-step-flow)
-- [Real-Time Telemedicine & Video Calls](#-real-time-telemedicine--video-calls)
-- [Technology Stack](#-technology-stack)
-- [Database Design & Structure](#-database-design--structure)
-- [Installation & Setup Guide](#-installation--setup-guide)
-- [Future Enhancements](#-future-enhancements)
+
+- [🌟 About The Platform](#-about-the-platform)
+- [✨ Core Innovation: AI Lab Report Analyzer](#-core-innovation-ai-lab-report-analyzer)
+- [🚀 Key Features by User Role](#-key-features-by-user-role)
+  - [🧑‍🦱 Patient Experience](#-patient-experience)
+  - [👨‍⚕️ Doctor Portal](#-doctor-portal)
+  - [🛡️ Administrator Control](#️-administrator-control)
+- [🔄 Complete End-to-End AI Workflow](#-complete-end-to-end-ai-workflow)
+- [📹 Built-In WebRTC Telemedicine](#-built-in-webrtc-telemedicine)
+- [🛠️ System Architecture & Technology Stack](#️-system-architecture--technology-stack)
+- [🗄️ Database Schema & Entities](#️-database-schema--entities)
+- [📡 Comprehensive Backend API Reference](#-comprehensive-backend-api-reference)
+- [💻 Quickstart & Installation Guide](#-quickstart--installation-guide)
+- [🧪 Running AI Verification Tests](#-running-ai-verification-tests)
+- [🎯 Demonstration Walkthrough for Evaluators](#-demonstration-walkthrough-for-evaluators)
+- [🛡️ Medical Safety & Disclaimer](#️-medical-safety--disclaimer)
 
 ---
 
-## 🌟 About The Project
+## 🌟 About The Platform
 
-Booking doctor appointments often involves long phone calls, waiting rooms, and complicated paperwork. HealPoint modernizes this entire process. 
+Traditional healthcare booking systems require patients to manually decipher confusing laboratory test values, search blindly for unknown specialties, navigate disjointed booking portals, and install third-party video software for remote care.
 
-With HealPoint:
-- Patients can search for doctors by specialty, check ratings, view fees, pick open time slots, and consult doctors over live video from the comfort of their homes.
-- Doctors can manage their weekly schedules, conduct video consultations directly from their browser, view patient history, and generate digital prescriptions.
-- Administrators can monitor platform activity, verify doctors, and keep operations running smoothly.
-
----
-
-## 💡 Why HealPoint? (Problem & Solution)
-
-### The Problems in Traditional Healthcare:
-1. **Long Waiting Times:** Patients spend hours waiting at clinics without knowing exact consultation times.
-2. **Scheduling Hassles & Double Bookings:** Manual paper appointments often result in scheduling overlaps or confusion.
-3. **Distance & Travel Barriers:** Patients living far away or unable to travel struggle to reach specialists.
-4. **Lost Medical Papers:** Physical prescriptions and diagnosis slips get misplaced over time.
-5. **No-Shows & Empty Slots:** When patients cancel without notice, doctors lose time that another patient could have used.
-
-### The HealPoint Solution:
-1. **Instant Online Booking:** Live available slots updated in real-time.
-2. **Built-in Video Consultations (Telemedicine):** High-quality video calls right inside the browser without installing any third-party software like Zoom.
-3. **Digital Medical Records (EHR):** Prescriptions, appointment logs, and clinical notes are saved safely in one profile.
-4. **Smart Waitlists & Notifications:** If an appointment is cancelled, patients on the waitlist can be alerted immediately.
-5. **Transparent Doctor Profiles:** Patients can see doctor qualifications, consultation fees, and reviews before booking.
+**HealPoint unifies the complete patient journey into one cohesive web platform:**
+1. **Intelligent Diagnostics:** Patients upload lab reports (PDF, PNG, JPG, or text) to extract biomarker values, highlight abnormal ranges, and receive plain-English explanations.
+2. **Clinical Safety Guardrails:** Clear framing that **AI observation ≠ medical diagnosis**, using cautious clinical language ("may indicate", "can be associated with", "possible condition to discuss").
+3. **Explainable Doctor Recommendations:** Maps detected abnormalities (e.g., elevated fasting blood sugar, high cholesterol, low hemoglobin, vitamin deficiencies) to qualified specialties and matches top-rated available doctors.
+4. **Frictionless 1-Click Booking:** Books real-time available time slots without restarting the appointment process.
+5. **In-Browser Telemedicine:** High-definition video/audio consultations using WebRTC with zero software downloads.
+6. **Electronic Health Records (EHR):** Digital prescriptions, past appointment history, payment records, and longitudinal biomarker trend analysis over time.
 
 ---
 
-## 🚀 Core Features
+## ✨ Core Innovation: AI Lab Report Analyzer
 
-### 🧑‍🦱 For Patients
-- **Doctor Search & Filters:** Find doctors quickly by medical specialty (Cardiology, Dermatology, Pediatrics, Neurology, etc.), location, and consultation fees.
-- **Dynamic Slot Booking:** Select dates and choose convenient 30-minute time slots that adjust dynamically based on doctor availability.
-- **1-Click Video Calls:** Join scheduled video calls directly from the patient dashboard.
-- **Digital Health Records:** View past prescriptions, diagnostic notes, and consultation history anytime.
-- **Insurance & Payments:** Store insurance information, calculate co-pays, and track consultation payments.
-- **Doctor Ratings & Reviews:** Rate doctors and leave feedback after completed appointments.
-- **Waitlist Support:** Request alerts for dates when a doctor is currently fully booked.
+The **AI Lab Report Analyzer** is integrated directly into the **Patient Dashboard**:
 
-### 👨‍⚕️ For Doctors
-- **Doctor Dashboard:** Overview of today's schedule, upcoming appointments, and patient lists.
-- **Availability Management:** Set weekly working hours or custom dates, with automated slot breakdown (e.g. 30-minute slots).
-- **Integrated Video Consultation Room:** Start video appointments with patients in one click using secure WebRTC technology.
-- **Digital Prescription Builder:** Write and attach medical prescriptions (medicine name, dosage, timing, and notes) directly to the patient's record during or after the call.
-- **Patient History Access:** Review previous medical history and past visit notes before treating a patient.
-- **Profile Customization:** Update bio, consultation fees, specialties, and qualifications.
-
-### 🛡️ For Administrators
-- **Doctor Verification:** Review doctor profiles and medical credentials before approving them on the platform.
-- **User Management:** Oversee patient, doctor, and admin accounts.
-- **Specialty Management:** Add or modify medical departments and specialties across the system.
-- **Analytics & Platform Health:** Track total appointments, active doctors, and overall system usage.
-
----
-
-## 🔄 How It Works (Step-by-Step Flow)
-
-```
-1. Search & Discover ──► 2. Pick a Slot ──► 3. Instant Confirmation ──► 4. Video Call ──► 5. Prescription & Review
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│ 🧪 AI Lab Report Analyzer                                              │
+│                                                                        │
+│ Understand your lab report with HealPoint AI.                          │
+│ Upload your laboratory report (CBC, Blood Sugar, Lipid Profile,        │
+│ Thyroid, Liver/Kidney tests, Vitamins) to extract parameters, identify │
+│ abnormal values, and find the right medical specialist.                │
+│                                                                        │
+│   [ 📤 Upload Lab Report ]      [ ⚡ Try Demo Report (1-Click) ]       │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
-1. **Discovery:** The patient visits the platform and searches for a specialist (e.g., Cardiologist).
-2. **Slot Selection:** The system shows only the open slots for the selected date. The patient selects a time.
-3. **Booking & Confirmation:** The appointment is confirmed, saved to the database, and added to both the patient's and doctor's dashboards.
-4. **Consultation:** At the appointment time, both doctor and patient join the integrated video room.
-5. **Follow-Up:** The doctor enters clinical notes and issues a digital prescription. The patient can download the prescription and leave a review.
+### Supported Laboratory Panels & Biomarkers:
+- **Complete Blood Count (CBC):** Hemoglobin, RBC Count, WBC (Leukocytes), Platelet Count, Hematocrit (PCV).
+- **Blood Sugar & Diabetes Panel:** Fasting Blood Glucose (FBS), Random Glucose (RBS), HbA1c (Glycated Hemoglobin).
+- **Lipid Profile (Cardiovascular):** Total Cholesterol, LDL ("Bad" Cholesterol), HDL ("Good" Cholesterol), Triglycerides.
+- **Thyroid Function Test:** Thyroid Stimulating Hormone (TSH), Total/Free T3, Total/Free T4.
+- **Kidney Function Test (KFT / Renal):** Serum Creatinine, Blood Urea Nitrogen (BUN), Uric Acid.
+- **Liver Function Test (LFT / Hepatic):** SGPT / ALT, SGOT / AST, Total Bilirubin.
+- **Vitamins & Essential Minerals:** Vitamin D (25-OH), Vitamin B12 (Cobalamin), Serum Calcium.
+
+### Structured Output Capabilities:
+- **Printed Reference Range Priority:** Extracts and uses reference ranges printed directly on the uploaded report, falling back to clinical standards.
+- **Abnormal Findings Breakdown:** Displays current value, status (`Low`, `High`, `Critical`), reference interval, and clinical significance.
+- **Possible Conditions to Discuss:** Categorized with confidence tags (`Possible`, `Needs medical evaluation`, `Worth discussing with a doctor`).
+- **Emergency Triage Filter:** Automatically triggers red alert banners for severe values (e.g., acute hyperglycemia, critical thrombocytopenia, severe anemia) directing the patient to emergency services.
+- **Longitudinal Biomarker Health Trends:** Tracks biomarker progression across multiple reports over time (e.g., Hemoglobin Jan 10.2 ➔ Mar 11.1 ➔ Jun 12.0 g/dL).
+- **Pre-Configured Demo Samples:** One-click sample reports (CBC + Glucose + Vit D, Lipid Panel, Thyroid Panel, Liver/Kidney Panel, Routine Wellness) for instant demonstration without local files.
 
 ---
 
-## 📹 Real-Time Telemedicine & Video Calls
+## 🚀 Key Features by User Role
 
-One of HealPoint's strongest features is its **built-in browser-to-browser video calling system**:
-- **Powered by WebRTC & PeerJS:** Audio and video are streamed directly between the patient and doctor, ensuring low latency, smooth video quality, and high privacy.
-- **Signaling via Socket.IO:** Coordinates when users join the call and handles connection handshakes behind the scenes.
-- **Zero Installs Needed:** Works seamlessly on Google Chrome, Microsoft Edge, Firefox, and Safari on desktop and mobile browsers.
-- **Complete In-Call Controls:** Easy buttons to mute microphone, toggle camera on/off, and end the call.
+### 🧑‍🦱 Patient Experience
+- **AI Lab Report Analyzer:** Upload PDF/Image lab reports, view summaries, structured tables, and recommended doctors.
+- **Symptom AI Chatbot:** Conversational assistant for symptom triage, FAQs, and slot queries.
+- **Doctor Directory & Filtering:** Search doctors by specialty, location, consultation fees, and patient ratings.
+- **Dynamic Slot Booking:** Real-time 30-minute availability slot generator.
+- **WebRTC Video Consultations:** 1-click video calls with real-time in-call chat.
+- **Patient Dashboard:** Manage upcoming visits, reschedule/cancel bookings, view digital prescriptions, and track payment transactions.
 
----
+### 👨‍⚕️ Doctor Portal
+- **Doctor Schedule Dashboard:** View today's consultations, patient queues, and appointment statuses.
+- **Availability Management:** Set working days, hours, and slot durations.
+- **In-Browser Video Consultation Room:** Connect with patients over WebRTC with full camera/microphone controls.
+- **Digital Prescription Writer:** Write medications, dosages, and instructions attached to patient records.
+- **EHR Patient History:** Review previous diagnosis logs and past reports before consultations.
 
-## 🛠️ Technology Stack
-
-### Frontend (Client-Side)
-- **React 19:** Modern, component-based user interface for fast and interactive pages.
-- **Vite:** Next-generation build tool providing fast reload and optimized bundles.
-- **PeerJS & Socket.io-client:** Client libraries for managing WebRTC video streaming and real-time socket events.
-- **Axios:** For smooth REST API communication with the backend.
-- **Vanilla CSS:** Custom responsive styling designed for both desktop and mobile screens.
-
-### Backend (Server-Side)
-- **Node.js & Express.js:** Fast, asynchronous REST API server handling authentication, appointment logic, and data validation.
-- **Socket.IO:** Real-time event communication for call signaling and live notifications.
-
-### Database (Data Storage)
-- **MySQL (`healpoint_db`):** Relational database ensuring strict data integrity, foreign key relations, and ACID compliance.
+### 🛡️ Administrator Control
+- **Doctor Credential Verification:** Review qualifications and approve or reject doctor signups.
+- **Specialty Directory Management:** Add, update, or reorganize clinical departments.
+- **Platform Analytics:** Track total appointments, active practitioners, and system performance.
 
 ---
 
-## 🗄️ Database Design & Structure
+## 🔄 Complete End-to-End AI Workflow
 
-The database (`healpoint_db`) contains 11 structured tables designed to keep all records connected and organized:
+```text
+               Patient Dashboard
+                      │
+           [ Upload Lab Report ] (PDF / JPG / PNG / Sample)
+                      │
+               File Validation (MIME & 10MB Limit)
+                      │
+           Document / Image Processing (pdf-parse / OCR)
+                      │
+           Biomarker Extraction (Name, Value, Unit, Printed Range)
+                      │
+           AI Clinical Evaluation Engine
+           ├── Overall Diagnostic Summary
+           ├── Abnormal Findings Detection
+           ├── Clinical Significance Explanation
+           ├── Possible Conditions (AI observation ≠ diagnosis)
+           └── Emergency Threshold Check
+                      │
+           Specialty Recommendation Algorithm
+                      │
+           Doctor Database Search & Availability Lookup
+                      │
+           Recommendation Scoring ("Why this doctor?")
+                      │
+           Results Display & Lab Values Table
+                      │
+           [ One-Click Appointment Booking ]
+                      │
+           Existing HealPoint Appointment API (`POST /api/appointments`)
+                      │
+           Appointment Confirmed & Telemedicine Room Ready
+```
 
-| Table Name | Description / Purpose |
+---
+
+## 📹 Built-In WebRTC Telemedicine
+
+HealPoint features zero-install, browser-to-browser video calling:
+- **Peer-to-Peer Streaming:** Uses WebRTC and PeerJS for low-latency, encrypted video/audio streaming.
+- **Socket.IO Signaling:** Coordinates room creation, connection handshakes, and live chat messaging.
+- **Cross-Platform Compatibility:** Works out-of-the-box on Chrome, Edge, Firefox, Safari, and mobile browsers.
+
+---
+
+## 🛠️ System Architecture & Technology Stack
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│                       React 19 Frontend                     │
+│  • Patient Dashboard     • AI Lab Report Analyzer           │
+│  • Doctor Dashboard      • WebRTC Telemedicine Call Room    │
+│  • Doctor Listing & Booking Modal • HealPoint AI Chat       │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ REST APIs & WebSocket
+┌──────────────────────────────▼──────────────────────────────┐
+│                    Express.js Backend Server                │
+│  • Lab Report Controller (Upload, Analysis, Trends)         │
+│  • Doctor & Appointment Controllers                         │
+│  • Socket.IO Signaling Server                               │
+│  • Multer File Storage & Validation                         │
+└──────────────┬──────────────────────────────┬───────────────┘
+               │                              │
+┌──────────────▼──────────────┐┌──────────────▼───────────────┐
+│     Modular AI Engine       ││      MySQL Database          │
+│  • Lab Report Analyzer      ││  • users & patients          │
+│  • Medical Taxonomy & RAG   ││  • doctors & availability    │
+│  • Recommendation Scorer    ││  • appointments & records    │
+│  • Emergency Triage         ││  • ai_lab_reports (JSON)     │
+└─────────────────────────────┘└──────────────────────────────┘
+```
+
+| Layer | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Frontend UI** | React 19, Vite, Vanilla CSS | Responsive, fast SPA with rich healthcare aesthetics |
+| **Video & Chat** | WebRTC, PeerJS, Socket.io-client | In-browser real-time audio/video consultations |
+| **Backend API** | Node.js, Express.js (ES Modules) | RESTful APIs, business logic, file upload pipelines |
+| **Document Parsing** | `pdf-parse`, `multer` | Digital PDF text extraction and file validation |
+| **AI Intelligence** | Custom Modular Engine (`AI/`) | Clinical biomarker extraction, scoring, safety triage |
+| **Database** | MySQL 8.0 (`healpoint_db`) | Relational persistence with JSON support for AI findings |
+
+---
+
+## 🗄️ Database Schema & Entities
+
+The database schema (`Healpoint_db.sql`) consists of 12 tables:
+
+| Table | Description |
 | :--- | :--- |
-| **`users`** | Base login accounts with email, password hash, and role (`PATIENT`, `DOCTOR`, `ADMIN`). |
-| **`patients`** | Detailed patient information (name, date of birth, phone number). |
-| **`doctors`** | Doctor profiles (biography, location, consultation fee). |
-| **`specialties`** | List of medical specialties (e.g., Cardiology, Neurology, Pediatrics). |
-| **`doctor_specialties`** | Links doctors to one or more specialties. |
-| **`doctor_availability`** | Stores doctor working hours and days to generate appointment slots dynamically. |
-| **`appointments`** | Core booking records with date, time, status (`SCHEDULED`, `COMPLETED`, `CANCELLED`), and telemedicine room links. |
-| **`waitlist`** | Tracks patients waiting for slots when a doctor is fully booked. |
-| **`medical_records`** | Doctor clinical notes and diagnosis history for each visit. |
-| **`prescriptions`** | Medication details, dosages, and instructions linked to medical records. |
-| **`reviews`** | Patient star ratings (1 to 5) and feedback comments for completed visits. |
-| **`payments`** | Records fee payments, co-pays, transaction statuses, and refunds. |
-| **`notifications`** | System alerts for appointment reminders, cancellations, and waitlist updates. |
+| **`users`** | Authentication credentials, email, password hash, role (`PATIENT`, `DOCTOR`, `ADMIN`). |
+| **`patients`** | Patient profiles (first name, last name, DOB, phone number, gender, blood group). |
+| **`doctors`** | Doctor profiles (bio, location, consultation fee, approval status). |
+| **`specialties`** | Medical specialties (Cardiology, Dermatology, General Medicine, Neurology, etc.). |
+| **`doctor_specialties`** | Many-to-many relationship mapping doctors to clinical specialties. |
+| **`doctor_availability`** | Day-of-week working hours and slot durations for dynamic scheduling. |
+| **`appointments`** | Booked visits with status (`SCHEDULED`, `COMPLETED`, `CANCELLED`), datetime, telemedicine room URL. |
+| **`ai_lab_reports`** | Stores uploaded lab reports, file metadata, AI analysis JSON, and recommended specialties. |
+| **`medical_records`** | Doctor clinical notes and consultation diagnosis logs. |
+| **`prescriptions`** | Medication details, dosage, and intake instructions. |
+| **`reviews`** | Patient ratings (1–5 stars) and feedback comments. |
+| **`payments`** | Financial transactions, co-pays, Stripe transaction IDs, and refunds. |
 
 ---
 
-## 💻 Installation & Setup Guide
+## 📡 Comprehensive Backend API Reference
+
+### 🧪 AI Lab Report Analyzer Endpoints
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/lab-reports/upload` | Upload PDF/image report, extract parameters, perform AI analysis, match doctors. |
+| `GET` | `/api/lab-reports` | Retrieve all analyzed reports for the logged-in patient. |
+| `GET` | `/api/lab-reports/samples` | Get pre-configured demo test reports for 1-click evaluation. |
+| `GET` | `/api/lab-reports/trends` | Fetch longitudinal biomarker progression across multiple reports over time. |
+| `GET` | `/api/lab-reports/:id` | Get single report details and full structured analysis. |
+| `GET` | `/api/lab-reports/:id/recommendations` | Get matched doctors and real-time available slots for a specific report. |
+| `DELETE` | `/api/lab-reports/:id` | Delete a report from patient history. |
+
+### 💬 Conversational AI Endpoints
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/ai/chat` | Natural language symptom detection, doctor search, and triage assistant. |
+| `GET` | `/api/ai/recommendations` | Personalized doctor recommendations based on past patient history. |
+| `GET` | `/api/ai/quick-slots` | Fetch real-time available slots for a specialty or doctor. |
+
+### 📅 Appointments, Doctors & Profiles
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/doctors` | List all verified doctors with ratings and specialties. |
+| `GET` | `/api/doctors/:id` | Get detailed doctor profile and availability. |
+| `GET` | `/api/appointments` | Retrieve scheduled appointments. |
+| `POST` | `/api/appointments` | Book an appointment (used by both manual booking & AI 1-click booking). |
+| `PUT` | `/api/appointments/:id/status` | Update status (`COMPLETED`, `CANCELLED`, `ACCEPTED`). |
+| `GET` | `/api/patients/:id` | Get patient profile details. |
+| `POST` | `/api/users/login` | User authentication for patients, doctors, and admins. |
+
+---
+
+## 💻 Quickstart & Installation Guide
 
 ### Prerequisites
-Make sure you have installed:
 - [Node.js](https://nodejs.org/) (Version 18 or higher)
 - [MySQL](https://www.mysql.com/) (Version 8.0 or higher)
 - Git
@@ -151,22 +255,21 @@ Make sure you have installed:
 ---
 
 ### Step 1: Database Setup
-1. Start your MySQL service.
-2. Open your MySQL client (Command Line, MySQL Workbench, or phpMyAdmin).
-3. Import and execute the SQL file:
+1. Start your MySQL server.
+2. Open MySQL client or workbench and execute:
    ```sql
    SOURCE Healpoint_db.sql;
    ```
-   *This will create the `healpoint_db` database and all necessary tables.*
+   *Creates `healpoint_db` with all tables including `ai_lab_reports`.*
 
 ---
 
 ### Step 2: Backend Setup
-1. Open a terminal and navigate to the backend folder:
+1. Open terminal and navigate to `ExpressJs`:
    ```bash
    cd ExpressJs
    ```
-2. Install required packages:
+2. Install dependencies:
    ```bash
    npm install
    ```
@@ -174,34 +277,68 @@ Make sure you have installed:
    ```bash
    npm run dev
    ```
-   *The backend will run on `http://localhost:3001`.*
+   *Backend runs on `http://localhost:3001`.*
 
 ---
 
 ### Step 3: Frontend Setup
-1. Open another terminal and navigate to the frontend folder:
+1. Open a new terminal and navigate to `React`:
    ```bash
    cd React
    ```
-2. Install required dependencies:
+2. Install dependencies:
    ```bash
    npm install
    ```
-3. Start the development server:
+3. Start the Vite development server:
    ```bash
    npm run dev
    ```
-4. Open your browser and go to `http://localhost:5173`.
+4. Open your browser and navigate to:
+   ```
+   http://localhost:5173
+   ```
 
 ---
 
-## 🔮 Future Enhancements
+## 🧪 Running AI Verification Tests
 
-- 🤖 **AI Health Assistant:** Symptom analyzer to help patients choose the right medical specialty.
-- 📱 **Mobile Application:** Dedicated Android and iOS apps using React Native.
-- 💬 **WhatsApp & SMS Alerts:** Automatic reminder messages and prescription delivery via WhatsApp.
-- 🏥 **Automated Insurance Verification:** Instant verification with health insurance provider APIs.
-- ⌚ **Smart Health Device Sync:** Live sync with smartwatches for blood pressure and heart rate monitoring during video consultations.
+Run the standalone AI engine test suite:
+
+```bash
+node AI/tests/aiEngine.test.js
+```
+
+**Verified Test Cases:**
+- ✅ **Test 1:** Natural Language Symptom & Specialty Detection (Dermatology, Neurology, Cardiology).
+- ✅ **Test 2:** Emergency Safety Redirection & Urgent Medical Triage.
+- ✅ **Test 3:** Doctor Recommendation Flow & Slot Matching.
+- ✅ **Test 4:** Medical Report Summarizer.
+- ✅ **Test 5:** Complex Multi-Biomarker Lab Report Analysis (Low Hemoglobin 10.2 g/dL, Elevated Glucose 145 mg/dL, Low Vitamin D 14 ng/mL ➔ Anemia / Glycemic / Vit D condition mapping ➔ General Medicine specialist recommendation).
+
+---
+
+## 🎯 Demonstration Walkthrough for Evaluators
+
+1. **Login:** Log in as a Patient (or use demo patient credentials).
+2. **Access AI Analyzer:** On the **Patient Dashboard**, click the **`🧪 AI Lab Analyzer`** tab or the prominent hero banner.
+3. **Select a Demo Report:** Click **`⚡ Try Demo Report (CBC + Glucose + Vit D)`** (or upload your own PDF/Image).
+4. **Click Analyze:** Click **`🧪 Analyze Lab Report Now`** to watch the multi-step animated extraction pipeline.
+5. **Review AI Findings:**
+   - **Overall Summary:** Clinical synopsis of findings.
+   - **⚠️ Abnormal Findings:** Hemoglobin (10.2 g/dL Low), Glucose (145 mg/dL High), Vitamin D (14 ng/mL Low) with plain-English significance.
+   - **🔍 Possible Conditions:** Anemia, Blood Sugar Dysregulation, Vitamin D Deficiency (framed as topics for doctor discussion).
+   - **📋 Structured Table:** Filter by *All*, *Abnormal Only*, or *Normal*.
+   - **👨‍⚕️ Recommended Doctors:** Top specialists with "Why this doctor?" badges, ratings, and next available slots.
+6. **Book Appointment:** Click **`📅 Book Appointment`** on any recommended doctor card ➔ select date/time ➔ confirm booking.
+7. **View History & Trends:** Switch to **`📜 Report History`** or **`📈 Biomarker Health Trends`** to view longitudinal progression over time.
+
+---
+
+## 🛡️ Medical Safety & Disclaimer
+
+> **IMPORTANT MEDICAL NOTICE:**
+> HealPoint AI and the AI Lab Report Analyzer provide educational observations, parameter breakdowns, and doctor matching assistance. **AI observations do not constitute a definitive medical diagnosis, prescription, or clinical treatment plan.** Patients must always consult a qualified, licensed healthcare professional for clinical evaluation. In cases of acute or life-threatening symptoms, immediate emergency medical care must be sought.
 
 ---
 

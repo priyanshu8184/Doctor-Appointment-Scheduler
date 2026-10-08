@@ -2,7 +2,9 @@ import {
   processUserMessage, 
   detectSpecialty, 
   checkEmergency, 
-  summarizeMedicalReport 
+  summarizeMedicalReport,
+  analyzeLabReport,
+  SAMPLE_LAB_REPORTS
 } from '../index.js';
 
 async function runTests() {
@@ -33,7 +35,30 @@ async function runTests() {
   console.log('Metrics Found:', reportRes.metricsFound.length);
   console.log('Abnormal Findings:', reportRes.abnormalFindings.map(a => `${a.name}: ${a.value} (${a.status})`));
 
-  console.log('\n✅ All HealPoint AI Tests Passed Successfully!');
+  console.log('\n--- TEST 5: Prompt Scenario Lab Report Analyzer ---');
+  const scenarioText = `Hemoglobin: 10.2 g/dL
+RBC: 3.9 million/mcL
+WBC: 7200 /mcL
+Platelets: 240000 /mcL
+Glucose: 145 mg/dL
+Vitamin D: 14 ng/mL`;
+  const scenarioRes = analyzeLabReport(scenarioText);
+  console.log('Summary:', scenarioRes.summary);
+  console.log('Abnormal Findings Count:', scenarioRes.abnormalFindings.length);
+  scenarioRes.abnormalFindings.forEach(abn => {
+    console.log(`  - ${abn.test}: ${abn.value} ${abn.unit} (${abn.statusLabel}) | Ref: ${abn.referenceRange}`);
+    console.log(`    Significance: ${abn.explanation}`);
+  });
+  console.log('Possible Conditions:');
+  scenarioRes.possibleConditions.forEach(cond => {
+    console.log(`  * ${cond.name} -> ${cond.reason}`);
+  });
+  console.log('Recommended Specialties:');
+  scenarioRes.recommendedSpecialties.forEach(spec => {
+    console.log(`  🩺 ${spec.specialty} (${spec.priority}): ${spec.reason}`);
+  });
+
+  console.log('\n✅ All HealPoint AI & Lab Report Analyzer Tests Passed Successfully!');
 }
 
 runTests();

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import aiRoutes from './aiRoutes.js';
+import labReportRoutes from './labReportRoutes.js';
 import { getAllDoctors, getDoctorById } from '../controllers/doctorController.js';
 import { loginUser, registerPatient, registerDoctor } from '../controllers/userController.js';
 import { getPatientProfile, updatePatientProfile } from '../controllers/patientController.js';
@@ -14,8 +15,9 @@ import {
 
 const apiRouter = Router();
 
-// AI Routes
+// AI & Lab Report Routes
 apiRouter.use('/ai', aiRoutes);
+apiRouter.use('/lab-reports', labReportRoutes);
 
 // Auth & Users
 apiRouter.post('/users/login', loginUser);

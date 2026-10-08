@@ -107,6 +107,36 @@ export const MEDICAL_TAXONOMY = {
     ],
     description: 'Specializes in female reproductive health and maternity care.',
     commonConditions: ['PCOS/PCOD', 'Dysmenorrhea', 'Pregnancy Checkups', 'Hormone Fluctuations']
+  },
+  Endocrinology: {
+    name: 'Endocrinology',
+    primaryDepartment: 'General Medicine',
+    keywords: [
+      'diabetes', 'thyroid', 'hormone', 'blood sugar', 'hba1c', 'tsh', 'insulin',
+      'hypothyroid', 'hyperthyroid', 'glucose', 'metabolism', 'endocrine'
+    ],
+    description: 'Specializes in hormonal and metabolic disorders including diabetes and thyroid conditions.',
+    commonConditions: ['Type 2 Diabetes', 'Hypothyroidism', 'Hyperthyroidism', 'Metabolic Syndrome']
+  },
+  Nephrology: {
+    name: 'Nephrology',
+    primaryDepartment: 'General Medicine',
+    keywords: [
+      'kidney', 'creatinine', 'urea', 'bun', 'renal', 'filtration', 'egfr',
+      'proteinuria', 'urine protein', 'dialysis', 'kidney stone'
+    ],
+    description: 'Specializes in kidney function, filtration, and renal disorders.',
+    commonConditions: ['Chronic Kidney Disease', 'Renal Impairment', 'Proteinuria', 'Electrolyte Imbalance']
+  },
+  Hematology: {
+    name: 'Hematology',
+    primaryDepartment: 'General Medicine',
+    keywords: [
+      'blood', 'hemoglobin', 'anemia', 'platelet', 'thrombocytopenia', 'rbc',
+      'wbc', 'iron deficiency', 'bleeding', 'clotting', 'ferritin'
+    ],
+    description: 'Specializes in disorders of the blood and blood-forming tissues.',
+    commonConditions: ['Iron Deficiency Anemia', 'Thrombocytopenia', 'Leukopenia', 'Blood Dyscrasia']
   }
 };
 
