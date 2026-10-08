@@ -7,18 +7,18 @@ const AiDashboardBanner = ({ onTriggerAiAction }) => {
     { label: '⚡ Book Earliest Available Slot', query: 'Find earliest available slot tomorrow' },
     { label: '🕒 Check My Next Appointment', query: 'When is my next appointment?' },
     { label: '📋 Summarize Medical Report', query: '/summarize CBC Report: Hemoglobin 11.0 g/dL, WBC 9000, Fasting Glucose 95 mg/dL' },
-    { label: '🩺 Ask HealPoint AI Anything', query: 'What specialties are available?' }
+    { label: '🤖 Ask Ghasitaram Anything', query: 'What specialties are available?' }
   ];
 
   return (
     <div className="ai-dashboard-banner">
       <div className="ai-banner-content">
         <div className="ai-banner-badge">
-          <span className="ai-sparkle">✨</span> HealPoint AI Assistant
+          <span className="ai-sparkle">🤖</span> Ghasitaram AI • “Health ka jhatpat jawab.”
         </div>
         <h2 className="ai-banner-title">What can I help you with today?</h2>
         <p className="ai-banner-subtitle">
-          Describe your symptoms, search doctors, book appointments, or summarize your medical reports using natural language.
+          Describe symptoms, find top specialists, check available slots, or summarize medical lab reports with 🤖Ghasitaram.
         </p>
 
         <div className="ai-banner-actions">

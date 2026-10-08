@@ -169,8 +169,8 @@ export const processUserMessage = async ({ message, conversationId = 'default_se
     }
     
     const greetingMsg = nameExtracted 
-      ? `Hello **${nameExtracted}**! 👋 I am **HealPoint AI**, your intelligent healthcare assistant.\n\nHow can I help you today? You can describe any symptoms, search for top-rated specialists, check real-time available slots, or summarize your medical test reports.`
-      : `Hello! 👋 I am **HealPoint AI**, your intelligent healthcare assistant.\n\nHow can I assist you today? You can describe symptoms, find specialists, book appointment slots, or summarize medical reports.`;
+      ? `Hello **${nameExtracted}**! 👋 I am **🤖Ghasitaram** — *“Health ka jhatpat jawab.”*\n\nHow can I help you today? You can describe any symptoms, search for top-rated specialists, check real-time available slots, or summarize your medical test reports.`
+      : `Hello! 👋 I am **🤖Ghasitaram** — *“Health ka jhatpat jawab.”*\n\nHow can I assist you today? You can describe symptoms, find specialists, book appointment slots, or summarize medical reports.`;
 
     return {
       message: greetingMsg,
@@ -386,13 +386,13 @@ export const processUserMessage = async ({ message, conversationId = 'default_se
         { label: 'Find Available Slots', action: 'find_slots' },
         { label: 'Ask Another Question', action: 'new_query' }
       ],
-      safetyNotice: 'HealPoint AI provides healthcare information and scheduling assistance, not medical diagnoses.'
+      safetyNotice: '🤖Ghasitaram provides healthcare information and scheduling assistance, not medical diagnoses.'
     };
   }
 
   // Default fallback conversational response
   return {
-    message: "I am **HealPoint AI**, your healthcare scheduling assistant. I can help you find specialists for symptoms, check real-time doctor availability, book or manage appointments, and summarize medical reports.\n\nHow can I assist you today?",
+    message: "I am **🤖Ghasitaram** — *“Health ka jhatpat jawab.”* 🩺\n\nI can help you find specialists for symptoms, check real-time doctor availability, book or manage appointments, and summarize medical reports.\n\nHow can I assist you today?",
     intent: 'GENERAL_HEALTH_INFORMATION',
     suggestedActions: [
       { label: 'Find a Doctor by Symptoms', action: 'find_doctor' },

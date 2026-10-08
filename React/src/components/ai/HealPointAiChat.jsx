@@ -87,7 +87,7 @@ const HealPointAiChat = ({ navigate }) => {
     {
       id: 'welcome_1',
       sender: 'ai',
-      text: "Hello! I'm HealPoint AI, your intelligent healthcare assistant. How can I help you today?",
+      text: "Hello! I'm **🤖Ghasitaram** — *“Health ka jhatpat jawab.”* 🩺\n\nHow can I help you today? You can search for specialists, book appointment slots, check your schedule, or analyze medical lab reports.",
       intent: 'WELCOME',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       quickActions: [
@@ -101,7 +101,7 @@ const HealPointAiChat = ({ navigate }) => {
 
   const [inputMessage, setInputMessage] = useState('');
   const [isThinking, setIsThinking] = useState(false);
-  const [thinkingPhase, setThinkingPhase] = useState('HealPoint AI is thinking...');
+  const [thinkingPhase, setThinkingPhase] = useState('🤖Ghasitaram is thinking...');
   const [conversationId, setConversationId] = useState(`conv_${Date.now()}`);
 
   const messagesEndRef = useRef(null);
@@ -125,10 +125,10 @@ const HealPointAiChat = ({ navigate }) => {
     let timer;
     if (isThinking) {
       const phases = [
-        'HealPoint AI is analyzing your request...',
+        '🤖Ghasitaram is analyzing your request...',
         'Matching medical specialties & symptoms...',
         'Checking real-time doctor availability...',
-        'Preparing recommendations...'
+        '“Health ka jhatpat jawab” preparing...'
       ];
       let i = 0;
       timer = setInterval(() => {
@@ -269,7 +269,7 @@ const HealPointAiChat = ({ navigate }) => {
       {
         id: 'welcome_reset',
         sender: 'ai',
-        text: "Conversation refreshed. How can **HealPoint AI** help you right now?",
+        text: "Conversation refreshed. I'm **🤖Ghasitaram** — *“Health ka jhatpat jawab.”* How can I assist you right now?",
         intent: 'WELCOME',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         quickActions: [
@@ -287,11 +287,11 @@ const HealPointAiChat = ({ navigate }) => {
         <button 
           className="ai-launcher-button"
           onClick={() => setIsOpen(true)}
-          aria-label="Open HealPoint AI Assistant"
+          aria-label="Open 🤖Ghasitaram Assistant"
         >
           <div className="ai-launcher-pulse" />
-          <div className="ai-launcher-icon">✨</div>
-          <span className="ai-launcher-text">Ask HealPoint AI</span>
+          <div className="ai-launcher-icon">🤖</div>
+          <span className="ai-launcher-text">Ask 🤖Ghasitaram</span>
         </button>
       )}
 
@@ -301,13 +301,13 @@ const HealPointAiChat = ({ navigate }) => {
           {/* Header */}
           <div className="ai-chat-header">
             <div className="ai-header-left">
-              <div className="ai-header-avatar">✨</div>
+              <div className="ai-header-avatar">🤖</div>
               <div className="ai-header-details">
                 <div className="ai-header-title">
-                  HealPoint AI
+                  🤖 Ghasitaram
                   <span className="ai-status-badge">Online</span>
                 </div>
-                <div className="ai-header-subtitle">Your Intelligent Healthcare Assistant</div>
+                <div className="ai-header-subtitle">“Health ka jhatpat jawab.”</div>
               </div>
             </div>
             <div className="ai-header-controls">
