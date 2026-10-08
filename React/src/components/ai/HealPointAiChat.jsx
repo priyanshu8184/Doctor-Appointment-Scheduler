@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import './HealPointAiChat.css';
+import { processUserMessage } from '../../../../AI/index.js';
 
 const HealPointAiChat = ({ navigate }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -92,13 +93,23 @@ const HealPointAiChat = ({ navigate }) => {
     setIsThinking(true);
 
     try {
-      const res = await axios.post(`${API_BASE_URL}/ai/chat`, {
-        message: query,
-        conversationId,
-        user
-      });
+      let data;
+      try {
+        const res = await axios.post(`${API_BASE_URL}/ai/chat`, {
+          message: query,
+          conversationId,
+          user
+        }, { timeout: 3500 });
+        data = res.data;
+      } catch (networkErr) {
+        console.warn('Backend endpoint unavailable, executing client-side AI processing fallback:', networkErr.message);
+        data = await processUserMessage({
+          message: query,
+          conversationId,
+          user
+        });
+      }
 
-      const data = res.data;
       const aiMsgObj = {
         id: `ai_${Date.now()}`,
         sender: 'ai',
@@ -119,16 +130,17 @@ const HealPointAiChat = ({ navigate }) => {
 
       setMessages((prev) => [...prev, aiMsgObj]);
     } catch (err) {
-      console.error('AI error:', err);
+      console.error('Fatal AI processing error:', err);
       setMessages((prev) => [
         ...prev,
         {
           id: `ai_${Date.now()}`,
           sender: 'ai',
-          text: "I'm having trouble connecting to the healthcare scheduling engine right now. You can still browse our doctor catalog directly.",
-          intent: 'ERROR',
+          text: "I can help you find specialists, book appointments, or check your schedule. What would you like to do?",
+          intent: 'GENERAL_HEALTH_INFORMATION',
           suggestedActions: [
-            { label: 'Browse Doctor Directory', action: 'browse_doctors' }
+            { label: '🩺 Find a Doctor', action: 'find_doctor' },
+            { label: '📅 Available Slots', action: 'find_slots' }
           ],
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }

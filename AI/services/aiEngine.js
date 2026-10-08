@@ -154,6 +154,36 @@ export const processUserMessage = async ({ message, conversationId = 'default_se
     };
   }
 
+  // 2b. Check for greetings or personal introductions
+  const detectedEarly = detectSpecialty(userText);
+  const greetingWords = ['hi', 'hello', 'hey', 'good morning', 'good evening', 'good afternoon', 'hola'];
+  const isGreeting = greetingWords.some(g => lower === g || lower.startsWith(g + ' ') || lower.startsWith(g + ',') || lower.startsWith(g + '!'));
+  const isSelfIntro = (lower.startsWith('i am ') || lower.startsWith('my name is ') || (userText.split(/\s+/).length <= 3 && !lower.includes('pain') && !lower.includes('doctor') && !lower.includes('appointment') && !detectedEarly));
+
+  if (isGreeting || isSelfIntro) {
+    let nameExtracted = '';
+    if (lower.startsWith('i am ')) nameExtracted = userText.substring(5).trim();
+    else if (lower.startsWith('my name is ')) nameExtracted = userText.substring(11).trim();
+    else if (isSelfIntro && !isGreeting && !['what', 'how', 'why', 'can', 'help', 'book'].includes(lower.split(/\s+/)[0])) {
+      nameExtracted = userText.trim();
+    }
+    
+    const greetingMsg = nameExtracted 
+      ? `Hello **${nameExtracted}**! 👋 I am **HealPoint AI**, your intelligent healthcare assistant.\n\nHow can I help you today? You can describe any symptoms, search for top-rated specialists, check real-time available slots, or summarize your medical test reports.`
+      : `Hello! 👋 I am **HealPoint AI**, your intelligent healthcare assistant.\n\nHow can I assist you today? You can describe symptoms, find specialists, book appointment slots, or summarize medical reports.`;
+
+    return {
+      message: greetingMsg,
+      intent: 'GREETING',
+      suggestedActions: [
+        { label: '🩺 Find a Doctor by Symptoms', action: 'find_doctor' },
+        { label: '📅 Book an Appointment', action: 'find_slots' },
+        { label: '🕒 Show My Next Appointment', action: 'view_appointments' },
+        { label: '📄 Summarize Lab Report', action: 'summarize_report' }
+      ]
+    };
+  }
+
   // 3. Check for Confirmation to pending actions (e.g. Cancel or Book)
   if (conv.context.pendingAction === 'CONFIRM_CANCEL' && (lower.includes('yes') || lower.includes('cancel it') || lower.includes('confirm'))) {
     const aptId = conv.context.pendingAppointmentId;
