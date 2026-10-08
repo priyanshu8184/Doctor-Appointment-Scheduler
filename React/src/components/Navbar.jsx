@@ -29,7 +29,7 @@ const Navbar = ({ onNavigate }) => {
     }
 
     window.history.pushState({}, '', nextRoute)
-    window.location.reload()
+    window.dispatchEvent(new Event('app-navigate'))
   }
 
   return (

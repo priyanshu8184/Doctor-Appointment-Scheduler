@@ -87,7 +87,7 @@ const HealPointAiChat = ({ navigate }) => {
     {
       id: 'welcome_1',
       sender: 'ai',
-      text: "Hello! I'm **HealPoint AI**, your intelligent healthcare assistant. How can I help you today?",
+      text: "Hello! I'm HealPoint AI, your intelligent healthcare assistant. How can I help you today?",
       intent: 'WELCOME',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       quickActions: [

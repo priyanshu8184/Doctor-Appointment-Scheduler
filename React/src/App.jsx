@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Homepage from './pages/Homepage'
 import LoginPage from './pages/LoginPage'
 import SignupSelectionPage from './pages/SignupSelectionPage'
@@ -14,15 +14,34 @@ import AdminDashboard from './pages/AdminDashboard'
 import HealPointAiChat from './components/ai/HealPointAiChat'
 
 const App = () => {
-  const [route, setRoute] = useState(window.location.pathname)
+  const [route, setRoute] = useState(window.location.pathname + window.location.search)
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setRoute(window.location.pathname + window.location.search)
+    }
+
+    // Listen to browser Back / Forward arrow navigation buttons
+    window.addEventListener('popstate', handleLocationChange)
+    window.addEventListener('app-navigate', handleLocationChange)
+
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange)
+      window.removeEventListener('app-navigate', handleLocationChange)
+    }
+  }, [])
 
   const navigate = (nextRoute) => {
-    window.history.pushState({}, '', nextRoute)
-    setRoute(nextRoute)
+    const currentFull = window.location.pathname + window.location.search
+    if (nextRoute !== currentFull) {
+      window.history.pushState({}, '', nextRoute)
+      setRoute(nextRoute)
+      window.scrollTo(0, 0)
+    }
   }
 
   const currentPage = () => {
-    const basePath = route.split('?')[0]
+    const basePath = (route || window.location.pathname).split('?')[0]
     if (basePath === '/login') return <LoginPage navigate={navigate} />
     if (basePath === '/signup') return <SignupSelectionPage navigate={navigate} />
     if (basePath === '/signup/patient') return <PatientSignupPage navigate={navigate} />

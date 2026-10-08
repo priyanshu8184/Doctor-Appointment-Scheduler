@@ -9,7 +9,7 @@ const Footer = ({ onNavigate }) => {
     }
 
     window.history.pushState({}, '', nextRoute)
-    window.location.reload()
+    window.dispatchEvent(new Event('app-navigate'))
   }
   return (
     <footer className="footer" id="contact">
