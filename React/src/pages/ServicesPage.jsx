@@ -15,6 +15,13 @@ const ServicesPage = ({ navigate }) => {
     const loadServicesData = () => {
       const servicesData = [
         {
+          id: 0,
+          icon: '🧪',
+          title: 'AI Lab Report Analyzer',
+          description: 'Upload laboratory test reports (CBC, Blood Sugar, Thyroid, Lipid, Liver/Kidney) to extract values and get specialist recommendations.',
+          path: '/patient-dashboard?tab=lab-reports'
+        },
+        {
           id: 1,
           icon: '🔍',
           title: 'Find Doctors',
@@ -86,17 +93,6 @@ const ServicesPage = ({ navigate }) => {
   }, [])
 
   const handleServiceClick = (path) => {
-    if (path === '/patient-dashboard') {
-      const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
-      if (!user) {
-        navigate('/login')
-        return
-      }
-      if (user.role === 'DOCTOR') {
-        navigate('/doctor-dashboard')
-        return
-      }
-    }
     navigate(path)
   }
 

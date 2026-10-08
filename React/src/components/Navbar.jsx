@@ -50,21 +50,29 @@ const Navbar = ({ onNavigate }) => {
       </button>
 
       <nav className={`nav-links ${open ? 'open' : ''}`} aria-label="Primary navigation">
+        <a href="/patient-dashboard?tab=lab-reports" onClick={(e) => { e.preventDefault(); handleNavigate('/patient-dashboard?tab=lab-reports') }} style={{ color: '#0d9488', fontWeight: '700' }}>
+          🧪 AI Lab Analyzer
+        </a>
         <a href="/services" onClick={(e) => { e.preventDefault(); handleNavigate('/services') }}>
           Services
         </a>
         <a href="/about" onClick={(e) => { e.preventDefault(); handleNavigate('/about') }}>
           About
         </a>
-        <a href="#contact" onClick={() => setOpen(false)}>
-          Contact
-        </a>
-        <a href="/login" onClick={(e) => { e.preventDefault(); handleNavigate('/login') }}>
-          Login
-        </a>
-        <a href="/signup" onClick={(e) => { e.preventDefault(); handleNavigate('/signup') }}>
-          Register
-        </a>
+        {user ? (
+          <a href={user.role === 'DOCTOR' ? '/doctor-dashboard' : '/patient-dashboard'} onClick={(e) => { e.preventDefault(); handleNavigate(user.role === 'DOCTOR' ? '/doctor-dashboard' : '/patient-dashboard') }}>
+            Dashboard
+          </a>
+        ) : (
+          <>
+            <a href="/login" onClick={(e) => { e.preventDefault(); handleNavigate('/login') }}>
+              Login
+            </a>
+            <a href="/signup" onClick={(e) => { e.preventDefault(); handleNavigate('/signup') }}>
+              Register
+            </a>
+          </>
+        )}
         {!isDoctor && (
           <a className="nav-cta mobile-cta" href="/signup" onClick={(e) => { e.preventDefault(); handleNavigate('/signup') }}>
             Book Now
