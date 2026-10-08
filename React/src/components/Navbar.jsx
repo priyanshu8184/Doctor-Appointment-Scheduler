@@ -51,7 +51,7 @@ const Navbar = ({ onNavigate }) => {
 
       <nav className={`nav-links ${open ? 'open' : ''}`} aria-label="Primary navigation">
         <a href="/patient-dashboard?tab=lab-reports" onClick={(e) => { e.preventDefault(); handleNavigate('/patient-dashboard?tab=lab-reports') }} style={{ color: '#0d9488', fontWeight: '700' }}>
-          🧪 AI Lab Analyzer
+          🧪 Report Analyzer
         </a>
         <a href="/services" onClick={(e) => { e.preventDefault(); handleNavigate('/services') }}>
           Services

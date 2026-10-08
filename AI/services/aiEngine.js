@@ -169,8 +169,8 @@ export const processUserMessage = async ({ message, conversationId = 'default_se
     }
     
     const greetingMsg = nameExtracted 
-      ? `Hello **${nameExtracted}**! 👋 I am **🤖Ghasitaram** — *“Health ka jhatpat jawab.”*\n\nHow can I help you today? You can describe any symptoms, search for top-rated specialists, check real-time available slots, or summarize your medical test reports.`
-      : `Hello! 👋 I am **🤖Ghasitaram** — *“Health ka jhatpat jawab.”*\n\nHow can I assist you today? You can describe symptoms, find specialists, book appointment slots, or summarize medical reports.`;
+      ? `Hello **${nameExtracted}**! 👋 I am **Ghasitaram** — *“Health ka jhatpat jawab.”*\n\nHow can I help you today? You can describe any symptoms, search for top-rated specialists, check real-time available slots, or summarize your medical test reports.`
+      : `Hello! 👋 I am **Ghasitaram** — *“Health ka jhatpat jawab.”*\n\nHow can I assist you today? You can describe symptoms, find specialists, book appointment slots, or summarize medical reports.`;
 
     return {
       message: greetingMsg,
