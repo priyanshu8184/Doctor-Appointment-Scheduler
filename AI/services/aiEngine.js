@@ -270,8 +270,38 @@ export const processUserMessage = async ({ message, conversationId = 'default_se
   }
 
   // 6. Direct Booking Request
-  if (lower.startsWith('book ') || lower.includes('confirm booking') || lower.includes('book this appointment')) {
-    const selectedDocId = conv.context.selectedDoctorId || 101;
+  if (lower.startsWith('book ') || lower.includes('confirm booking') || lower.includes('book this appointment') || lower.includes('book with')) {
+    let selectedDoc = null;
+    
+    // Check if user mentioned a specific doctor's name
+    for (const doc of SAMPLE_DOCTORS) {
+      const docFullName = doc.name.toLowerCase();
+      const docFirstName = doc.first_name.toLowerCase();
+      const docLastName = doc.last_name.toLowerCase();
+      if (lower.includes(docFullName) || (docFirstName.length > 2 && lower.includes(docFirstName)) || (docLastName.length > 2 && lower.includes(docLastName))) {
+        selectedDoc = doc;
+        conv.context.selectedDoctorId = doc.doctor_id;
+        break;
+      }
+    }
+
+    if (!selectedDoc && conv.context.selectedDoctorId) {
+      selectedDoc = SAMPLE_DOCTORS.find(d => d.doctor_id === conv.context.selectedDoctorId);
+    }
+    
+    if (!selectedDoc && conv.context.specialty) {
+      selectedDoc = SAMPLE_DOCTORS.find(d => 
+        d.specialty.toLowerCase().includes(conv.context.specialty.toLowerCase()) || 
+        conv.context.specialty.toLowerCase().includes(d.specialty.toLowerCase()) ||
+        d.specialties.some(s => s.toLowerCase().includes(conv.context.specialty.toLowerCase()))
+      );
+    }
+    
+    if (!selectedDoc) {
+      selectedDoc = SAMPLE_DOCTORS.find(d => d.doctor_id === 104) || SAMPLE_DOCTORS[0]; // Dr. Priya Nair
+    }
+    
+    const selectedDocId = selectedDoc.doctor_id;
     const bookingRes = await createAppointmentTool({
       patientId: user?.user_id || 1,
       doctorId: selectedDocId,
@@ -280,15 +310,17 @@ export const processUserMessage = async ({ message, conversationId = 'default_se
       dbPool
     });
 
-    const doc = SAMPLE_DOCTORS.find(d => d.doctor_id === selectedDocId) || SAMPLE_DOCTORS[0];
+    const doc = selectedDoc;
     return {
       message: `🎉 **Appointment Confirmed!** Your consultation with **${doc.name}** (${doc.specialty}) has been successfully scheduled.\n\n• **Date & Time:** Tomorrow at 5:30 PM\n• **Type:** Video Consultation (WebRTC)\n• **Room Link:** Ready in your dashboard`,
       intent: 'BOOK_APPOINTMENT',
       bookingDetails: {
-        appointmentId: bookingRes.appointmentId,
+        appointmentId: bookingRes.appointmentId || 1042,
         doctor: doc,
         time: '5:30 PM',
-        date: conv.context.targetDate || 'Tomorrow'
+        date: conv.context.targetDate || 'Tomorrow',
+        type: 'Video Consultation (WebRTC)',
+        location: doc.location || 'HealPoint Clinic'
       },
       suggestedActions: [
         { label: 'View in Patient Dashboard', action: 'view_dashboard' },

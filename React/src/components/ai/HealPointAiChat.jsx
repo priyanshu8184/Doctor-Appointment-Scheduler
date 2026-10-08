@@ -1,7 +1,84 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import './HealPointAiChat.css';
-import { processUserMessage } from '../../../../AI/index.js';
+import { processUserMessage, SAMPLE_DOCTORS } from '../../../../AI/index.js';
+
+// Parse inline formatting tokens like **bold text**
+const parseInlineFormatting = (text) => {
+  if (!text) return null;
+  const parts = [];
+  let remaining = text;
+  let keyIdx = 0;
+
+  while (remaining) {
+    const boldMatch = remaining.match(/\*\*(.+?)\*\*/);
+    if (boldMatch) {
+      const matchIndex = boldMatch.index;
+      if (matchIndex > 0) {
+        parts.push(remaining.substring(0, matchIndex));
+      }
+      parts.push(
+        <strong key={`b-${keyIdx++}`} className="ai-bold-text">
+          {boldMatch[1]}
+        </strong>
+      );
+      remaining = remaining.substring(matchIndex + boldMatch[0].length);
+    } else {
+      parts.push(remaining);
+      break;
+    }
+  }
+
+  return parts;
+};
+
+// Render multi-line AI messages cleanly with styled bullet points and paragraphs
+const renderFormattedMessage = (rawText) => {
+  if (!rawText) return null;
+  const lines = rawText.split('\n');
+  const elements = [];
+  let currentBullets = [];
+
+  const flushBullets = () => {
+    if (currentBullets.length > 0) {
+      elements.push(
+        <ul key={`ul-${elements.length}`} className="ai-bullet-list">
+          {currentBullets.map((bText, idx) => (
+            <li key={idx} className="ai-bullet-item">
+              <span className="ai-bullet-dot">•</span>
+              <span className="ai-bullet-content">{parseInlineFormatting(bText)}</span>
+            </li>
+          ))}
+        </ul>
+      );
+      currentBullets = [];
+    }
+  };
+
+  lines.forEach((line, lineIdx) => {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      flushBullets();
+      return;
+    }
+
+    // Identify bullet items: starts with •, -, or * followed by a space
+    if (trimmed.startsWith('•') || trimmed.startsWith('- ') || (trimmed.startsWith('* ') && !trimmed.startsWith('**'))) {
+      const cleaned = trimmed.replace(/^[•\-\*]\s*/, '');
+      currentBullets.push(cleaned);
+    } else {
+      flushBullets();
+      elements.push(
+        <p key={`p-${lineIdx}`} className="ai-msg-paragraph">
+          {parseInlineFormatting(trimmed)}
+        </p>
+      );
+    }
+  });
+
+  flushBullets();
+  return elements;
+};
 
 const HealPointAiChat = ({ navigate }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -268,10 +345,49 @@ const HealPointAiChat = ({ navigate }) => {
                     
                     <div className={`ai-message-bubble ${msg.isEmergency ? 'emergency-bubble' : ''}`}>
                       <div className="ai-msg-text">
-                        {msg.text.split('\n').map((line, idx) => (
-                          <p key={idx}>{line}</p>
-                        ))}
+                        {renderFormattedMessage(msg.text)}
                       </div>
+
+                      {/* Render Appointment Booking Confirmation Summary Card */}
+                      {msg.bookingDetails && (
+                        <div className="ai-booking-confirmation-card">
+                          <div className="ai-booking-header">
+                            <div className="ai-booking-status-pill">
+                              <span className="ai-status-check">✓</span> Appointment Confirmed
+                            </div>
+                            <span className="ai-booking-ref">#{msg.bookingDetails.appointmentId || '1042'}</span>
+                          </div>
+                          
+                          <div className="ai-booking-doc-row">
+                            <div className="ai-booking-avatar">👨‍⚕️</div>
+                            <div className="ai-booking-doc-details">
+                              <h4 className="ai-booking-doc-name">{msg.bookingDetails.doctor?.name || 'Dr. Priya Nair'}</h4>
+                              <span className="ai-booking-doc-spec">{msg.bookingDetails.doctor?.specialty || 'General Medicine'}</span>
+                            </div>
+                          </div>
+
+                          <ul className="ai-booking-bullet-details">
+                            <li>
+                              <span className="ai-bullet-icon">📅</span>
+                              <div className="ai-bullet-text">
+                                <strong>Date & Time:</strong> {msg.bookingDetails.date || 'Tomorrow'} at {msg.bookingDetails.time || '5:30 PM'}
+                              </div>
+                            </li>
+                            <li>
+                              <span className="ai-bullet-icon">📹</span>
+                              <div className="ai-bullet-text">
+                                <strong>Consultation Type:</strong> {msg.bookingDetails.type || 'Video Consultation (WebRTC)'}
+                              </div>
+                            </li>
+                            <li>
+                              <span className="ai-bullet-icon">📍</span>
+                              <div className="ai-bullet-text">
+                                <strong>Location / Link:</strong> {msg.bookingDetails.location || msg.bookingDetails.doctor?.location || 'Ready in Patient Dashboard'}
+                              </div>
+                            </li>
+                          </ul>
+                        </div>
+                      )}
 
                       {/* Render Quick Starter Chips */}
                       {msg.quickActions && msg.quickActions.length > 0 && (

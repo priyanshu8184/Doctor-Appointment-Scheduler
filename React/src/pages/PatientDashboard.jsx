@@ -7,6 +7,29 @@ import { io } from 'socket.io-client'
 import Peer from 'peerjs'
 import AiDashboardBanner from '../components/ai/AiDashboardBanner'
 import AiLabReportAnalyzer from '../components/ai/AiLabReportAnalyzer'
+import { SAMPLE_DOCTORS } from '../../../AI/index.js'
+
+// Helper to resolve registered doctor information
+const resolveDoctorInfo = (docId, doctorsMap = {}) => {
+  if (docId && doctorsMap[docId]) {
+    const d = doctorsMap[docId];
+    return {
+      name: d.name || (d.first_name ? `Dr. ${d.first_name} ${d.last_name}` : 'Dr. Priya Nair'),
+      specialty: d.specialty || d.specialization || 'General Medicine',
+      location: d.location || 'HealPoint Health Clinic'
+    };
+  }
+  const found = (SAMPLE_DOCTORS || []).find(d => d.doctor_id === Number(docId)) || 
+    (SAMPLE_DOCTORS || []).find(d => d.doctor_id === 104) || 
+    SAMPLE_DOCTORS[0] || 
+    { name: 'Dr. Priya Nair', specialty: 'General Medicine', location: 'HealPoint Health Clinic' };
+  
+  return {
+    name: found.name,
+    specialty: found.specialty || found.specialties?.[0] || 'General Medicine',
+    location: found.location || 'HealPoint Health Clinic'
+  };
+};
 
 const PatientDashboard = ({ navigate }) => {
   const handleLogout = () => {
@@ -154,21 +177,36 @@ const PatientDashboard = ({ navigate }) => {
       setProfileData(fullProfile)
       setProfileForm(fullProfile)
 
-      // B. Fetch Appointments
+      // B. Fetch Doctors Directory & Appointments
+      let doctorsMap = {}
+      try {
+        const docsRes = await axios.get(`${API_BASE_URL}/doctors`)
+        const docsList = docsRes.data.doctors || docsRes.data || []
+        docsList.forEach(d => {
+          const id = d.doctor_id || d.id
+          if (id) doctorsMap[id] = d
+        })
+      } catch (docErr) {
+        console.warn('Doctors directory fetch fallback to local registry:', docErr.message)
+      }
+
       const appointmentsRes = await axios.get(`${API_BASE_URL}/appointments`)
       const allAppointments = appointmentsRes.data.appointments || []
       const myApts = allAppointments
         .filter(a => String(a.patient_id) === String(patientId))
-        .map(apt => ({
-          id: apt.appointment_id,
-          doctorName: `Doctor #${apt.doctor_id}`,
-          specialization: 'General Medicine',
-          date: apt.appointment_datetime,
-          time: new Date(apt.appointment_datetime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-          status: apt.status,
-          type: apt.appointment_type,
-          location: 'HealPoint Clinic'
-        }))
+        .map(apt => {
+          const docInfo = resolveDoctorInfo(apt.doctor_id, doctorsMap)
+          return {
+            id: apt.appointment_id,
+            doctorName: apt.doctor_name || docInfo.name,
+            specialization: apt.specialization || docInfo.specialty,
+            date: apt.appointment_datetime,
+            time: new Date(apt.appointment_datetime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+            status: apt.status,
+            type: apt.appointment_type || 'VIDEO',
+            location: apt.location || docInfo.location
+          }
+        })
 
       if (myApts.length > 0) {
         const now = new Date()
@@ -182,27 +220,33 @@ const PatientDashboard = ({ navigate }) => {
       const paymentsRes = await axios.get(`${API_BASE_URL}/payments/patient/${patientId}`)
       const allPayments = paymentsRes.data.payments || []
       if (allPayments.length > 0) {
-        setPayments(allPayments.map(p => ({
-          id: p.payment_id,
-          date: new Date(p.created_at).toLocaleDateString(),
-          doctorName: `Appointment #${p.appointment_id}`,
-          amount: `$${p.total_amount}`,
-          status: p.payment_status,
-          method: p.payment_type
-        })))
+        setPayments(allPayments.map(p => {
+          const docInfo = resolveDoctorInfo(p.doctor_id || 104, doctorsMap)
+          return {
+            id: p.payment_id,
+            date: new Date(p.created_at).toLocaleDateString(),
+            doctorName: p.doctor_name || docInfo.name,
+            amount: `$${p.total_amount || '50.00'}`,
+            status: p.payment_status,
+            method: p.payment_type
+          }
+        }))
       }
 
       // D. Fetch Reviews
       const reviewsRes = await axios.get(`${API_BASE_URL}/reviews/patient/${patientId}`)
       const allReviews = reviewsRes.data.reviews || []
       if (allReviews.length > 0) {
-        setReviews(allReviews.map(r => ({
-          id: r.review_id,
-          doctorName: `Doctor #${r.doctor_id}`,
-          rating: r.rating,
-          date: new Date(r.created_at).toLocaleDateString(),
-          reviewText: r.comment
-        })))
+        setReviews(allReviews.map(r => {
+          const docInfo = resolveDoctorInfo(r.doctor_id || 104, doctorsMap)
+          return {
+            id: r.review_id,
+            doctorName: r.doctor_name || docInfo.name,
+            rating: r.rating,
+            date: new Date(r.created_at).toLocaleDateString(),
+            reviewText: r.comment
+          }
+        }))
       }
     } catch (err) {
       console.warn("Backend API not reachable, using local fallback state:", err.message)

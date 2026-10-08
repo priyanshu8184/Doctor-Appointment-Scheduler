@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
+import { SAMPLE_DOCTORS } from '../../../AI/index.js'
 
 const TopDoctorsSection = () => {
   const [doctors, setDoctors] = useState([])
@@ -12,15 +13,24 @@ const TopDoctorsSection = () => {
       try {
         setLoading(true)
         const res = await axios.get(`${API_BASE_URL}/doctors`)
-        const fetched = (res.data.doctors || res.data || []).slice(0, 3).map(doc => ({
+        const docsList = res.data.doctors || res.data || []
+        const listToUse = docsList.length > 0 ? docsList : SAMPLE_DOCTORS
+        const fetched = listToUse.slice(0, 3).map(doc => ({
           name: doc.name || `Dr. ${doc.first_name} ${doc.last_name}`,
-          specialty: doc.specialization || 'General Medicine',
+          specialty: doc.specialty || doc.specialization || 'General Medicine',
           rating: doc.rating || '4.8',
-          availability: doc.availability || 'Next available: Today'
+          availability: typeof doc.availability === 'string' ? doc.availability : 'Next available: Today'
         }))
         setDoctors(fetched)
       } catch (err) {
-        console.error("Error fetching top doctors:", err)
+        console.warn("Using registered fallback doctors:", err.message)
+        const fetched = SAMPLE_DOCTORS.slice(0, 3).map(doc => ({
+          name: doc.name,
+          specialty: doc.specialty,
+          rating: doc.rating,
+          availability: 'Next available: Today'
+        }))
+        setDoctors(fetched)
       } finally {
         setLoading(false)
       }
