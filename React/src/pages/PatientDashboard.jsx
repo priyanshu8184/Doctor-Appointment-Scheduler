@@ -826,7 +826,7 @@ const PatientDashboard = ({ navigate }) => {
             onClick={() => setActiveTab('lab-reports')}
             style={activeTab === 'lab-reports' ? { backgroundColor: '#0f766e', color: 'white', fontWeight: 'bold' } : { color: '#2dd4bf' }}
           >
-            🧪 AI Lab Analyzer
+            🧪 Report Analyzer
           </button>
           <button
             type="button"
