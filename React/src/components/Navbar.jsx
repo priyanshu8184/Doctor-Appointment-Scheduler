@@ -8,6 +8,9 @@ const Navbar = ({ onNavigate }) => {
   const userStr = localStorage.getItem('user')
   const user = userStr ? JSON.parse(userStr) : null
   const isDoctor = user?.role === 'DOCTOR'
+  const isAdmin = user?.role === 'ADMIN'
+
+  const currentPath = window.location.pathname
 
   useEffect(() => {
     const onOutside = (e) => {
@@ -15,7 +18,6 @@ const Navbar = ({ onNavigate }) => {
         setOpen(false)
       }
     }
-    // use pointerdown to avoid race with React click handlers
     document.addEventListener('pointerdown', onOutside)
     return () => document.removeEventListener('pointerdown', onOutside)
   }, [open])
@@ -32,56 +34,88 @@ const Navbar = ({ onNavigate }) => {
     window.dispatchEvent(new Event('app-navigate'))
   }
 
+  const getDashboardPath = () => {
+    if (isAdmin) return '/admin-dashboard'
+    if (isDoctor) return '/doctor-dashboard'
+    return '/patient-dashboard'
+  }
+
+  const isHomeActive = currentPath === '/' || currentPath === ''
+
   return (
-    <header className="navbar" ref={containerRef}>
-      <a className="brand" href="/" onClick={(e) => { e.preventDefault(); handleNavigate('/') }}>
-        <img src="/heelpoint_logo.png" alt="HealPoint logo" className="brand-logo" />
-      </a>
-
-      <button
-        className="nav-toggle"
-        type="button"
-        aria-label="Toggle navigation"
-        aria-expanded={open}
-        onClick={() => setOpen((s) => !s)}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(s => !s) } }}
-      >
-        <span className="hamburger" aria-hidden="true" />
-      </button>
-
-      <nav className={`nav-links ${open ? 'open' : ''}`} aria-label="Primary navigation">
-        <a href="/services" onClick={(e) => { e.preventDefault(); handleNavigate('/services') }}>
-          Services
+    <header className="navbar-header" ref={containerRef}>
+      <div className="navbar-container">
+        <a className="brand" href="/" onClick={(e) => { e.preventDefault(); handleNavigate('/') }}>
+          <img src="/heelpoint_logo.png" alt="HealPoint" className="brand-logo" />
         </a>
-        <a href="/about" onClick={(e) => { e.preventDefault(); handleNavigate('/about') }}>
-          About
-        </a>
-        {user ? (
-          <a href={user.role === 'DOCTOR' ? '/doctor-dashboard' : '/patient-dashboard'} onClick={(e) => { e.preventDefault(); handleNavigate(user.role === 'DOCTOR' ? '/doctor-dashboard' : '/patient-dashboard') }}>
-            Dashboard
+
+        <button
+          className="nav-toggle"
+          type="button"
+          aria-label="Toggle navigation"
+          aria-expanded={open}
+          onClick={() => setOpen((s) => !s)}
+        >
+          <span className="hamburger" aria-hidden="true" />
+        </button>
+
+        <nav className={`nav-links ${open ? 'open' : ''}`} aria-label="Primary navigation">
+          <a 
+            href="/" 
+            className={`nav-link ${isHomeActive ? 'active' : ''}`}
+            onClick={(e) => { e.preventDefault(); handleNavigate('/') }}
+          >
+            Home
           </a>
-        ) : (
-          <>
-            <a href="/login" onClick={(e) => { e.preventDefault(); handleNavigate('/login') }}>
-              Login
+          <a 
+            href="/services" 
+            className={`nav-link ${currentPath === '/services' ? 'active' : ''}`}
+            onClick={(e) => { e.preventDefault(); handleNavigate('/services') }}
+          >
+            Services
+          </a>
+          <a 
+            href="/about" 
+            className={`nav-link ${currentPath === '/about' ? 'active' : ''}`}
+            onClick={(e) => { e.preventDefault(); handleNavigate('/about') }}
+          >
+            About
+          </a>
+
+          {user ? (
+            <a 
+              href={getDashboardPath()} 
+              className="nav-user-pill"
+              onClick={(e) => { e.preventDefault(); handleNavigate(getDashboardPath()) }}
+            >
+              <span className="user-dot" />
+              <span>{user.first_name || 'Dashboard'}</span>
             </a>
-            <a href="/signup" onClick={(e) => { e.preventDefault(); handleNavigate('/signup') }}>
-              Register
+          ) : (
+            <div className="nav-auth-group">
+              <a 
+                href="/login" 
+                className={`nav-link nav-link-login ${currentPath === '/login' ? 'active' : ''}`} 
+                onClick={(e) => { e.preventDefault(); handleNavigate('/login') }}
+              >
+                Log in
+              </a>
+            </div>
+          )}
+
+          {!isDoctor && !isAdmin && (
+            <a className="nav-cta mobile-cta" href="/doctors" onClick={(e) => { e.preventDefault(); handleNavigate('/doctors') }}>
+              Book Appointment
             </a>
-          </>
-        )}
-        {!isDoctor && (
-          <a className="nav-cta mobile-cta" href="/signup" onClick={(e) => { e.preventDefault(); handleNavigate('/signup') }}>
-            Book Now
+          )}
+        </nav>
+
+        {!isDoctor && !isAdmin && (
+          <a className="nav-cta desktop-cta" href="/doctors" onClick={(e) => { e.preventDefault(); handleNavigate('/doctors') }}>
+            Book Appointment
           </a>
         )}
-      </nav>
-
-      {!isDoctor && (
-        <a className="nav-cta desktop-cta" href="/signup" onClick={(e) => { e.preventDefault(); handleNavigate('/signup') }}>
-          Book Now
-        </a>
-      )}
+      </div>
     </header>
   )
 }

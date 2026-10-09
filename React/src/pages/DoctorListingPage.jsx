@@ -5,10 +5,28 @@ import './DoctorListingPage.css'
 import axios from 'axios'
 import { SAMPLE_DOCTORS } from '../../../AI/index.js'
 
+// Authentic clinician portrait mapping with fallback
+const DOCTOR_PORTRAITS = {
+  101: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=320&q=80',
+  102: 'https://images.unsplash.com/photo-1594824813589-9a250325ff2a?auto=format&fit=crop&w=320&q=80',
+  103: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=320&q=80',
+  104: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=320&q=80',
+  105: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=320&q=80',
+  106: 'https://images.unsplash.com/photo-1594824813589-9a250325ff2a?auto=format&fit=crop&w=320&q=80'
+}
+
+const getDoctorPortrait = (doc, idx) => {
+  if (doc.profile_picture) return doc.profile_picture
+  if (doc.image) return doc.image
+  const id = doc.id || doc.doctor_id || (101 + (idx % 6))
+  return DOCTOR_PORTRAITS[id] || DOCTOR_PORTRAITS[101 + (idx % 6)]
+}
+
 const DoctorListingPage = ({ navigate }) => {
   const [doctorsList, setDoctorsList] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [failedImages, setFailedImages] = useState({})
 
   const queryParams = new URLSearchParams(window.location.search)
   const initialSearch = queryParams.get('search') || ''
@@ -37,7 +55,7 @@ const DoctorListingPage = ({ navigate }) => {
   })
 
   const [currentPage, setCurrentPage] = useState(1)
-  const pageSize = 3
+  const pageSize = 6
 
   const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'
 
@@ -49,30 +67,34 @@ const DoctorListingPage = ({ navigate }) => {
         const docsList = res.data.doctors || res.data || []
         const listToUse = docsList.length > 0 ? docsList : SAMPLE_DOCTORS
         // Map backend DB properties to what the frontend expects
-        const mapped = listToUse.map(doc => ({
-          id: doc.doctor_id || doc.id,
+        const mapped = listToUse.map((doc, idx) => ({
+          id: doc.doctor_id || doc.id || (101 + idx),
           name: doc.name || `Dr. ${doc.first_name} ${doc.last_name}`,
           specialization: doc.specialty || doc.specialization || 'General Medicine',
           location: doc.location || 'HealPoint Medical Center',
           availability: typeof doc.availability === 'string' ? doc.availability : 'Today · 4:00 PM',
-          experience: doc.experience || '8+ years',
-          rating: Number(doc.rating) || 4.8,
-          bio: doc.bio || 'Board-certified specialist practicing at HealPoint Health Network.',
-          profile_picture: doc.profile_picture ? `${API_BASE_URL.replace('/api', '')}${doc.profile_picture}` : null
+          experience: doc.experience || '8+ years exp',
+          rating: Number(doc.rating || 4.8).toFixed(1),
+          reviewsCount: doc.reviews_count || (110 + idx * 12),
+          fee: doc.consultation_fee ? `₹${doc.consultation_fee}` : '₹650',
+          bio: doc.bio || 'Board-certified specialist dedicated to compassionate, evidence-based patient care.',
+          portraitUrl: getDoctorPortrait(doc, idx)
         }))
         setDoctorsList(mapped)
       } catch (err) {
         console.warn("Error loading doctors from API, using registered doctors:", err.message)
-        const mapped = (SAMPLE_DOCTORS || []).map(doc => ({
+        const mapped = (SAMPLE_DOCTORS || []).map((doc, idx) => ({
           id: doc.doctor_id,
           name: doc.name,
           specialization: doc.specialty,
           location: doc.location,
           availability: 'Today · 4:00 PM',
-          experience: doc.experience || '8+ years',
-          rating: doc.rating,
-          bio: doc.bio,
-          profile_picture: null
+          experience: doc.experience || '8+ years exp',
+          rating: Number(doc.rating).toFixed(1),
+          reviewsCount: doc.reviews_count || 124,
+          fee: `₹${doc.consultation_fee}`,
+          bio: doc.bio || 'Board-certified specialist dedicated to compassionate, evidence-based patient care.',
+          portraitUrl: getDoctorPortrait(doc, idx)
         }))
         setDoctorsList(mapped)
       } finally {
@@ -265,48 +287,81 @@ const DoctorListingPage = ({ navigate }) => {
               <p>{error}</p>
             </div>
           ) : paginatedDoctors.length > 0 ? (
-            paginatedDoctors.map((doctor) => (
-              <article className="doctor-card" key={doctor.id}>
-                <div className="doctor-card-header" style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                  <div style={{ width: '60px', height: '60px', borderRadius: '50%', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                    {doctor.profile_picture ? (
-                      <img src={doctor.profile_picture} alt={doctor.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <span style={{ fontSize: '1.5rem', color: '#94a3b8' }}>👨‍⚕️</span>
-                    )}
-                  </div>
-                  <div className="doctor-info" style={{ flex: 1 }}>
-                    <h2 className="doctor-name">{doctor.name}</h2>
-                    <span className="doctor-specialty-badge">{doctor.specialization}</span>
-                  </div>
-                  <div className="doctor-rating-box">
-                    <span className="doctor-rating-value">{doctor.rating}</span>
-                    <span className="doctor-rating-star">⭐</span>
-                  </div>
-                </div>
+            paginatedDoctors.map((doctor) => {
+              const cleanInitial = doctor.name.replace('Dr. ', '').charAt(0) || 'D'
+              const isImageFailed = failedImages[doctor.id]
 
-                <p className="doctor-bio">{doctor.bio}</p>
+              return (
+                <article className="doctor-card" key={doctor.id}>
+                  <div className="doc-card-top-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
+                    <span className="doc-avail-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', fontWeight: 600, color: '#087F72', background: 'rgba(8, 127, 114, 0.08)', padding: '0.25rem 0.6rem', borderRadius: '100px' }}>
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#087F72' }} />
+                      <span>{doctor.availability}</span>
+                    </span>
+                    <span className="doc-fee-badge" style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111C2F', background: '#F5F8F6', padding: '0.25rem 0.6rem', borderRadius: '6px', border: '1px solid #E1E8E5' }}>{doctor.fee}</span>
+                  </div>
 
-                <div className="doctor-details">
-                  <div className="detail-item">
-                    <span className="detail-icon">📍</span>
-                    <span className="detail-text">{doctor.location}</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-icon">🕒</span>
-                    <span className="detail-text">{doctor.availability}</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-icon">🩺</span>
-                    <span className="detail-text">{doctor.experience}</span>
-                  </div>
-                </div>
+                  <div className="doctor-card-header" style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', marginBottom: '0.85rem', paddingBottom: '0.85rem', borderBottom: '1px solid #E1E8E5' }}>
+                    <div style={{ position: 'relative', width: '56px', height: '56px', borderRadius: '12px', overflow: 'hidden', flexShrink: 0, border: '1px solid #E1E8E5', background: '#F5F8F6' }}>
+                      {!isImageFailed ? (
+                        <img 
+                          src={doctor.portraitUrl} 
+                          alt={doctor.name} 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          onError={() => setFailedImages(prev => ({ ...prev, [doctor.id]: true }))}
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #111C2F, #087F72)', color: '#fff', fontWeight: 700, fontSize: '1.2rem' }}>
+                          {cleanInitial}
+                        </div>
+                      )}
+                      <span style={{ position: 'absolute', bottom: '2px', right: '2px', width: '15px', height: '15px', borderRadius: '50%', background: '#087F72', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 800, border: '1.5px solid #fff' }}>✓</span>
+                    </div>
 
-                {!isDoctor && (
-                  <button type="button" className="primary-btn book-btn" onClick={() => setSelectedDoctorForBooking(doctor)}>Book Appointment</button>
-                )}
-              </article>
-            ))
+                    <div className="doctor-info" style={{ flex: 1, minWidth: 0 }}>
+                      <h2 className="doctor-name" style={{ margin: '0 0 0.25rem', fontSize: '1.05rem', fontWeight: 700, color: '#172033', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{doctor.name}</h2>
+                      <span className="doctor-specialty-badge" style={{ display: 'inline-block', background: 'rgba(8, 127, 114, 0.08)', color: '#087F72', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600 }}>{doctor.specialization}</span>
+                    </div>
+
+                    <div className="doctor-rating-box" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: '#FFFBEB', border: '1px solid #FEF3C7', padding: '0.25rem 0.5rem', borderRadius: '6px' }}>
+                      <span style={{ color: '#F59E0B', fontSize: '0.85rem' }}>★</span>
+                      <strong style={{ fontSize: '0.85rem', color: '#92400E' }}>{doctor.rating}</strong>
+                    </div>
+                  </div>
+
+                  <p className="doctor-bio" style={{ margin: '0 0 0.85rem', color: '#5B6778', fontSize: '0.88rem', lineHeight: 1.55 }}>{doctor.bio}</p>
+
+                  <div className="doctor-details" style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', marginBottom: '1rem', flexGrow: 1 }}>
+                    <div className="detail-item" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#5B6778' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B6778" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                      </svg>
+                      <span className="detail-text" style={{ fontWeight: 500 }}>{doctor.location}</span>
+                    </div>
+                    <div className="detail-item" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#5B6778' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B6778" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                      </svg>
+                      <span className="detail-text" style={{ fontWeight: 500 }}>{doctor.experience}</span>
+                    </div>
+                  </div>
+
+                  {!isDoctor && (
+                    <button 
+                      type="button" 
+                      className="primary-btn book-btn" 
+                      onClick={() => setSelectedDoctorForBooking(doctor)}
+                      style={{ width: '100%', padding: '0.75rem', fontSize: '0.9rem', fontWeight: 600, borderRadius: '8px', cursor: 'pointer', border: 'none', background: '#087F72', color: '#ffffff' }}
+                    >
+                      Book Appointment
+                    </button>
+                  )}
+                </article>
+              )
+            })
           ) : (
             <div className="empty-state">
               <h2>No doctors found</h2>

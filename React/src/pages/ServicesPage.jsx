@@ -166,7 +166,7 @@ const ServicesPage = ({ navigate }) => {
         </section>
       </main>
 
-      <Footer />
+      <Footer onNavigate={navigate} />
     </div>
   )
 }

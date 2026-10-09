@@ -585,7 +585,7 @@ const DoctorDashboard = ({ navigate }) => {
           <h1 className="content-title">Doctor Dashboard</h1>
           <button 
             type="button" 
-            onClick={() => navigate('/home')} 
+            onClick={() => navigate('/')} 
             style={{ marginLeft: 'auto', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             aria-label="Go to Home"
             title="Go to Home"

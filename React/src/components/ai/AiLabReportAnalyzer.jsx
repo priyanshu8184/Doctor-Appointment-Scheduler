@@ -456,11 +456,11 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
               <span className="ai-sparkle-icon">✨</span> HealPoint AI Medical Intelligence
             </div>
             <h2 className="header-title">🧪 Understand your lab report with HealPoint AI</h2>
-            <p className="header-subtitle">
+            {/* <p className="header-subtitle">
               Upload your medical laboratory report (CBC, Blood Glucose, Lipid Profile, Thyroid, Liver/Kidney tests, Vitamins)
               and our clinical AI engine will summarize important findings, highlight abnormal values, explain potential health
               implications, and recommend the most suitable doctors with instant appointment booking.
-            </p>
+            </p> */}
           </div>
 
           {/* Upload & Demo Selector Section */}

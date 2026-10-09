@@ -34,8 +34,8 @@ With HealPoint:
 ## 💡 Why HealPoint? (Problem & Solution)
 
 ### The Problems in Traditional Healthcare:
-1. **Long Waiting Times:** Patients spend hours waiting at clinics without knowing exact consultation times.
-2. **Scheduling Hassles & Double Bookings:** Manual paper appointments often result in scheduling overlaps or confusion.
+1. Long Waiting Times: Patients spend hours waiting at clinics without knowing exact consultation times.
+2. Scheduling Hassles & Double Bookings: Manual paper appointments often result in scheduling overlaps or confusion.
 3. **Distance & Travel Barriers:** Patients living far away or unable to travel struggle to reach specialists.
 4. **Lost Medical Papers:** Physical prescriptions and diagnosis slips get misplaced over time.
 5. **No-Shows & Empty Slots:** When patients cancel without notice, doctors lose time that another patient could have used.
@@ -203,7 +203,4 @@ Make sure you have installed:
 - 🏥 **Automated Insurance Verification:** Instant verification with health insurance provider APIs.
 - ⌚ **Smart Health Device Sync:** Live sync with smartwatches for blood pressure and heart rate monitoring during video consultations.
 
----
 
-## 📄 License
-This project is open-source and available under the [MIT License](LICENSE).

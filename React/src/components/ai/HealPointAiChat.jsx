@@ -287,50 +287,86 @@ const HealPointAiChat = ({ navigate }) => {
         <button 
           className="ai-launcher-button"
           onClick={() => setIsOpen(true)}
-          aria-label="Open Ghasitaram Assistant"
+          aria-label="Open Ghasitaram Medical Assistant"
         >
-          <div className="ai-launcher-pulse" />
-          <div className="ai-launcher-icon">🤖</div>
-          <span className="ai-launcher-text">Ask Ghasitaram</span>
+          <div className="ai-launcher-icon-wrap">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              <path d="M12 7v6"/>
+              <path d="M9 10h6"/>
+            </svg>
+            <span className="ai-launcher-online-dot" />
+          </div>
+          <div className="ai-launcher-content">
+            <span className="ai-launcher-label">Ask Ghasitaram</span>
+            <span className="ai-launcher-sub">AI Health Assistant</span>
+          </div>
         </button>
       )}
 
       {/* Main AI Chat Interface Modal */}
       {isOpen && (
-        <div className={`ai-chat-window ${isMinimized ? 'minimized' : ''}`}>
+        <div className={`ai-chat-window ${isMinimized ? 'minimized' : ''}`} role="dialog" aria-label="Ghasitaram Medical Assistant">
           {/* Header */}
           <div className="ai-chat-header">
             <div className="ai-header-left">
-              <div className="ai-header-avatar">🤖</div>
+              <div className="ai-header-avatar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  <path d="M12 7v6"/>
+                  <path d="M9 10h6"/>
+                </svg>
+              </div>
               <div className="ai-header-details">
                 <div className="ai-header-title">
-                  Ghasitaram
-                  <span className="ai-status-badge">Online</span>
+                  <span>Ghasitaram</span>
+                  <span className="ai-status-badge">
+                    <span className="ai-status-dot" /> Online
+                  </span>
                 </div>
-                <div className="ai-header-subtitle">“Health ka jhatpat jawab.”</div>
+                <div className="ai-header-subtitle">HealPoint AI Care Assistant</div>
               </div>
             </div>
             <div className="ai-header-controls">
               <button 
+                type="button"
                 className="ai-ctrl-btn" 
-                title="Clear Conversation" 
+                title="Reset Conversation" 
+                aria-label="Reset Conversation"
                 onClick={clearChat}
               >
-                🔄
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
               </button>
               <button 
+                type="button"
                 className="ai-ctrl-btn" 
                 title={isMinimized ? "Maximize" : "Minimize"} 
+                aria-label={isMinimized ? "Maximize" : "Minimize"}
                 onClick={() => setIsMinimized(!isMinimized)}
               >
-                {isMinimized ? '▢' : '—'}
+                {isMinimized ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  </svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                )}
               </button>
               <button 
+                type="button"
                 className="ai-ctrl-btn close-btn" 
                 title="Close AI Assistant" 
+                aria-label="Close AI Assistant"
                 onClick={() => setIsOpen(false)}
               >
-                ✕
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
               </button>
             </div>
           </div>

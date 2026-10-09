@@ -130,7 +130,7 @@ export const processUserMessage = async ({ message, conversationId = 'default_se
   // 1. Emergency Safety Filter
   if (checkEmergency(userText)) {
     return {
-      message: "⚠️ **URGENT MEDICAL NOTICE**: What you are describing may require immediate emergency medical care. Please call your local emergency service (112 or 911) or visit the nearest hospital emergency room immediately.\n\nHealPoint AI cannot provide emergency medical care or diagnosis. Once you are safe, I can assist with standard scheduling.",
+      message: "⚠️ URGENT MEDICAL NOTICE: What you are describing may require immediate emergency medical care. Please call your local emergency service (112 or 911) or visit the nearest hospital emergency room immediately.\n\nHealPoint AI cannot provide emergency medical care or diagnosis. Once you are safe, I can assist with standard scheduling.",
       intent: 'EMERGENCY_TRIAGE',
       isEmergency: true,
       suggestedActions: [
@@ -169,9 +169,10 @@ export const processUserMessage = async ({ message, conversationId = 'default_se
     }
     
     const greetingMsg = nameExtracted 
-      ? `Hello **${nameExtracted}**! 👋 I am **Ghasitaram** — *“Health ka jhatpat jawab.”*\n\nHow can I help you today? You can describe any symptoms, search for top-rated specialists, check real-time available slots, or summarize your medical test reports.`
-      : `Hello! 👋 I am **Ghasitaram** — *“Health ka jhatpat jawab.”*\n\nHow can I assist you today? You can describe symptoms, find specialists, book appointment slots, or summarize medical reports.`;
+      ? `Hello ${nameExtracted}! 👋 I am Ghasitaram — “Health ka jhatpat jawab.”\n\nHow can I help you today? You can describe any symptoms, search for top-rated specialists, check real-time available slots, or summarize your medical test reports.`
+      : `Hello! 👋 I am Ghasitaram — “Health ka jhatpat jawab.”\n\nHow can I assist you today? You can describe symptoms, find specialists, book appointment slots, or summarize medical reports.`;
 
+      
     return {
       message: greetingMsg,
       intent: 'GREETING',
@@ -232,7 +233,7 @@ export const processUserMessage = async ({ message, conversationId = 'default_se
       const timeFormatted = new Date(next.appointment_datetime).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
       return {
-        message: `Your next appointment is with **${next.doctorName || 'your doctor'}** (${next.specialization || 'General'}) on **${dateFormatted} at ${timeFormatted}**.`,
+        message: `Your next appointment is with ${next.doctorName || 'your doctor'} (${next.specialization || 'General'}) on ${dateFormatted} at ${timeFormatted}.`,
         intent: 'VIEW_APPOINTMENT',
         appointments: upcoming,
         suggestedActions: [
@@ -312,7 +313,7 @@ export const processUserMessage = async ({ message, conversationId = 'default_se
 
     const doc = selectedDoc;
     return {
-      message: `🎉 **Appointment Confirmed!** Your consultation with **${doc.name}** (${doc.specialty}) has been successfully scheduled.\n\n• **Date & Time:** Tomorrow at 5:30 PM\n• **Type:** Video Consultation (WebRTC)\n• **Room Link:** Ready in your dashboard`,
+      message: `🎉 Appointment Confirmed! Your consultation with ${doc.name} (${doc.specialty}) has been successfully scheduled.\n\n• Date & Time: Tomorrow at 5:30 PM\n• Type: Video Consultation (WebRTC)\n• Room Link: Ready in your dashboard`,
       intent: 'BOOK_APPOINTMENT',
       bookingDetails: {
         appointmentId: bookingRes.appointmentId || 1042,
@@ -392,7 +393,7 @@ export const processUserMessage = async ({ message, conversationId = 'default_se
 
   // Default fallback conversational response
   return {
-    message: "I am **🤖Ghasitaram** — *“Health ka jhatpat jawab.”* 🩺\n\nI can help you find specialists for symptoms, check real-time doctor availability, book or manage appointments, and summarize medical reports.\n\nHow can I assist you today?",
+    message: "I am 🤖Ghasitaram — “Health ka jhatpat jawab.” 🩺\n\nI can help you find specialists for symptoms, check real-time doctor availability, book or manage appointments, and summarize medical reports.\n\nHow can I assist you today?",
     intent: 'GENERAL_HEALTH_INFORMATION',
     suggestedActions: [
       { label: 'Find a Doctor by Symptoms', action: 'find_doctor' },
