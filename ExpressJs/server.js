@@ -20,7 +20,26 @@ const io = new Server(server, {
 
 import path from 'path';
 
-app.use(cors());
+// Comprehensive CORS setup allowing Netlify frontend and custom headers (x-user-id, x-user-role)
+app.use(cors({
+  origin: true, // Reflect request origin
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Origin',
+    'X-Requested-With',
+    'Content-Type',
+    'Accept',
+    'Authorization',
+    'x-user-id',
+    'x-user-role'
+  ],
+  exposedHeaders: ['Content-Disposition', 'Content-Type']
+}));
+
+// Explicit preflight handler for all routes
+app.options('*', cors());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
