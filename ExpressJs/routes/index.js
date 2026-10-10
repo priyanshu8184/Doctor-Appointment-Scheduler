@@ -46,9 +46,9 @@ apiRouter.put('/appointments/:id/status', optionalAuth, updateAppointmentStatus)
 apiRouter.patch('/appointments/:id/status', optionalAuth, updateAppointmentStatus);
 
 // Payments & Reviews
-apiRouter.get('/payments/patient/:id', getPaymentsByPatient);
-apiRouter.get('/reviews/patient/:id', getReviewsByPatient);
-apiRouter.post('/reviews', createReview);
+apiRouter.get('/payments/patient/:id', optionalAuth, getPaymentsByPatient);
+apiRouter.get('/reviews/patient/:id', optionalAuth, getReviewsByPatient);
+apiRouter.post('/reviews', optionalAuth, createReview);
 
 export default apiRouter;
 

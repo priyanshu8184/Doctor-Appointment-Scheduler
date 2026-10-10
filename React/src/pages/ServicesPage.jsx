@@ -93,7 +93,23 @@ const ServicesPage = ({ navigate }) => {
   }, [])
 
   const handleServiceClick = (path) => {
-    navigate(path)
+    let role = '';
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        role = (JSON.parse(userStr)?.role || '').toUpperCase();
+      }
+    } catch (e) {}
+
+    if (role === 'DOCTOR') {
+      navigate('/doctor-dashboard');
+      return;
+    }
+    if (role === 'ADMIN') {
+      navigate('/admin/dashboard');
+      return;
+    }
+    navigate(path);
   }
 
   return (

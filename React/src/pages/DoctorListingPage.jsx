@@ -1,9 +1,12 @@
-import React, { useMemo, useState, useEffect } from 'react'
-import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
-import './DoctorListingPage.css'
-import axios from 'axios'
-import { SAMPLE_DOCTORS } from '../../../AI/index.js'
+import React, { useMemo, useState, useEffect } from 'react';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import DoctorFilterSidebar from '../components/doctor-listing/DoctorFilterSidebar';
+import DoctorCard from '../components/doctor-listing/DoctorCard';
+import QuickBookingModal from '../components/doctor-listing/QuickBookingModal';
+import './DoctorListingPage.css';
+import axios from 'axios';
+import { SAMPLE_DOCTORS } from '../../../AI/index.js';
 
 // Authentic clinician portrait mapping with fallback
 const DOCTOR_PORTRAITS = {
@@ -13,69 +16,67 @@ const DOCTOR_PORTRAITS = {
   104: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=320&q=80',
   105: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=320&q=80',
   106: 'https://images.unsplash.com/photo-1594824813589-9a250325ff2a?auto=format&fit=crop&w=320&q=80'
-}
+};
 
 const getDoctorPortrait = (doc, idx) => {
-  if (doc.profile_picture) return doc.profile_picture
-  if (doc.image) return doc.image
-  const id = doc.id || doc.doctor_id || (101 + (idx % 6))
-  return DOCTOR_PORTRAITS[id] || DOCTOR_PORTRAITS[101 + (idx % 6)]
-}
+  if (doc.profile_picture) return doc.profile_picture;
+  if (doc.image) return doc.image;
+  const id = doc.id || doc.doctor_id || (101 + (idx % 6));
+  return DOCTOR_PORTRAITS[id] || DOCTOR_PORTRAITS[101 + (idx % 6)];
+};
 
 const DoctorListingPage = ({ navigate }) => {
-  const [doctorsList, setDoctorsList] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [failedImages, setFailedImages] = useState({})
+  const [doctorsList, setDoctorsList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [failedImages, setFailedImages] = useState({});
 
-  const queryParams = new URLSearchParams(window.location.search)
-  const initialSearch = queryParams.get('search') || ''
-  const initialLocation = queryParams.get('location') || 'All'
-  const initialAvailability = queryParams.get('availability') || 'All'
-  const initialSpecialization = queryParams.get('specialization') || 'All'
+  const queryParams = new URLSearchParams(window.location.search);
+  const initialSearch = queryParams.get('search') || '';
+  const initialLocation = queryParams.get('location') || 'All';
+  const initialAvailability = queryParams.get('availability') || 'All';
+  const initialSpecialization = queryParams.get('specialization') || 'All';
 
-  const [searchTerm, setSearchTerm] = useState(initialSearch)
-  const [selectedDoctorForBooking, setSelectedDoctorForBooking] = useState(null)
-  const [appointmentDate, setAppointmentDate] = useState('')
-  const [appointmentType, setAppointmentType] = useState('VIDEO')
-  const [bookingStatus, setBookingStatus] = useState('')
-  const [selectedSpecialization, setSelectedSpecialization] = useState(initialSpecialization)
-  const [selectedLocation, setSelectedLocation] = useState(initialLocation)
-  const [selectedAvailability, setSelectedAvailability] = useState(initialAvailability)
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [selectedDoctorForBooking, setSelectedDoctorForBooking] = useState(null);
+  const [appointmentDate, setAppointmentDate] = useState('');
+  const [appointmentType, setAppointmentType] = useState('VIDEO');
+  const [bookingStatus, setBookingStatus] = useState('');
+  const [selectedSpecialization, setSelectedSpecialization] = useState(initialSpecialization);
+  const [selectedLocation, setSelectedLocation] = useState(initialLocation);
+  const [selectedAvailability, setSelectedAvailability] = useState(initialAvailability);
   
-  const userStr = localStorage.getItem('user')
-  const user = userStr ? JSON.parse(userStr) : null
-  const isDoctor = user?.role === 'DOCTOR'
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  const isDoctor = user?.role === 'DOCTOR';
   
   const [activeFilters, setActiveFilters] = useState({
     search: initialSearch,
     specialization: initialSpecialization,
     location: initialLocation,
     availability: initialAvailability
-  })
+  });
 
-  const [currentPage, setCurrentPage] = useState(1)
-  const pageSize = 6
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 6;
 
-  const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api';
 
   useEffect(() => {
     if (isDoctor) {
-      if (navigate) navigate('/doctor-dashboard')
-      else window.location.href = '/doctor-dashboard'
-      return
+      if (navigate) navigate('/doctor-dashboard');
+      else window.location.href = '/doctor-dashboard';
     }
-  }, [isDoctor, navigate])
+  }, [isDoctor, navigate]);
 
   useEffect(() => {
-    if (isDoctor) return
+    if (isDoctor) return;
     const fetchDoctors = async () => {
       try {
-        setLoading(true)
-        const res = await axios.get(`${API_BASE_URL}/doctors`)
-        const docsList = res.data.doctors || res.data || []
-        const listToUse = docsList.length > 0 ? docsList : SAMPLE_DOCTORS
-        // Map backend DB properties to what the frontend expects
+        setLoading(true);
+        const res = await axios.get(`${API_BASE_URL}/doctors`);
+        const docsList = res.data.doctors || res.data || [];
+        const listToUse = docsList.length > 0 ? docsList : SAMPLE_DOCTORS;
         const mapped = listToUse.map((doc, idx) => ({
           id: doc.doctor_id || doc.id || (101 + idx),
           name: doc.name || `Dr. ${doc.first_name} ${doc.last_name}`,
@@ -88,64 +89,64 @@ const DoctorListingPage = ({ navigate }) => {
           fee: doc.consultation_fee ? `₹${doc.consultation_fee}` : '₹650',
           bio: doc.bio || 'Board-certified specialist dedicated to compassionate, evidence-based patient care.',
           portraitUrl: getDoctorPortrait(doc, idx)
-        }))
-        setDoctorsList(mapped)
+        }));
+        setDoctorsList(mapped);
       } catch (err) {
-        console.warn("Error loading doctors from API, using registered doctors:", err.message)
+        console.warn("Error loading doctors from API, using registered doctors:", err.message);
         const mapped = (SAMPLE_DOCTORS || []).map((doc, idx) => ({
           id: doc.doctor_id,
           name: doc.name,
           specialization: doc.specialty,
           location: doc.location,
           availability: 'Today · 4:00 PM',
-          experience: doc.experience || '8+ years exp',
+          experience: doc.experience,
           rating: Number(doc.rating).toFixed(1),
-          reviewsCount: doc.reviews_count || 124,
+          reviewsCount: 120 + idx * 15,
           fee: `₹${doc.consultation_fee}`,
-          bio: doc.bio || 'Board-certified specialist dedicated to compassionate, evidence-based patient care.',
+          bio: `Specialized in ${doc.specialty} with comprehensive clinical background.`,
           portraitUrl: getDoctorPortrait(doc, idx)
-        }))
-        setDoctorsList(mapped)
+        }));
+        setDoctorsList(mapped);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchDoctors()
-  }, [])
+    };
+    fetchDoctors();
+  }, [isDoctor, API_BASE_URL]);
 
-  // Dynamically calculate filter choices based on fetched doctors
   const specializations = useMemo(() => {
-    return ['All', ...new Set(doctorsList.map((doctor) => doctor.specialization))]
-  }, [doctorsList])
+    const set = new Set(doctorsList.map((doc) => doc.specialization));
+    return ['All', ...Array.from(set)];
+  }, [doctorsList]);
 
   const locations = useMemo(() => {
-    return ['All', ...new Set(doctorsList.map((doctor) => doctor.location))]
-  }, [doctorsList])
+    const set = new Set(doctorsList.map((doc) => doc.location));
+    return ['All', ...Array.from(set)];
+  }, [doctorsList]);
 
   const availabilityOptions = useMemo(() => {
-    return ['All', ...new Set(doctorsList.map((doctor) => doctor.availability.split(' · ')[0]))]
-  }, [doctorsList])
+    const set = new Set(doctorsList.map((doc) => doc.availability));
+    return ['All', ...Array.from(set)];
+  }, [doctorsList]);
 
   const filteredDoctors = useMemo(() => {
-    const normalizedSearch = activeFilters.search.trim().toLowerCase()
+    return doctorsList.filter((doc) => {
+      const matchSearch = activeFilters.search
+        ? doc.name.toLowerCase().includes(activeFilters.search.toLowerCase()) ||
+          doc.specialization.toLowerCase().includes(activeFilters.search.toLowerCase())
+        : true;
+      const matchSpec = activeFilters.specialization === 'All' || doc.specialization === activeFilters.specialization;
+      const matchLoc = activeFilters.location === 'All' || doc.location === activeFilters.location;
+      const matchAvail = activeFilters.availability === 'All' || doc.availability === activeFilters.availability;
+      return matchSearch && matchSpec && matchLoc && matchAvail;
+    });
+  }, [doctorsList, activeFilters]);
 
-    return doctorsList.filter((doctor) => {
-      const matchesSearch = !normalizedSearch ||
-        doctor.name.toLowerCase().includes(normalizedSearch) ||
-        doctor.specialization.toLowerCase().includes(normalizedSearch) ||
-        doctor.location.toLowerCase().includes(normalizedSearch)
-
-      const matchesSpecialization = activeFilters.specialization === 'All' || doctor.specialization.toLowerCase() === activeFilters.specialization.toLowerCase()
-      const matchesLocation = activeFilters.location === 'All' || doctor.location.toLowerCase() === activeFilters.location.toLowerCase()
-      const matchesAvailability = activeFilters.availability === 'All' || doctor.availability.toLowerCase().includes(activeFilters.availability.toLowerCase())
-
-      return matchesSearch && matchesSpecialization && matchesLocation && matchesAvailability
-    })
-  }, [activeFilters, doctorsList])
-
-  const totalPages = Math.max(1, Math.ceil(filteredDoctors.length / pageSize))
-  const safePage = Math.min(currentPage, totalPages)
-  const paginatedDoctors = filteredDoctors.slice((safePage - 1) * pageSize, safePage * pageSize)
+  const totalPages = Math.ceil(filteredDoctors.length / pageSize) || 1;
+  const paginatedDoctors = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredDoctors.slice(start, start + pageSize);
+  }, [filteredDoctors, currentPage, pageSize]);
 
   const applyFilters = () => {
     setActiveFilters({
@@ -153,37 +154,35 @@ const DoctorListingPage = ({ navigate }) => {
       specialization: selectedSpecialization,
       location: selectedLocation,
       availability: selectedAvailability
-    })
-    setCurrentPage(1)
-  }
+    });
+    setCurrentPage(1);
+  };
 
   const resetFilters = () => {
-    setSearchTerm('')
-    setSelectedSpecialization('All')
-    setSelectedLocation('All')
-    setSelectedAvailability('All')
+    setSearchTerm('');
+    setSelectedSpecialization('All');
+    setSelectedLocation('All');
+    setSelectedAvailability('All');
     setActiveFilters({
       search: '',
       specialization: 'All',
       location: 'All',
       availability: 'All'
-    })
-    setCurrentPage(1)
-  }
+    });
+    setCurrentPage(1);
+  };
 
   const handleBookAppointment = async (e) => {
-    e.preventDefault()
-    setBookingStatus('Booking...')
+    e.preventDefault();
+    setBookingStatus('Booking...');
     try {
-      const userStr = localStorage.getItem('user')
       if (!userStr) {
-        setBookingStatus('Please log in as a patient to book.')
-        return
+        setBookingStatus('Please log in as a patient to book.');
+        return;
       }
-      const user = JSON.parse(userStr)
       if (user.role !== 'PATIENT') {
-        setBookingStatus('Only patients can book appointments.')
-        return
+        setBookingStatus('Only patients can book appointments.');
+        return;
       }
 
       const payload = {
@@ -191,23 +190,34 @@ const DoctorListingPage = ({ navigate }) => {
         doctor_id: selectedDoctorForBooking.id,
         appointment_datetime: appointmentDate,
         appointment_type: appointmentType
-      }
+      };
       
-      const res = await axios.post(`${API_BASE_URL}/appointments`, payload)
+      const res = await axios.post(`${API_BASE_URL}/appointments`, payload);
       if (res.status === 201) {
-        setBookingStatus('Appointment booked successfully!')
+        setBookingStatus('Appointment booked successfully!');
         setTimeout(() => {
-          setSelectedDoctorForBooking(null)
-          setBookingStatus('')
-          setAppointmentDate('')
-        }, 1500)
+          setSelectedDoctorForBooking(null);
+          setBookingStatus('');
+          setAppointmentDate('');
+        }, 1500);
       } else {
-        setBookingStatus('Failed to book appointment.')
+        setBookingStatus('Failed to book appointment.');
       }
     } catch (err) {
-      console.error(err)
-      setBookingStatus(err.response?.data?.message || 'Failed to book appointment.')
+      console.error(err);
+      setBookingStatus(err.response?.data?.message || 'Failed to book appointment.');
     }
+  };
+
+  if (isDoctor) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', fontFamily: 'sans-serif' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ width: 40, height: 40, border: '4px solid #e2e8f0', borderTopColor: '#0284c7', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
+          <p style={{ color: '#64748b', fontSize: 16 }}>Redirecting to doctor portal...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -223,66 +233,21 @@ const DoctorListingPage = ({ navigate }) => {
           </div>
         </section>
 
-        <section className="filters-card" aria-label="Doctor filters">
-          <div className="filter-group">
-            <label htmlFor="search">Search</label>
-            <input
-              id="search"
-              type="text"
-              placeholder="Search by name or specialty"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-            />
-          </div>
-
-          <div className="filter-group">
-            <label htmlFor="specialization">Filter by Specialization</label>
-            <select
-              id="specialization"
-              value={selectedSpecialization}
-              onChange={(event) => setSelectedSpecialization(event.target.value)}
-            >
-              {specializations.map((item) => (
-                <option key={item} value={item}>{item}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="filter-group">
-            <label htmlFor="location">Filter by Location</label>
-            <select
-              id="location"
-              value={selectedLocation}
-              onChange={(event) => setSelectedLocation(event.target.value)}
-            >
-              {locations.map((item) => (
-                <option key={item} value={item}>{item}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="filter-group">
-            <label htmlFor="availability">Availability</label>
-            <select
-              id="availability"
-              value={selectedAvailability}
-              onChange={(event) => setSelectedAvailability(event.target.value)}
-            >
-              {availabilityOptions.map((item) => (
-                <option key={item} value={item}>{item}</option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', paddingBottom: '2px' }}>
-            <button type="button" className="primary-btn search-btn" onClick={applyFilters} style={{ padding: '0.8rem 1.2rem', height: '100%' }}>
-              Find Doctor
-            </button>
-            <button type="button" className="secondary-btn reset-btn" onClick={resetFilters} style={{ padding: '0.8rem 1.2rem', height: '100%' }}>
-              Reset Filters
-            </button>
-          </div>
-        </section>
+        <DoctorFilterSidebar
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          selectedSpecialization={selectedSpecialization}
+          setSelectedSpecialization={setSelectedSpecialization}
+          selectedLocation={selectedLocation}
+          setSelectedLocation={setSelectedLocation}
+          selectedAvailability={selectedAvailability}
+          setSelectedAvailability={setSelectedAvailability}
+          specializations={specializations}
+          locations={locations}
+          availabilityOptions={availabilityOptions}
+          applyFilters={applyFilters}
+          resetFilters={resetFilters}
+        />
 
         <section className="doctor-cards" aria-label="Doctor cards">
           {loading ? (
@@ -296,156 +261,61 @@ const DoctorListingPage = ({ navigate }) => {
               <p>{error}</p>
             </div>
           ) : paginatedDoctors.length > 0 ? (
-            paginatedDoctors.map((doctor) => {
-              const cleanInitial = doctor.name.replace('Dr. ', '').charAt(0) || 'D'
-              const isImageFailed = failedImages[doctor.id]
-
-              return (
-                <article className="doctor-card" key={doctor.id}>
-                  <div className="doc-card-top-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
-                    <span className="doc-avail-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', fontWeight: 600, color: '#087F72', background: 'rgba(8, 127, 114, 0.08)', padding: '0.25rem 0.6rem', borderRadius: '100px' }}>
-                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#087F72' }} />
-                      <span>{doctor.availability}</span>
-                    </span>
-                    <span className="doc-fee-badge" style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111C2F', background: '#F5F8F6', padding: '0.25rem 0.6rem', borderRadius: '6px', border: '1px solid #E1E8E5' }}>{doctor.fee}</span>
-                  </div>
-
-                  <div className="doctor-card-header" style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', marginBottom: '0.85rem', paddingBottom: '0.85rem', borderBottom: '1px solid #E1E8E5' }}>
-                    <div style={{ position: 'relative', width: '56px', height: '56px', borderRadius: '12px', overflow: 'hidden', flexShrink: 0, border: '1px solid #E1E8E5', background: '#F5F8F6' }}>
-                      {!isImageFailed ? (
-                        <img 
-                          src={doctor.portraitUrl} 
-                          alt={doctor.name} 
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          onError={() => setFailedImages(prev => ({ ...prev, [doctor.id]: true }))}
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #111C2F, #087F72)', color: '#fff', fontWeight: 700, fontSize: '1.2rem' }}>
-                          {cleanInitial}
-                        </div>
-                      )}
-                      <span style={{ position: 'absolute', bottom: '2px', right: '2px', width: '15px', height: '15px', borderRadius: '50%', background: '#087F72', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 800, border: '1.5px solid #fff' }}>✓</span>
-                    </div>
-
-                    <div className="doctor-info" style={{ flex: 1, minWidth: 0 }}>
-                      <h2 className="doctor-name" style={{ margin: '0 0 0.25rem', fontSize: '1.05rem', fontWeight: 700, color: '#172033', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{doctor.name}</h2>
-                      <span className="doctor-specialty-badge" style={{ display: 'inline-block', background: 'rgba(8, 127, 114, 0.08)', color: '#087F72', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600 }}>{doctor.specialization}</span>
-                    </div>
-
-                    <div className="doctor-rating-box" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: '#FFFBEB', border: '1px solid #FEF3C7', padding: '0.25rem 0.5rem', borderRadius: '6px' }}>
-                      <span style={{ color: '#F59E0B', fontSize: '0.85rem' }}>★</span>
-                      <strong style={{ fontSize: '0.85rem', color: '#92400E' }}>{doctor.rating}</strong>
-                    </div>
-                  </div>
-
-                  <p className="doctor-bio" style={{ margin: '0 0 0.85rem', color: '#5B6778', fontSize: '0.88rem', lineHeight: 1.55 }}>{doctor.bio}</p>
-
-                  <div className="doctor-details" style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', marginBottom: '1rem', flexGrow: 1 }}>
-                    <div className="detail-item" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#5B6778' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B6778" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                        <circle cx="12" cy="10" r="3"/>
-                      </svg>
-                      <span className="detail-text" style={{ fontWeight: 500 }}>{doctor.location}</span>
-                    </div>
-                    <div className="detail-item" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#5B6778' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B6778" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-                      </svg>
-                      <span className="detail-text" style={{ fontWeight: 500 }}>{doctor.experience}</span>
-                    </div>
-                  </div>
-
-                  {!isDoctor && (
-                    <button 
-                      type="button" 
-                      className="primary-btn book-btn" 
-                      onClick={() => setSelectedDoctorForBooking(doctor)}
-                      style={{ width: '100%', padding: '0.75rem', fontSize: '0.9rem', fontWeight: 600, borderRadius: '8px', cursor: 'pointer', border: 'none', background: '#087F72', color: '#ffffff' }}
-                    >
-                      Book Appointment
-                    </button>
-                  )}
-                </article>
-              )
-            })
+            paginatedDoctors.map((doctor) => (
+              <DoctorCard
+                key={doctor.id}
+                doctor={doctor}
+                isImageFailed={failedImages[doctor.id]}
+                onImageError={() => setFailedImages(prev => ({ ...prev, [doctor.id]: true }))}
+                onBookClick={(doc) => setSelectedDoctorForBooking(doc)}
+              />
+            ))
           ) : (
             <div className="empty-state">
               <h2>No doctors found</h2>
-              <p>Try adjusting your search or filters.</p>
+              <p>Try adjusting your search criteria or filters to find available healthcare providers.</p>
             </div>
           )}
         </section>
 
-        <section className="pagination" aria-label="Doctor pagination">
-          <button
-            type="button"
-            className="secondary-btn"
-            onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
-            disabled={safePage === 1}
-          >
-            Previous
-          </button>
-
-          <span className="page-indicator">Page {safePage} of {totalPages}</span>
-
-          <button
-            type="button"
-            className="secondary-btn"
-            onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
-            disabled={safePage === totalPages}
-          >
-            Next
-          </button>
-        </section>
+        {totalPages > 1 && (
+          <div className="pagination" aria-label="Pagination Navigation">
+            <button
+              type="button"
+              className="secondary-btn"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            >
+              Previous
+            </button>
+            <span>Page {currentPage} of {totalPages}</span>
+            <button
+              type="button"
+              className="secondary-btn"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            >
+              Next
+            </button>
+          </div>
+        )}
       </main>
 
-      {selectedDoctorForBooking && (
-        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div className="modal-content" style={{ background: '#fff', padding: '2rem', borderRadius: '8px', maxWidth: '400px', width: '100%' }}>
-            <h2 style={{ marginTop: 0 }}>Book Appointment</h2>
-            <p style={{ color: '#475569', marginBottom: '1.5rem' }}>with {selectedDoctorForBooking.name}</p>
-            <form onSubmit={handleBookAppointment} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontWeight: 600 }}>
-                Date & Time
-                <input 
-                  type="datetime-local" 
-                  value={appointmentDate} 
-                  onChange={(e) => setAppointmentDate(e.target.value)} 
-                  required 
-                  style={{ width: '100%', padding: '0.78rem', borderRadius: '0.8rem', border: '1px solid #cbd5e1', font: 'inherit', boxSizing: 'border-box' }}
-                />
-              </label>
-
-              <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontWeight: 600 }}>
-                Appointment Type
-                <select 
-                  value={appointmentType}
-                  onChange={(e) => setAppointmentType(e.target.value)}
-                  style={{ width: '100%', padding: '0.78rem', borderRadius: '0.8rem', border: '1px solid #cbd5e1', font: 'inherit', boxSizing: 'border-box', backgroundColor: '#fff' }}
-                >
-                  <option value="MESSAGING">Telemedicine via Live Messaging</option>
-                  <option value="AUDIO">Telemedicine via Audio Call</option>
-                  <option value="VIDEO">Telemedicine via Video Call</option>
-                </select>
-              </label>
-              
-              {bookingStatus && <p style={{ margin: 0, color: bookingStatus.includes('success') ? '#10b981' : '#ef4444', fontWeight: 500 }}>{bookingStatus}</p>}
-              
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-                <button type="button" className="secondary-btn" style={{ flex: 1, padding: '0.8rem' }} onClick={() => { setSelectedDoctorForBooking(null); setBookingStatus(''); setAppointmentDate(''); }}>Cancel</button>
-                <button type="submit" className="primary-btn" style={{ flex: 1, padding: '0.8rem' }}>Confirm</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
       <Footer onNavigate={navigate} />
-    </div>
-  )
-}
 
-export default DoctorListingPage
+      {/* Quick Booking Modal */}
+      <QuickBookingModal
+        doctor={selectedDoctorForBooking}
+        onClose={() => setSelectedDoctorForBooking(null)}
+        appointmentDate={appointmentDate}
+        setAppointmentDate={setAppointmentDate}
+        appointmentType={appointmentType}
+        setAppointmentType={setAppointmentType}
+        bookingStatus={bookingStatus}
+        handleBookAppointment={handleBookAppointment}
+      />
+    </div>
+  );
+};
+
+export default DoctorListingPage;

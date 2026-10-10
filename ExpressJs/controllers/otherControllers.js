@@ -1,4 +1,12 @@
 export const getPaymentsByPatient = (req, res) => {
+  const user = req.user;
+  if (user && user.role === 'DOCTOR') {
+    return res.status(403).json({
+      success: false,
+      message: 'Forbidden: Doctors cannot access patient billing records directly.'
+    });
+  }
+
   res.json({
     payments: [
       {
@@ -14,6 +22,14 @@ export const getPaymentsByPatient = (req, res) => {
 };
 
 export const getReviewsByPatient = (req, res) => {
+  const user = req.user;
+  if (user && user.role === 'DOCTOR') {
+    return res.status(403).json({
+      success: false,
+      message: 'Forbidden: Doctors cannot view patient private review logs.'
+    });
+  }
+
   res.json({
     reviews: [
       {

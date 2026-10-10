@@ -1,6 +1,14 @@
 import dbPool from '../config/db.js';
 
 export const getPatientProfile = async (req, res) => {
+  const user = req.user;
+  if (user && user.role === 'DOCTOR') {
+    return res.status(403).json({
+      success: false,
+      message: 'Forbidden: Doctors cannot access patient personal dashboard profile records.'
+    });
+  }
+
   const { id } = req.params;
   const samplePatient = {
     patient_id: Number(id) || 1,
@@ -18,5 +26,13 @@ export const getPatientProfile = async (req, res) => {
 };
 
 export const updatePatientProfile = async (req, res) => {
+  const user = req.user;
+  if (user && user.role === 'DOCTOR') {
+    return res.status(403).json({
+      success: false,
+      message: 'Forbidden: Doctors cannot modify patient accounts.'
+    });
+  }
+
   res.json({ message: 'Profile updated successfully', patient: req.body });
 };

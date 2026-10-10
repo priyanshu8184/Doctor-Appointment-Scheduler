@@ -77,17 +77,20 @@ const App = () => {
     // 2. Role Guards: DOCTOR Authenticated
     // =========================================================================
     if (isDoctor) {
-      // If a doctor visits root '/', '/home', '/doctors' (find a doctor), or '/patient-dashboard', redirect to doctor dashboard
-      if (basePath === '' || basePath === '/' || basePath === '/home' || basePath === '/doctors' || basePath === '/patient-dashboard') {
+      // If doctor attempts to access patient pages, home, doctor listings, or admin routes
+      if (
+        basePath === '' || 
+        basePath === '/' || 
+        basePath === '/home' || 
+        basePath === '/doctors' || 
+        basePath === '/patient-dashboard' || 
+        basePath.startsWith('/patient') ||
+        basePath.startsWith('/admin')
+      ) {
         return <DoctorDashboard navigate={navigate} />
       }
 
-      // If doctor attempts to access admin routes, redirect to doctor dashboard
-      if (basePath.startsWith('/admin')) {
-        return <DoctorDashboard navigate={navigate} />
-      }
-
-      if (basePath === '/doctor-dashboard') {
+      if (basePath === '/doctor-dashboard' || basePath.startsWith('/doctor')) {
         return <DoctorDashboard navigate={navigate} />
       }
     }
@@ -96,8 +99,17 @@ const App = () => {
     // 3. Role Guards: ADMIN Authenticated
     // =========================================================================
     if (isAdmin) {
-      // If admin visits root '/', '/home', '/doctor-dashboard', or '/patient-dashboard', redirect to admin dashboard
-      if (basePath === '' || basePath === '/' || basePath === '/home' || basePath === '/doctor-dashboard' || basePath === '/patient-dashboard' || basePath === '/doctors') {
+      // If admin visits patient or doctor routes or homepage
+      if (
+        basePath === '' || 
+        basePath === '/' || 
+        basePath === '/home' || 
+        basePath === '/doctor-dashboard' || 
+        basePath === '/patient-dashboard' || 
+        basePath.startsWith('/patient') ||
+        basePath.startsWith('/doctor') ||
+        basePath === '/doctors'
+      ) {
         return <AdminDashboard navigate={navigate} initialTab="overview" />
       }
 
@@ -126,14 +138,10 @@ const App = () => {
     // 4. Role Guards: PATIENT Authenticated
     // =========================================================================
     if (isPatient) {
-      // If patient attempts to open doctor dashboard or admin dashboard
-      if (basePath === '/doctor-dashboard') {
+      if (basePath.startsWith('/doctor') || basePath.startsWith('/admin')) {
         return <PatientDashboard navigate={navigate} />
       }
-      if (basePath.startsWith('/admin')) {
-        return <PatientDashboard navigate={navigate} />
-      }
-      if (basePath === '/patient-dashboard') {
+      if (basePath === '/patient-dashboard' || basePath.startsWith('/patient')) {
         return <PatientDashboard navigate={navigate} />
       }
     }
@@ -142,7 +150,7 @@ const App = () => {
     // 5. Unauthenticated User Guards for Protected Pages
     // =========================================================================
     if (!authUser) {
-      if (basePath === '/doctor-dashboard' || basePath === '/patient-dashboard') {
+      if (basePath.startsWith('/doctor') || basePath.startsWith('/patient')) {
         return <LoginPage navigate={navigate} />
       }
       if (basePath.startsWith('/admin')) {
@@ -151,14 +159,28 @@ const App = () => {
     }
 
     // =========================================================================
-    // 6. Public Pages (Accessible to logged-out users & patients)
+    // 6. Public Pages & Fallback Route
     // =========================================================================
-    if (basePath === '/doctors') return <DoctorListingPage navigate={navigate} />
+    if (basePath === '/doctors') {
+      if (isDoctor) return <DoctorDashboard navigate={navigate} />
+      if (isAdmin) return <AdminDashboard navigate={navigate} />
+      return <DoctorListingPage navigate={navigate} />
+    }
     if (basePath === '/services') return <ServicesPage navigate={navigate} />
     if (basePath === '/about') return <AboutPage navigate={navigate} />
-    if (basePath === '/patient-dashboard') return <PatientDashboard navigate={navigate} />
-    if (basePath === '/doctor-dashboard') return <DoctorDashboard navigate={navigate} />
+    if (basePath.startsWith('/patient')) {
+      if (isDoctor) return <DoctorDashboard navigate={navigate} />
+      if (isAdmin) return <AdminDashboard navigate={navigate} />
+      if (!authUser) return <LoginPage navigate={navigate} />
+      return <PatientDashboard navigate={navigate} />
+    }
+    if (basePath.startsWith('/doctor')) {
+      if (!isDoctor) return <LoginPage navigate={navigate} />
+      return <DoctorDashboard navigate={navigate} />
+    }
 
+    if (isDoctor) return <DoctorDashboard navigate={navigate} />
+    if (isAdmin) return <AdminDashboard navigate={navigate} />
     return <Homepage navigate={navigate} />
   }
 
