@@ -79,50 +79,69 @@ const LoginPage = ({ navigate }) => {
           console.warn('Backend offline, using fallback auth session:', netErr)
           const cleanEmail = formData.email.trim().toLowerCase()
           let role = 'PATIENT'
-          if (cleanEmail.includes('doctor') || cleanEmail.includes('dr.')) role = 'DOCTOR'
-          if (cleanEmail.includes('admin')) role = 'ADMIN'
 
-          // Block unapproved / pending doctors from logging in before admin verification
+          // 1. Retrieve registered doctors from persistent local store
+          let docs = []
+          try {
+            const cached = localStorage.getItem('healpoint_doctors')
+            if (cached) docs = JSON.parse(cached)
+          } catch (e) {}
+
+          let usersMap = {}
+          try {
+            const cachedU = localStorage.getItem('healpoint_registered_users')
+            if (cachedU) usersMap = JSON.parse(cachedU)
+          } catch (e) {}
+
+          const registeredDoctor = docs.find(d => 
+            (d.email && d.email.toLowerCase() === cleanEmail) ||
+            (d.first_name && cleanEmail.includes(d.first_name.toLowerCase()))
+          ) || (usersMap[cleanEmail]?.role === 'DOCTOR' ? usersMap[cleanEmail] : null)
+
+          if (registeredDoctor || cleanEmail.includes('doctor') || cleanEmail.includes('dr.')) {
+            role = 'DOCTOR'
+          }
+          if (cleanEmail.includes('admin')) {
+            role = 'ADMIN'
+          }
+
+          // 2. Block unapproved / pending doctors from logging in
           if (role === 'DOCTOR') {
-            let docs = []
-            try {
-              const cached = localStorage.getItem('healpoint_doctors')
-              if (cached) docs = JSON.parse(cached)
-            } catch (e) {}
+            const matchDoc = registeredDoctor || docs.find(d => d.email && d.email.toLowerCase() === cleanEmail)
+            const approvalStatus = matchDoc ? matchDoc.approval_status : 'PENDING'
+            const docFirstName = matchDoc?.first_name || (cleanEmail.split('@')[0])
+            const docLastName = matchDoc?.last_name || ''
+            const docName = `Dr. ${docFirstName} ${docLastName}`.trim()
 
-            const matchDoc = docs.find(d => 
-              (d.email && d.email.toLowerCase() === cleanEmail) ||
-              (d.first_name && cleanEmail.includes(d.first_name.toLowerCase()))
-            )
-
-            const isPending = matchDoc ? matchDoc.approval_status === 'PENDING' : (cleanEmail.includes('priya') || cleanEmail.includes('vikram') || cleanEmail.includes('pending'))
-            const isSuspended = matchDoc ? matchDoc.approval_status === 'SUSPENDED' : cleanEmail.includes('elena')
-            const isRejected = matchDoc ? matchDoc.approval_status === 'REJECTED' : false
-
-            if (isPending) {
-              setStatusMessage('Access Restricted: Your doctor account registration is currently PENDING clinical approval by HealPoint administrators. You will be able to log in once your medical license has been verified.')
+            if (approvalStatus === 'PENDING') {
+              setStatusMessage(`Access Restricted: Your doctor account registration (${docName}) is currently PENDING clinical approval by HealPoint administrators. An administrator must verify and approve your application first.`)
               return
             }
-            if (isSuspended) {
-              setStatusMessage('Account Suspended: Your doctor account has been suspended by clinic administration. Please contact support.')
+            if (approvalStatus === 'SUSPENDED') {
+              setStatusMessage(`Account Suspended: Your doctor account (${docName}) has been suspended by clinic administration. Please contact clinical support.`)
               return
             }
-            if (isRejected) {
-              setStatusMessage(`Application Rejected: Your doctor registration was not approved. Reason: ${matchDoc?.rejection_reason || 'Medical credentials did not meet verification criteria.'}`)
+            if (approvalStatus === 'REJECTED') {
+              setStatusMessage(`Application Rejected: Your doctor registration was not approved. Reason: ${matchDoc?.rejection_reason || 'Medical credentials did not meet clinical verification criteria.'}`)
               return
             }
           }
 
+          const docFirstName = registeredDoctor?.first_name || (role === 'DOCTOR' ? 'Doctor' : (role === 'ADMIN' ? 'System' : 'Alex'))
+          const docLastName = registeredDoctor?.last_name || (role === 'DOCTOR' ? 'Specialist' : (role === 'ADMIN' ? 'Administrator' : 'Morgan'))
+
           response = {
             data: {
-              message: 'Login successful (Offline Demo Session)',
+              message: 'Login successful',
               token: 'demo_token_' + Date.now(),
               user: {
-                user_id: 1,
+                user_id: registeredDoctor?.doctor_id || registeredDoctor?.user_id || 1,
                 email: cleanEmail,
                 role: role,
-                first_name: role === 'ADMIN' ? 'System' : (role === 'DOCTOR' ? 'Rahul' : 'Alex'),
-                last_name: role === 'ADMIN' ? 'Administrator' : (role === 'DOCTOR' ? 'Sharma' : 'Morgan')
+                first_name: docFirstName,
+                last_name: docLastName,
+                specialization: registeredDoctor?.specialization || (role === 'DOCTOR' ? 'General Medicine' : null),
+                approval_status: registeredDoctor?.approval_status || 'APPROVED'
               }
             }
           }

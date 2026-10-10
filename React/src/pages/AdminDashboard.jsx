@@ -311,70 +311,122 @@ const AdminDashboard = ({ navigate, initialTab = 'overview' }) => {
 
   // Initial Data State with persistent local backup
   const getInitialDocs = () => {
+    let docs = []
     try {
-      const cached = localStorage.getItem('healpoint_doctors');
-      if (cached) return JSON.parse(cached);
+      const cached = localStorage.getItem('healpoint_doctors')
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        if (Array.isArray(parsed) && parsed.length > 0) docs = parsed
+      }
     } catch (e) {}
-    return INITIAL_DOCTORS;
-  };
 
-  const [doctors, setDoctors] = useState(getInitialDocs);
-  const [patients, setPatients] = useState(INITIAL_PATIENTS);
-  const [appointments, setAppointments] = useState(INITIAL_APPOINTMENTS);
-  const [auditLogs, setAuditLogs] = useState(INITIAL_AUDIT_LOGS);
-  const [stats, setStats] = useState(null);
+    if (docs.length === 0) {
+      docs = [...INITIAL_DOCTORS]
+    }
 
-  const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api';
+    // Merge in any newly registered doctors from healpoint_registered_users
+    try {
+      const cachedU = localStorage.getItem('healpoint_registered_users')
+      if (cachedU) {
+        const usersMap = JSON.parse(cachedU)
+        Object.values(usersMap).forEach(u => {
+          if (u.role === 'DOCTOR' && u.email) {
+            const cleanEmail = u.email.toLowerCase()
+            const exists = docs.some(d => d.email && d.email.toLowerCase() === cleanEmail)
+            if (!exists) {
+              docs.unshift({
+                doctor_id: u.doctor_id || Date.now(),
+                user_id: u.user_id || Date.now() + 1,
+                first_name: u.first_name || 'Sarah',
+                last_name: u.last_name || 'Taylor',
+                name: `Dr. ${u.first_name || 'Sarah'} ${u.last_name || 'Taylor'}`,
+                email: cleanEmail,
+                specialization: u.specialization || 'General Medicine',
+                medical_license_number: u.medical_license_number || 'MED-LIC-202699',
+                consultation_fee: u.consultation_fee || 85.00,
+                experience_years: u.experience_years || 7,
+                qualifications: u.qualifications || 'MBBS, MD',
+                approval_status: u.approval_status || 'PENDING',
+                created_at: new Date().toISOString()
+              })
+            }
+          }
+        })
+      }
+    } catch (e) {}
+
+    return docs
+  }
+
+  const [doctors, setDoctors] = useState(getInitialDocs)
+  const [patients, setPatients] = useState(INITIAL_PATIENTS)
+  const [appointments, setAppointments] = useState(INITIAL_APPOINTMENTS)
+  const [auditLogs, setAuditLogs] = useState(INITIAL_AUDIT_LOGS)
+  const [stats, setStats] = useState(null)
+
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'
 
   const getAuthHeaders = () => {
-    const token = localStorage.getItem('adminToken');
-    const userStr = localStorage.getItem('user');
-    let userId = 1;
+    const token = localStorage.getItem('adminToken')
+    const userStr = localStorage.getItem('user')
+    let userId = 1
     if (userStr) {
-      try { userId = JSON.parse(userStr).user_id || 1; } catch (e) {}
+      try { userId = JSON.parse(userStr).user_id || 1 } catch (e) {}
     }
 
     const headers = {
       'x-user-id': String(userId),
       'x-user-role': 'ADMIN'
-    };
-
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
     }
 
-    return headers;
-  };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
 
-  // Auth Guard
+    return headers
+  }
+
+  // Auth Guard & Dynamic sync with doctor registrations
   useEffect(() => {
-    const storedUserStr = localStorage.getItem('user');
+    const storedUserStr = localStorage.getItem('user')
     if (!storedUserStr) {
-      if (navigate) navigate('/admin/login');
-      else window.location.href = '/admin/login';
-      return;
+      if (navigate) navigate('/admin/login')
+      else window.location.href = '/admin/login'
+      return
     }
 
     try {
-      const user = JSON.parse(storedUserStr);
+      const user = JSON.parse(storedUserStr)
       if (!user || user.role !== 'ADMIN') {
         if (user.role === 'DOCTOR') {
-          if (navigate) navigate('/doctor-dashboard');
-          else window.location.href = '/doctor-dashboard';
+          if (navigate) navigate('/doctor-dashboard')
+          else window.location.href = '/doctor-dashboard'
         } else {
-          if (navigate) navigate('/patient-dashboard');
-          else window.location.href = '/patient-dashboard';
+          if (navigate) navigate('/patient-dashboard')
+          else window.location.href = '/patient-dashboard'
         }
-        return;
+        return
       }
     } catch (e) {
-      if (navigate) navigate('/admin/login');
-      else window.location.href = '/admin/login';
-      return;
+      if (navigate) navigate('/admin/login')
+      else window.location.href = '/admin/login'
+      return
     }
 
-    fetchAllAdminData();
-  }, []);
+    const syncFromStorage = () => {
+      setDoctors(getInitialDocs())
+    }
+
+    window.addEventListener('storage', syncFromStorage)
+    window.addEventListener('user-auth-change', syncFromStorage)
+
+    fetchAllAdminData()
+
+    return () => {
+      window.removeEventListener('storage', syncFromStorage)
+      window.removeEventListener('user-auth-change', syncFromStorage)
+    }
+  }, [])
 
   const showToast = (msg) => {
     setToastMsg(msg);
@@ -475,6 +527,21 @@ const AdminDashboard = ({ navigate, initialTab = 'overview' }) => {
         reviewed_at: new Date().toISOString() 
       } : d);
       localStorage.setItem('healpoint_doctors', JSON.stringify(updated));
+
+      try {
+        const cachedU = localStorage.getItem('healpoint_registered_users');
+        if (cachedU) {
+          const usersMap = JSON.parse(cachedU);
+          const docItem = updated.find(d => d.doctor_id === doctorId);
+          if (docItem && docItem.email && usersMap[docItem.email.toLowerCase()]) {
+            usersMap[docItem.email.toLowerCase()].approval_status = 'APPROVED';
+            localStorage.setItem('healpoint_registered_users', JSON.stringify(usersMap));
+          }
+        }
+      } catch (e) {}
+
+      window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new Event('user-auth-change'));
       return updated;
     });
 
@@ -514,6 +581,20 @@ const AdminDashboard = ({ navigate, initialTab = 'overview' }) => {
         reviewed_at: new Date().toISOString()
       } : d);
       localStorage.setItem('healpoint_doctors', JSON.stringify(updated));
+
+      try {
+        const cachedU = localStorage.getItem('healpoint_registered_users');
+        if (cachedU) {
+          const usersMap = JSON.parse(cachedU);
+          if (doc.email && usersMap[doc.email.toLowerCase()]) {
+            usersMap[doc.email.toLowerCase()].approval_status = 'REJECTED';
+            localStorage.setItem('healpoint_registered_users', JSON.stringify(usersMap));
+          }
+        }
+      } catch (e) {}
+
+      window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new Event('user-auth-change'));
       return updated;
     });
 
