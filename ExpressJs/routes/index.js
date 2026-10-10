@@ -2,7 +2,14 @@ import { Router } from 'express';
 import aiRoutes from './aiRoutes.js';
 import labReportRoutes from './labReportRoutes.js';
 import adminRouter from './adminRoutes.js';
-import { getAllDoctors, getDoctorById } from '../controllers/doctorController.js';
+import { 
+  getAllDoctors, 
+  getDoctorById, 
+  updateDoctorProfile, 
+  getDoctorAvailability, 
+  addDoctorAvailability, 
+  deleteDoctorAvailability 
+} from '../controllers/doctorController.js';
 import { loginUser, registerPatient, registerDoctor } from '../controllers/userController.js';
 import { getPatientProfile, updatePatientProfile } from '../controllers/patientController.js';
 import { getAppointments, createAppointment, updateAppointmentStatus } from '../controllers/appointmentController.js';
@@ -34,6 +41,10 @@ apiRouter.post('/doctors/signup', registerDoctor);
 // Doctors
 apiRouter.get('/doctors', getAllDoctors);
 apiRouter.get('/doctors/:id', getDoctorById);
+apiRouter.put('/doctors/:id', optionalAuth, updateDoctorProfile);
+apiRouter.get('/doctor-availability/doctor/:id', optionalAuth, getDoctorAvailability);
+apiRouter.post('/doctor-availability', optionalAuth, addDoctorAvailability);
+apiRouter.delete('/doctor-availability/:id', optionalAuth, deleteDoctorAvailability);
 
 // Patients
 apiRouter.get('/patients/:id', optionalAuth, getPatientProfile);
