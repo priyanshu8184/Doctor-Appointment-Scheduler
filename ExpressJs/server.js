@@ -20,9 +20,23 @@ const io = new Server(server, {
 
 import path from 'path';
 
-// Comprehensive CORS setup allowing Netlify frontend and custom headers (x-user-id, x-user-role)
+// Bulletproof CORS headers middleware for Netlify & custom headers (x-user-id, x-user-role)
+app.use((req, res, next) => {
+  const origin = req.headers.origin || '*';
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-user-id, x-user-role');
+  res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition, Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
+
 app.use(cors({
-  origin: true, // Reflect request origin
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: [
@@ -37,7 +51,6 @@ app.use(cors({
   exposedHeaders: ['Content-Disposition', 'Content-Type']
 }));
 
-// Explicit preflight handler for all routes
 app.options('*', cors());
 
 app.use(express.json());
