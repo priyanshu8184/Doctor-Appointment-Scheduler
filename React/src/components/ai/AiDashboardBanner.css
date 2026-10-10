@@ -1,89 +1,139 @@
-/* AI Dashboard Banner Styles - Harmonized with HealPoint Palette */
+/* AI Dashboard Banner Styles - Healthcare Navy & Teal Design System */
 .ai-dashboard-banner {
-  background: linear-gradient(135deg, #111C2F 0%, #087F72 100%);
-  border-radius: 14px;
-  padding: 24px;
-  color: #ffffff;
-  margin-bottom: 24px;
-  box-shadow: 0 10px 24px -4px rgba(17, 28, 47, 0.15);
+  background: linear-gradient(135deg, #111C2F 0%, #17263A 55%, #084c44 100%);
+  border: 1px solid rgba(226, 232, 240, 0.12);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  color: #FFFFFF;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 16px -2px rgba(17, 28, 47, 0.12);
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.ai-dashboard-banner::after {
-  content: '✨';
-  position: absolute;
-  right: 20px;
-  bottom: 10px;
-  font-size: 110px;
-  opacity: 0.06;
-  pointer-events: none;
-}
-
-.ai-banner-content {
+.ai-banner-main {
   position: relative;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .ai-banner-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(8px);
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 11.5px;
+  background: rgba(8, 127, 114, 0.25);
+  border: 1px solid rgba(8, 127, 114, 0.4);
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #F0F8F5;
+  letter-spacing: 0.3px;
+  margin-bottom: 0.5rem;
+  width: fit-content;
 }
 
-.ai-sparkle {
-  font-size: 14px;
+.ai-badge-icon {
+  color: #5eead4;
 }
 
 .ai-banner-title {
-  font-size: 20px;
+  font-size: 1.25rem;
   font-weight: 700;
-  margin: 0 0 6px 0;
-  color: #ffffff;
+  margin: 0 0 0.35rem 0;
+  color: #FFFFFF;
+  line-height: 1.3;
 }
 
 .ai-banner-subtitle {
-  font-size: 13.5px;
-  color: rgba(255, 255, 255, 0.88);
-  max-width: 650px;
-  margin: 0 0 16px 0;
+  font-size: 0.875rem;
+  color: #CBD5E1;
+  max-width: 680px;
+  margin: 0;
   line-height: 1.5;
 }
 
-.ai-banner-actions {
+.ai-banner-actions-group {
+  margin-top: 0.25rem;
+}
+
+.ai-actions-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.ai-banner-btn {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #ffffff;
-  padding: 7px 14px;
-  border-radius: 999px;
-  font-size: 12.5px;
+.ai-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
-  backdrop-filter: blur(4px);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.18s ease-in-out;
+  text-decoration: none;
+  border: 1px solid transparent;
 }
 
-.ai-banner-btn:hover {
-  background: #ffffff;
-  color: #087F72;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+.ai-action-btn.primary {
+  background: #087F72;
+  color: #FFFFFF;
+  border-color: #0c9687;
+  box-shadow: 0 2px 6px rgba(8, 127, 114, 0.25);
 }
 
+.ai-action-btn.primary:hover {
+  background: #0a9788;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(8, 127, 114, 0.35);
+}
+
+.ai-action-btn.secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #E2E8F0;
+}
+
+.ai-action-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.ai-action-btn:focus-visible {
+  outline: 2px solid #5eead4;
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .ai-dashboard-banner {
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1.25rem;
+  }
+
+  .ai-banner-title {
+    font-size: 1.125rem;
+  }
+
+  .ai-banner-subtitle {
+    font-size: 0.8125rem;
+  }
+
+  .ai-actions-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ai-action-btn {
+    justify-content: center;
+    width: 100%;
+    padding: 0.55rem 0.85rem;
+  }
+}

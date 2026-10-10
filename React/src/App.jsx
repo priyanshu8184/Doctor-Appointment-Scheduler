@@ -10,6 +10,7 @@ import PatientDashboard from './pages/PatientDashboard'
 import ServicesPage from './pages/ServicesPage'
 import AboutPage from './pages/AboutPage'
 import AdminDashboard from './pages/AdminDashboard'
+import AdminLoginPage from './pages/AdminLoginPage'
 
 import HealPointAiChat from './components/ai/HealPointAiChat'
 
@@ -41,8 +42,9 @@ const App = () => {
   }
 
   const currentPage = () => {
-    const basePath = (route || window.location.pathname).split('?')[0]
+    const basePath = (route || window.location.pathname).split('?')[0].replace(/\/$/, '')
     if (basePath === '/login') return <LoginPage navigate={navigate} />
+    if (basePath === '/admin/login') return <AdminLoginPage navigate={navigate} />
     if (basePath === '/signup') return <SignupSelectionPage navigate={navigate} />
     if (basePath === '/signup/patient') return <PatientSignupPage navigate={navigate} />
     if (basePath === '/signup/doctor') return <DoctorSignupPage navigate={navigate} />
@@ -51,7 +53,27 @@ const App = () => {
     if (basePath === '/about') return <AboutPage navigate={navigate} />
     if (basePath === '/doctor-dashboard') return <DoctorDashboard navigate={navigate} />
     if (basePath === '/patient-dashboard') return <PatientDashboard navigate={navigate} />
-    if (basePath === '/admin-dashboard') return <AdminDashboard navigate={navigate} />
+
+    // Admin Panel Routes
+    if (basePath === '/admin' || basePath === '/admin/dashboard' || basePath === '/admin-dashboard') {
+      return <AdminDashboard navigate={navigate} initialTab="overview" />
+    }
+    if (basePath === '/admin/doctors') {
+      return <AdminDashboard navigate={navigate} initialTab="doctors" />
+    }
+    if (basePath === '/admin/patients') {
+      return <AdminDashboard navigate={navigate} initialTab="patients" />
+    }
+    if (basePath === '/admin/appointments') {
+      return <AdminDashboard navigate={navigate} initialTab="appointments" />
+    }
+    if (basePath === '/admin/reports') {
+      return <AdminDashboard navigate={navigate} initialTab="reports" />
+    }
+    if (basePath === '/admin/audit-logs') {
+      return <AdminDashboard navigate={navigate} initialTab="audit-logs" />
+    }
+
     return <Homepage navigate={navigate} />
   }
 

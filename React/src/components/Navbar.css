@@ -1,8 +1,12 @@
+/* ==========================================================================
+   HealPoint Navigation Bar & Gmail-Style Profile Dropdown Menu
+   ========================================================================== */
+
 .navbar-header {
   position: sticky;
   top: 0;
   z-index: 1000;
-  background-color: var(--navy);
+  background-color: var(--navy, #111C2F);
   border-bottom: 1px solid rgba(225, 232, 229, 0.12);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -12,13 +16,14 @@
   max-width: 1240px;
   margin: 0 auto;
   padding: 0 1.5rem;
-  height: 88px;
+  height: 84px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
 }
 
+/* Brand Logo */
 .brand {
   display: flex;
   align-items: center;
@@ -33,13 +38,14 @@
 }
 
 .brand-logo {
-  height: 72px;
+  height: 68px;
   width: auto;
-  max-width: 250px;
+  max-width: 240px;
   object-fit: contain;
   display: block;
 }
 
+/* Primary Nav Links */
 .nav-links {
   display: flex;
   align-items: center;
@@ -53,9 +59,10 @@
   font-size: 0.9375rem;
   font-weight: 500;
   padding: 0.5rem 0.85rem;
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   transition: all 0.2s ease;
   white-space: nowrap;
+  text-decoration: none;
 }
 
 .nav-links a:hover {
@@ -85,34 +92,21 @@
   color: #FFFFFF !important;
 }
 
-.nav-user-pill {
-  display: inline-flex;
+/* Right Section Cluster (CTA + Avatar Trigger + Hamburger) */
+.navbar-right-cluster {
+  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  background-color: var(--navy-surface);
-  border: 1px solid rgba(8, 127, 114, 0.35);
-  color: #FFFFFF !important;
-  padding: 0.45rem 0.9rem !important;
-  border-radius: 999px;
-  font-size: 0.875rem !important;
-  font-weight: 600 !important;
-}
-
-.user-dot {
-  width: 8px;
-  height: 8px;
-  background-color: #10B981;
-  border-radius: 50%;
-  display: inline-block;
+  gap: 0.875rem;
+  position: relative;
 }
 
 .nav-cta {
-  background-color: var(--teal);
+  background-color: var(--teal, #087F72);
   color: #FFFFFF !important;
   font-size: 0.9375rem;
   font-weight: 600;
-  padding: 0.65rem 1.25rem;
-  border-radius: var(--radius-md);
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px rgba(8, 127, 114, 0.3);
@@ -124,7 +118,7 @@
 }
 
 .nav-cta:hover {
-  background-color: var(--teal-hover);
+  background-color: #06685D;
   box-shadow: 0 4px 14px rgba(8, 127, 114, 0.45);
   transform: translateY(-1px);
 }
@@ -137,16 +131,277 @@
   display: none;
 }
 
-/* Hamburger button */
+/* ==========================================================================
+   Gmail-Style Account Profile Menu
+   ========================================================================== */
+.nav-profile-menu-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.nav-avatar-trigger {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
+  border: 2px solid rgba(8, 127, 114, 0.5);
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.nav-avatar-trigger:hover,
+.nav-avatar-trigger.active {
+  border-color: #5EEAD4;
+  transform: scale(1.05);
+  box-shadow: 0 0 0 3px rgba(8, 127, 114, 0.35);
+}
+
+.nav-avatar-trigger:focus-visible {
+  outline: 2px solid #5EEAD4;
+  outline-offset: 2px;
+}
+
+.nav-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.nav-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #087F72 0%, #06685D 100%);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  user-select: none;
+}
+
+.nav-avatar-online-dot {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 10px;
+  height: 10px;
+  background-color: #10B981;
+  border: 2px solid var(--navy, #111C2F);
+  border-radius: 50%;
+}
+
+/* Floating Dropdown Card */
+.nav-profile-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 300px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 1.15rem;
+  box-shadow: 0 16px 36px -6px rgba(17, 28, 47, 0.22), 0 0 0 1px rgba(17, 28, 47, 0.05);
+  z-index: 1100;
+  animation: dropdownPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #172033;
+}
+
+@keyframes dropdownPop {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dropdown-user-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 0.25rem;
+}
+
+.dropdown-avatar-wrap {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid #E2E8F0;
+}
+
+.dropdown-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dropdown-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #087F72 0%, #111C2F 100%);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.dropdown-user-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.dropdown-user-name {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #172033;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-user-email {
+  margin: 1px 0 4px 0;
+  font-size: 0.78125rem;
+  color: #64748B;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #F0F8F5;
+  color: #087F72;
+  border: 1px solid rgba(8, 127, 114, 0.2);
+  padding: 2px 7px;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.role-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: #087F72;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background-color: #F1F5F9;
+  margin: 0.75rem 0;
+}
+
+.dropdown-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dropdown-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.84375rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.dropdown-menu-item .item-icon {
+  color: #64748B;
+  transition: color 0.15s ease;
+}
+
+.dropdown-menu-item:hover {
+  background-color: #F0F8F5;
+  color: #087F72;
+}
+
+.dropdown-menu-item:hover .item-icon {
+  color: #087F72;
+}
+
+.dropdown-menu-item:focus-visible {
+  outline: 2px solid #087F72;
+  outline-offset: -1px;
+}
+
+.dropdown-footer {
+  margin-top: 0.25rem;
+}
+
+.dropdown-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.84375rem;
+  font-weight: 600;
+  color: #DC2626;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.dropdown-logout-btn .logout-icon {
+  color: #DC2626;
+}
+
+.dropdown-logout-btn:hover {
+  background-color: #FEF2F2;
+  color: #B91C1C;
+}
+
+.dropdown-logout-btn:focus-visible {
+  outline: 2px solid #DC2626;
+  outline-offset: -1px;
+}
+
+/* ==========================================================================
+   Hamburger Toggle Button & Mobile Navigation
+   ========================================================================== */
 .nav-toggle {
   display: none;
   background: transparent;
   border: none;
   cursor: pointer;
   padding: 0.5rem;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-sm);
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
   align-items: center;
   justify-content: center;
 }
@@ -192,14 +447,15 @@
   top: 0;
 }
 
+/* Responsive Breakpoints */
 @media (max-width: 960px) {
   .navbar-container {
-    height: 80px;
+    height: 76px;
   }
 
   .brand-logo {
-    height: 64px;
-    max-width: 220px;
+    height: 60px;
+    max-width: 210px;
   }
 
   .nav-toggle {
@@ -221,10 +477,10 @@
     flex-direction: column;
     align-items: stretch;
     position: absolute;
-    top: 80px;
+    top: 76px;
     left: 0;
     right: 0;
-    background-color: var(--navy);
+    background-color: var(--navy, #111C2F);
     border-bottom: 1px solid rgba(225, 232, 229, 0.15);
     padding: 1.25rem 1.5rem 1.75rem;
     gap: 0.5rem;
@@ -238,7 +494,7 @@
   .nav-links a {
     padding: 0.75rem 1rem;
     font-size: 1rem;
-    border-radius: var(--radius-md);
+    border-radius: 8px;
   }
 
   .nav-auth-group {
@@ -252,21 +508,31 @@
   .nav-auth-group a {
     text-align: center;
   }
+
+  .nav-profile-dropdown {
+    right: 0;
+    width: calc(100vw - 32px);
+    max-width: 300px;
+  }
 }
 
 @media (max-width: 480px) {
   .navbar-container {
     padding: 0 1rem;
-    height: 74px;
+    height: 70px;
   }
 
   .brand-logo {
-    height: 58px;
-    max-width: 190px;
+    height: 52px;
+    max-width: 180px;
   }
 
   .nav-links {
-    top: 74px;
+    top: 70px;
+  }
+
+  .nav-avatar-trigger {
+    width: 36px;
+    height: 36px;
   }
 }
-

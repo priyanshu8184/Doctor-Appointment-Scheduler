@@ -63,6 +63,7 @@ const LoginPage = ({ navigate }) => {
           setStatusMessage('Login successful')
           const user = response.data.user
           localStorage.setItem('user', JSON.stringify(user))
+          window.dispatchEvent(new Event('user-auth-change'))
           
           setTimeout(() => {
             const role = user.role ? user.role.toUpperCase() : ''

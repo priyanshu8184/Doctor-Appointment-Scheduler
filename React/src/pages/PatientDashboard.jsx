@@ -1,10 +1,35 @@
 import React, { useState, useEffect, useRef } from 'react'
 import './PatientDashboard.css'
-import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
 import axios from 'axios'
 import { io } from 'socket.io-client'
 import Peer from 'peerjs'
+import { 
+  Stethoscope, 
+  FileText, 
+  Calendar, 
+  History as HistoryIcon, 
+  User, 
+  CreditCard, 
+  Star, 
+  LogOut, 
+  Menu, 
+  X, 
+  Home, 
+  Clock, 
+  MapPin, 
+  Video, 
+  Building, 
+  AlertCircle, 
+  CheckCircle2, 
+  Edit3, 
+  UploadCloud, 
+  ArrowLeft, 
+  PhoneCall, 
+  PhoneOff, 
+  Send,
+  Sparkles,
+  ChevronRight
+} from 'lucide-react'
 import AiDashboardBanner from '../components/ai/AiDashboardBanner'
 import AiLabReportAnalyzer from '../components/ai/AiLabReportAnalyzer'
 import { SAMPLE_DOCTORS } from '../../../AI/index.js'
@@ -34,17 +59,19 @@ const resolveDoctorInfo = (docId, doctorsMap = {}) => {
 const PatientDashboard = ({ navigate }) => {
   const handleLogout = () => {
     localStorage.removeItem('user')
-    window.location.href = '/login'
+    if (navigate) navigate('/login')
+    else window.location.href = '/login'
   }
 
-  // Parse URL search parameters for default active tab (e.g. ?tab=lab-reports)
+  // Parse URL search parameters for default active tab
   const queryParams = new URLSearchParams(window.location.search)
   const initialTab = queryParams.get('tab') || 'upcoming'
 
   const [activeTab, setActiveTab] = useState(initialTab)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false) // Mobile drawer state
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [imageError, setImageError] = useState(false)
 
   // Default sample patient profile
   const defaultProfile = {
@@ -85,7 +112,6 @@ const PatientDashboard = ({ navigate }) => {
     }
   ]
 
-  // 1. Define states to store backend data
   const [upcomingAppointments, setUpcomingAppointments] = useState(defaultAppointments)
   const [appointmentHistory, setAppointmentHistory] = useState([
     {
@@ -130,12 +156,77 @@ const PatientDashboard = ({ navigate }) => {
   const [rescheduleDate, setRescheduleDate] = useState("")
   const [joinedConsultation, setJoinedConsultation] = useState(null)
 
-  // 2. Base API URL
+  // Post-visit doctor rating states
+  const [ratingModalApt, setRatingModalApt] = useState(null)
+  const [ratingForm, setRatingForm] = useState({ rating: 5, comment: '' })
+  const [ratingHover, setRatingHover] = useState(0)
+  const [ratingSubmitting, setRatingSubmitting] = useState(false)
+  const [ratingSuccessMsg, setRatingSuccessMsg] = useState('')
+
+  const getRatingLabel = (score) => {
+    switch (score) {
+      case 5: return '5 ★ - Excellent experience, highly recommend!'
+      case 4: return '4 ★ - Very good consultation'
+      case 3: return '3 ★ - Average / Satisfactory'
+      case 2: return '2 ★ - Below expectations'
+      case 1: return '1 ★ - Unsatisfactory visit'
+      default: return 'Select star rating'
+    }
+  }
+
+  const handleOpenRatingModal = (apt) => {
+    setRatingModalApt(apt)
+    setRatingForm({ rating: 5, comment: '' })
+    setRatingHover(0)
+    setRatingSuccessMsg('')
+  }
+
+  const handlePostVisitRatingSubmit = async (e) => {
+    e?.preventDefault()
+    if (!ratingModalApt) return
+    setRatingSubmitting(true)
+    try {
+      const loggedInUser = JSON.parse(localStorage.getItem('user')) || { user_id: 1 }
+      const payload = {
+        appointment_id: ratingModalApt.id,
+        patient_id: loggedInUser.user_id,
+        doctor_id: ratingModalApt.doctor_id || 104,
+        rating: ratingForm.rating,
+        comment: ratingForm.comment || 'Helpful and professional doctor consultation.'
+      }
+
+      try {
+        await axios.post(`${API_BASE_URL}/reviews`, payload)
+      } catch (err) {
+        console.warn('Backend review submission fallback:', err.message)
+      }
+
+      const newReview = {
+        id: Date.now(),
+        appointment_id: ratingModalApt.id,
+        doctorName: ratingModalApt.doctorName,
+        rating: ratingForm.rating,
+        date: new Date().toLocaleDateString(),
+        reviewText: ratingForm.comment || 'Helpful and professional doctor consultation.'
+      }
+
+      setReviews(prev => [newReview, ...prev])
+      setRatingSuccessMsg(`Thank you! Your ${ratingForm.rating}-star review for ${ratingModalApt.doctorName} has been recorded.`)
+      setTimeout(() => {
+        setRatingModalApt(null)
+        setRatingSuccessMsg('')
+      }, 2000)
+    } catch (err) {
+      console.error('Error submitting review:', err)
+      alert('Failed to submit review')
+    } finally {
+      setRatingSubmitting(false)
+    }
+  }
+
   const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'
 
-  // 3. Fetch data from backend on component mount
   const fetchDashboardData = async () => {
-    // Get logged-in patient details from localStorage
     let loggedInUser = null
     try {
       const userStr = localStorage.getItem('user')
@@ -187,7 +278,7 @@ const PatientDashboard = ({ navigate }) => {
           if (id) doctorsMap[id] = d
         })
       } catch (docErr) {
-        console.warn('Doctors directory fetch fallback to local registry:', docErr.message)
+        console.warn('Doctors directory fetch fallback:', docErr.message)
       }
 
       const appointmentsRes = await axios.get(`${API_BASE_URL}/appointments`)
@@ -250,7 +341,6 @@ const PatientDashboard = ({ navigate }) => {
       }
     } catch (err) {
       console.warn("Backend API not reachable, using local fallback state:", err.message)
-      // Do not block dashboard with fatal error screen
     }
   }
 
@@ -279,10 +369,9 @@ const PatientDashboard = ({ navigate }) => {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
       
-      // Update local state and close editor
       setProfileData({ ...profileData, ...profileForm, name: `${profileForm.firstName} ${profileForm.lastName}` })
       setIsEditingProfile(false)
-      window.location.reload()
+      fetchDashboardData()
     } catch (err) {
       alert("Failed to update profile")
       console.error(err)
@@ -302,23 +391,19 @@ const PatientDashboard = ({ navigate }) => {
     
     try {
       const loggedInUser = JSON.parse(localStorage.getItem('user'))
-      // Find doctor ID for the selected appointment (assuming we parse it or backend just uses it)
-      // Since our mock history maps doctorName to "Doctor #X", we need to extract the ID, but wait, myApts doesn't expose raw doctor_id.
-      // We should really fetch the raw appointment object or parse it.
-      // Let's just hardcode a doctor_id to the appointment's doctor_id.
       const rawApts = (await axios.get(`${API_BASE_URL}/appointments`)).data.appointments;
       const apt = rawApts.find(a => String(a.appointment_id) === String(reviewForm.appointmentId))
 
       await axios.post(`${API_BASE_URL}/reviews`, {
         appointment_id: reviewForm.appointmentId,
         patient_id: loggedInUser.user_id,
-        doctor_id: apt.doctor_id,
+        doctor_id: apt ? apt.doctor_id : 104,
         rating: reviewForm.rating,
         comment: reviewForm.comment
       })
       alert("Review submitted successfully!")
       setReviewForm({ appointmentId: '', rating: 5, comment: '' })
-      window.location.reload()
+      fetchDashboardData()
     } catch (err) {
       alert(err.response?.data?.message || "Failed to submit review")
     }
@@ -341,7 +426,7 @@ const PatientDashboard = ({ navigate }) => {
       })
       alert("Payment successful!")
       setPaymentAppointmentId('')
-      window.location.reload()
+      fetchDashboardData()
     } catch (err) {
       alert(err.response?.data?.message || "Failed to make payment")
     }
@@ -352,7 +437,7 @@ const PatientDashboard = ({ navigate }) => {
     try {
       await axios.patch(`${API_BASE_URL}/appointments/${id}/cancel`);
       alert("Appointment cancelled successfully!");
-      window.location.reload();
+      fetchDashboardData();
     } catch (err) {
       alert("Failed to cancel appointment: " + (err.response?.data?.message || err.message));
     }
@@ -371,11 +456,23 @@ const PatientDashboard = ({ navigate }) => {
         status: 'SCHEDULED'
       });
       alert("Appointment rescheduled successfully!");
-      window.location.reload();
+      setRescheduleId(null);
+      setRescheduleDate('');
+      fetchDashboardData();
     } catch (err) {
       alert("Failed to reschedule appointment: " + (err.response?.data?.message || err.message));
     }
   };
+
+  // Extract initials for fallback avatar
+  const getInitials = (name) => {
+    if (!name) return 'P'
+    const parts = name.trim().split(' ')
+    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+    return name.slice(0, 2).toUpperCase()
+  }
+
+  const nextAppointment = upcomingAppointments && upcomingAppointments.length > 0 ? upcomingAppointments[0] : null;
 
   const renderContent = () => {
     switch (activeTab) {
@@ -388,166 +485,302 @@ const PatientDashboard = ({ navigate }) => {
         );
       case 'upcoming':
         return (
-          <section className="dashboard-section">
-            {/* Prominent AI Lab Report Analyzer Card on Patient Dashboard */}
+          <div className="dashboard-view-stack">
+            {/* 1. Next Appointment Highlight Card (when available) */}
+            {nextAppointment && (
+              <div className="next-appointment-hero">
+                <div className="next-apt-header">
+                  <div className="next-apt-badge">
+                    <Clock size={13} />
+                    <span>Next Upcoming Appointment</span>
+                  </div>
+                  <span className={`appointment-status ${nextAppointment.status.toLowerCase()}`}>
+                    {nextAppointment.status}
+                  </span>
+                </div>
+                <div className="next-apt-body">
+                  <div className="next-apt-doc-block">
+                    <div className="next-apt-avatar">
+                      <Stethoscope size={20} />
+                    </div>
+                    <div>
+                      <h3 className="next-apt-doctor">{nextAppointment.doctorName}</h3>
+                      <p className="next-apt-spec">{nextAppointment.specialization}</p>
+                    </div>
+                  </div>
+                  <div className="next-apt-meta-grid">
+                    <div className="meta-pill">
+                      <Calendar size={14} />
+                      <span>{nextAppointment.date}</span>
+                    </div>
+                    <div className="meta-pill">
+                      <Clock size={14} />
+                      <span>{nextAppointment.time}</span>
+                    </div>
+                    <div className="meta-pill">
+                      {nextAppointment.type === 'VIDEO' ? <Video size={14} /> : <Building size={14} />}
+                      <span>{nextAppointment.type === 'VIDEO' ? 'Telemedicine Video' : 'In-Person Clinic'}</span>
+                    </div>
+                    <div className="meta-pill">
+                      <MapPin size={14} />
+                      <span>{nextAppointment.location}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="next-apt-actions">
+                  {nextAppointment.status === 'ACCEPTED' && (
+                    <button 
+                      type="button" 
+                      className="primary-btn join-btn"
+                      onClick={() => setJoinedConsultation(nextAppointment)}
+                    >
+                      <Video size={15} />
+                      <span>Join Video Consultation</span>
+                    </button>
+                  )}
+                  {rescheduleId === nextAppointment.id ? (
+                    <div className="inline-reschedule-form">
+                      <input 
+                        type="datetime-local" 
+                        value={rescheduleDate} 
+                        onChange={(e) => setRescheduleDate(e.target.value)} 
+                      />
+                      <button type="button" className="primary-btn sm" onClick={() => handleReschedule(nextAppointment.id)}>Save</button>
+                      <button type="button" className="secondary-btn sm" onClick={() => setRescheduleId(null)}>Cancel</button>
+                    </div>
+                  ) : (
+                    <>
+                      <button 
+                        type="button" 
+                        className="secondary-btn" 
+                        onClick={() => { setRescheduleId(nextAppointment.id); setRescheduleDate(''); }}
+                      >
+                        Reschedule
+                      </button>
+                      <button 
+                        type="button" 
+                        className="secondary-btn danger-hover" 
+                        onClick={() => handleCancelAppointment(nextAppointment.id)}
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 2. Prominent AI Lab Report Analyzer Card */}
             <div 
-              className="lab-analyzer-dashboard-hero" 
+              className="lab-analyzer-feature-card" 
               onClick={() => setActiveTab('lab-reports')}
-              style={{
-                background: 'linear-gradient(135deg, #0f766e 0%, #0d9488 60%, #14b8a6 100%)',
-                color: '#ffffff',
-                padding: '1.5rem 1.75rem',
-                borderRadius: '16px',
-                marginBottom: '1.75rem',
-                cursor: 'pointer',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                boxShadow: '0 10px 25px -5px rgba(13, 148, 136, 0.3)',
-                flexWrap: 'wrap',
-                gap: '16px'
-              }}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setActiveTab('lab-reports'); }}
+              aria-label="Open AI Lab Report Analyzer"
             >
-              <div style={{ flex: '1', minWidth: '280px' }}>
-                <span style={{
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  backdropFilter: 'blur(8px)',
-                  padding: '3px 10px',
-                  borderRadius: '20px',
-                  fontSize: '0.75rem',
-                  fontWeight: '700',
-                  textTransform: 'uppercase',
-                  display: 'inline-block',
-                  marginBottom: '8px'
-                }}>
-                  ✨ AI Medical Intelligence
-                </span>
-                <h3 style={{ margin: '0 0 6px 0', fontSize: '1.35rem', fontWeight: '700' }}>🧪 AI Lab Report Analyzer</h3>
-                <p style={{ margin: '0 0 14px 0', fontSize: '0.9rem', color: '#e6fffa', lineHeight: '1.5' }}>
-                  <strong>Understand your lab report with HealPoint AI.</strong> Upload your medical/lab report (CBC, Blood Sugar, Lipid, Thyroid, Kidney/Liver, Vitamins) and our AI will summarize important findings, highlight abnormal values, and suggest which specialist you may want to consult.
+              <div className="feature-card-content">
+                <div className="feature-badge">
+                  <FileText size={13} />
+                  <span>Clinical Diagnostics</span>
+                </div>
+                <h3 className="feature-title">AI Lab Report Analyzer</h3>
+                <p className="feature-description">
+                  Upload blood work, lipid panels, thyroid tests, or metabolic reports to extract biomarker values, identify abnormal findings, and match with relevant clinical specialists.
                 </p>
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <div className="feature-actions">
                   <button 
                     type="button" 
+                    className="feature-btn primary"
                     onClick={(e) => { e.stopPropagation(); setActiveTab('lab-reports'); }}
-                    style={{
-                      background: '#ffffff',
-                      color: '#0f766e',
-                      border: 'none',
-                      padding: '0.55rem 1.2rem',
-                      borderRadius: '8px',
-                      fontWeight: '700',
-                      fontSize: '0.85rem',
-                      cursor: 'pointer'
-                    }}
                   >
-                    📤 Upload Lab Report
+                    <UploadCloud size={15} />
+                    <span>Upload Lab Report</span>
                   </button>
                   <button 
                     type="button" 
+                    className="feature-btn secondary"
                     onClick={(e) => { e.stopPropagation(); setActiveTab('lab-reports'); }}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.15)',
-                      color: '#ffffff',
-                      border: '1px solid rgba(255, 255, 255, 0.4)',
-                      padding: '0.55rem 1.2rem',
-                      borderRadius: '8px',
-                      fontWeight: '600',
-                      fontSize: '0.85rem',
-                      cursor: 'pointer'
-                    }}
                   >
-                    ⚡ Try Demo Report (1-Click)
+                    <span>Try Demo Report</span>
+                    <ChevronRight size={14} />
                   </button>
                 </div>
               </div>
-              <div style={{ textAlign: 'center', background: 'rgba(255, 255, 255, 0.12)', padding: '16px 20px', borderRadius: '12px' }}>
-                <div style={{ fontSize: '2.5rem' }}>📄</div>
-                <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#ccfbf1', marginTop: '4px' }}>PDF • JPG • PNG</div>
-                <div style={{ fontSize: '0.75rem', color: '#e6fffa' }}>Max 10MB</div>
+              <div className="feature-format-card">
+                <FileText size={28} className="format-icon" />
+                <span className="format-title">PDF • JPG • PNG</span>
+                <span className="format-limit">Max 10MB</span>
               </div>
             </div>
 
-            <h2>Upcoming Appointments</h2>
-            <div className="appointments-list">
-              {upcomingAppointments.length > 0 ? (
-                upcomingAppointments.map((apt) => (
-                  <div key={apt.id} className="appointment-card">
-                    <div className="appointment-top">
-                      <div>
-                        <p className="appointment-doctor">{apt.doctorName}</p>
-                        <p className="appointment-specialty">{apt.specialization} • {apt.type}</p>
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                        <span className={`appointment-status ${apt.status.toLowerCase()}`}>{apt.status}</span>
-                        {apt.status === 'REJECTED' && <span style={{ fontSize: '0.8rem', color: '#ef4444', marginTop: '4px' }}>You are on waiting list</span>}
-                        {apt.status === 'ACCEPTED' && <span style={{ fontSize: '0.8rem', color: '#10b981', marginTop: '4px' }}>Doctor confirmed</span>}
-                      </div>
-                    </div>
+            {/* 3. Upcoming Appointments Section */}
+            <section className="dashboard-section">
+              <div className="section-header-row">
+                <div className="section-title-wrap">
+                  <Calendar size={18} className="section-icon" />
+                  <h2>Upcoming Appointments</h2>
+                </div>
+                <button 
+                  type="button" 
+                  className="section-link-btn"
+                  onClick={() => { if (navigate) navigate('/doctors'); else window.location.href = '/doctors'; }}
+                >
+                  <span>Book New Appointment</span>
+                  <ChevronRight size={14} />
+                </button>
+              </div>
 
-                    <div className="appointment-details">
-                      <span>📅 {apt.date}</span>
-                      <span>📍 {apt.location}</span>
-                    </div>
-
-                    <div className="appointment-actions">
-                      {apt.status === 'ACCEPTED' && (
-                        <button 
-                          type="button" 
-                          className="primary-btn" 
-                          onClick={() => setJoinedConsultation(apt)}
-                          style={{ padding: '0.4rem 0.8rem', fontSize: '0.9rem', marginRight: '8px', background: '#0f766e' }}
-                        >
-                          Join Consultation
-                        </button>
-                      )}
-                      {rescheduleId === apt.id ? (
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <input 
-                            type="datetime-local" 
-                            value={rescheduleDate} 
-                            onChange={(e) => setRescheduleDate(e.target.value)} 
-                            style={{ padding: '0.4rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
-                          />
-                          <button type="button" className="primary-btn" onClick={() => handleReschedule(apt.id)} style={{ padding: '0.4rem 0.8rem', fontSize: '0.9rem' }}>Save</button>
-                          <button type="button" className="secondary-btn" onClick={() => setRescheduleId(null)} style={{ padding: '0.4rem 0.8rem', fontSize: '0.9rem' }}>Cancel</button>
+              <div className="appointments-list">
+                {upcomingAppointments.length > 0 ? (
+                  upcomingAppointments.map((apt) => (
+                    <div key={apt.id} className="appointment-card">
+                      <div className="appointment-top">
+                        <div className="appointment-doctor-group">
+                          <p className="appointment-doctor">{apt.doctorName}</p>
+                          <p className="appointment-specialty">{apt.specialization} • {apt.type === 'VIDEO' ? 'Video' : 'In-Person'}</p>
                         </div>
-                      ) : (
-                        <>
-                          <button type="button" className="secondary-btn" onClick={() => { setRescheduleId(apt.id); setRescheduleDate(''); }}>Reschedule</button>
-                          <button type="button" className="secondary-btn" onClick={() => handleCancelAppointment(apt.id)}>Cancel</button>
-                        </>
-                      )}
+                        <div className="appointment-status-wrap">
+                          <span className={`appointment-status ${apt.status.toLowerCase()}`}>{apt.status}</span>
+                          {apt.status === 'REJECTED' && <span className="status-note danger">On waiting list</span>}
+                          {apt.status === 'ACCEPTED' && <span className="status-note success">Doctor confirmed</span>}
+                        </div>
+                      </div>
+
+                      <div className="appointment-details">
+                        <span className="detail-item">
+                          <Calendar size={14} />
+                          <span>{apt.date} at {apt.time}</span>
+                        </span>
+                        <span className="detail-item">
+                          <MapPin size={14} />
+                          <span>{apt.location}</span>
+                        </span>
+                      </div>
+
+                      <div className="appointment-actions">
+                        {apt.status === 'ACCEPTED' && (
+                          <button 
+                            type="button" 
+                            className="primary-btn join-btn" 
+                            onClick={() => setJoinedConsultation(apt)}
+                          >
+                            <Video size={14} />
+                            <span>Join Consultation</span>
+                          </button>
+                        )}
+                        {rescheduleId === apt.id ? (
+                          <div className="inline-reschedule-form">
+                            <input 
+                              type="datetime-local" 
+                              value={rescheduleDate} 
+                              onChange={(e) => setRescheduleDate(e.target.value)} 
+                            />
+                            <button type="button" className="primary-btn sm" onClick={() => handleReschedule(apt.id)}>Save</button>
+                            <button type="button" className="secondary-btn sm" onClick={() => setRescheduleId(null)}>Cancel</button>
+                          </div>
+                        ) : (
+                          <>
+                            <button 
+                              type="button" 
+                              className="secondary-btn" 
+                              onClick={() => { setRescheduleId(apt.id); setRescheduleDate(''); }}
+                            >
+                              Reschedule
+                            </button>
+                            <button 
+                              type="button" 
+                              className="secondary-btn danger-hover" 
+                              onClick={() => handleCancelAppointment(apt.id)}
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="empty-state">
+                    <Calendar size={32} className="empty-state-icon" />
+                    <h4>No upcoming appointments</h4>
+                    <p>Schedule a video or in-person consultation with our certified doctors.</p>
+                    <button 
+                      type="button" 
+                      className="primary-btn" 
+                      onClick={() => { if (navigate) navigate('/doctors'); else window.location.href = '/doctors'; }}
+                    >
+                      Find a Doctor
+                    </button>
                   </div>
-                ))
-              ) : (
-                <p className="empty-state">No upcoming appointments.</p>
-              )}
-            </div>
-          </section>
+                )}
+              </div>
+            </section>
+          </div>
         )
       case 'history':
         return (
           <section className="dashboard-section">
-            <h2>Appointment History</h2>
+            <div className="section-header-row">
+              <div className="section-title-wrap">
+                <HistoryIcon size={18} className="section-icon" />
+                <h2>Appointment History</h2>
+              </div>
+            </div>
             <div className="history-list">
               {appointmentHistory.length > 0 ? (
-                appointmentHistory.map((apt) => (
-                  <div key={apt.id} className="history-item">
-                    <div className="history-info">
-                      <p className="history-doctor">{apt.doctorName}</p>
-                      <p className="history-specialty">{apt.specialization}</p>
-                      <p className="history-notes">{apt.notes}</p>
+                appointmentHistory.map((apt) => {
+                  const existingReview = reviews.find(r => 
+                    String(r.appointment_id) === String(apt.id) || 
+                    (r.doctorName === apt.doctorName && (r.date === apt.date || String(apt.date).includes(String(r.date))))
+                  );
+
+                  return (
+                    <div key={apt.id} className="history-item">
+                      <div className="history-info">
+                        <div className="history-title-row">
+                          <p className="history-doctor">{apt.doctorName}</p>
+                          {existingReview ? (
+                            <span className="history-rating-badge">
+                              <Star size={12} className="star-icon filled" />
+                              <span>Rated {existingReview.rating}/5</span>
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              className="rate-doc-btn"
+                              onClick={() => handleOpenRatingModal(apt)}
+                              aria-label={`Rate ${apt.doctorName}`}
+                            >
+                              <Star size={13} className="star-icon" />
+                              <span>Rate Doctor</span>
+                            </button>
+                          )}
+                        </div>
+                        <p className="history-specialty">{apt.specialization} • {apt.type === 'VIDEO' ? 'Video' : 'In-Person'}</p>
+                        {apt.notes && <p className="history-notes">{apt.notes}</p>}
+                        {existingReview && existingReview.reviewText && (
+                          <p className="history-review-feedback">
+                            <strong>Your review:</strong> "{existingReview.reviewText}"
+                          </p>
+                        )}
+                      </div>
+                      <div className="history-meta">
+                        <span className="history-date">
+                          <Calendar size={13} />
+                          <span>{apt.date}</span>
+                        </span>
+                        <span className={`appointment-status ${apt.status.toLowerCase()}`}>{apt.status}</span>
+                      </div>
                     </div>
-                    <div className="history-meta">
-                      <span className="history-date">{apt.date}</span>
-                      <button type="button" className="secondary-btn view-details-btn">View Details</button>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
-                <p className="empty-state">No appointment history.</p>
+                <div className="empty-state">
+                  <HistoryIcon size={32} className="empty-state-icon" />
+                  <h4>No appointment history</h4>
+                  <p>Your completed consultations and clinical records will appear here.</p>
+                </div>
               )}
             </div>
           </section>
@@ -555,15 +788,24 @@ const PatientDashboard = ({ navigate }) => {
       case 'profile':
         return (
           <section className="dashboard-section">
-            <h2>Your Profile</h2>
             <div className="profile-card">
               <div className="profile-header">
-                <h3>{isEditingProfile ? 'Edit Profile' : profileData.name}</h3>
+                <div className="profile-title-group">
+                  <User size={20} className="section-icon" />
+                  <h3>{isEditingProfile ? 'Edit Profile Details' : profileData.name}</h3>
+                </div>
                 {!isEditingProfile ? (
-                  <button type="button" className="primary-btn edit-profile-btn" onClick={() => { setIsEditingProfile(true); setProfileForm({ ...profileData }); }}>Edit Profile</button>
+                  <button 
+                    type="button" 
+                    className="primary-btn edit-profile-btn" 
+                    onClick={() => { setIsEditingProfile(true); setProfileForm({ ...profileData }); }}
+                  >
+                    <Edit3 size={14} />
+                    <span>Edit Profile</span>
+                  </button>
                 ) : (
-                  <div>
-                    <button type="button" className="secondary-btn" style={{ marginRight: '10px' }} onClick={() => setIsEditingProfile(false)}>Cancel</button>
+                  <div className="profile-header-actions">
+                    <button type="button" className="secondary-btn" onClick={() => setIsEditingProfile(false)}>Cancel</button>
                     <button type="button" className="primary-btn" onClick={handleSaveProfile}>Save Changes</button>
                   </div>
                 )}
@@ -584,7 +826,7 @@ const PatientDashboard = ({ navigate }) => {
                     <input type="text" name="lastName" value={profileForm.lastName || ''} onChange={handleProfileChange} />
                   </div>
                   <div className="profile-item">
-                    <label>Phone</label>
+                    <label>Phone Number</label>
                     <input type="text" name="phone" value={profileForm.phone || ''} onChange={handleProfileChange} />
                   </div>
                   <div className="profile-item">
@@ -615,11 +857,11 @@ const PatientDashboard = ({ navigate }) => {
               ) : (
                 <div className="profile-grid">
                   <div className="profile-item">
-                    <label>Email</label>
+                    <label>Email Address</label>
                     <p>{profileData.email}</p>
                   </div>
                   <div className="profile-item">
-                    <label>Phone</label>
+                    <label>Phone Number</label>
                     <p>{profileData.phone}</p>
                   </div>
                   <div className="profile-item">
@@ -635,7 +877,7 @@ const PatientDashboard = ({ navigate }) => {
                     <p>{profileData.bloodGroup}</p>
                   </div>
                   <div className="profile-item">
-                    <label>Address</label>
+                    <label>Home Address</label>
                     <p>{profileData.address}</p>
                   </div>
                   <div className="profile-item full-width">
@@ -650,29 +892,42 @@ const PatientDashboard = ({ navigate }) => {
       case 'payments':
         return (
           <section className="dashboard-section">
-            <h2>Payment History</h2>
-            <div className="payments-table">
-              <div className="table-header">
-                <p className="col-date">Date</p>
-                <p className="col-doctor">Doctor / Service</p>
-                <p className="col-amount">Amount</p>
-                <p className="col-status">Status</p>
-                <p className="col-method">Method</p>
+            <div className="section-header-row">
+              <div className="section-title-wrap">
+                <CreditCard size={18} className="section-icon" />
+                <h2>Payment History</h2>
               </div>
-              {payments.map((payment) => (
-                <div key={payment.id} className="table-row">
-                  <p className="col-date">{payment.date}</p>
-                  <p className="col-doctor">{payment.doctorName}</p>
-                  <p className="col-amount">{payment.amount}</p>
-                  <p className={`col-status status-${payment.status.toLowerCase()}`}>{payment.status}</p>
-                  <p className="col-method">{payment.method}</p>
-                </div>
-              ))}
+            </div>
+            <div className="payments-table-container">
+              <table className="payments-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Doctor / Service</th>
+                    <th scope="col">Amount</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Payment Method</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payments.map((payment) => (
+                    <tr key={payment.id}>
+                      <td className="col-date">{payment.date}</td>
+                      <td className="col-doctor">{payment.doctorName}</td>
+                      <td className="col-amount">{payment.amount}</td>
+                      <td>
+                        <span className={`status-pill status-${payment.status.toLowerCase()}`}>{payment.status}</span>
+                      </td>
+                      <td className="col-method">{payment.method}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
-            <div className="add-review-section" style={{ marginTop: '30px' }}>
+            <div className="add-payment-section">
               <h3>Make a Mock Payment</h3>
-              <form className="review-form" onSubmit={handleMockPayment}>
+              <form className="payment-form" onSubmit={handleMockPayment}>
                 <div className="form-group">
                   <label htmlFor="payment-select">Select Appointment</label>
                   <select 
@@ -686,7 +941,7 @@ const PatientDashboard = ({ navigate }) => {
                     ))}
                   </select>
                 </div>
-                <button type="submit" className="primary-btn submit-review-btn">Pay $150.00 Now</button>
+                <button type="submit" className="primary-btn">Pay $150.00 Now</button>
               </form>
             </div>
           </section>
@@ -694,7 +949,12 @@ const PatientDashboard = ({ navigate }) => {
       case 'reviews':
         return (
           <section className="dashboard-section">
-            <h2>My Reviews</h2>
+            <div className="section-header-row">
+              <div className="section-title-wrap">
+                <Star size={18} className="section-icon" />
+                <h2>Doctor Consultations & Ratings</h2>
+              </div>
+            </div>
             <div className="reviews-list">
               {reviews.length > 0 ? (
                 reviews.map((review) => (
@@ -704,9 +964,11 @@ const PatientDashboard = ({ navigate }) => {
                         <p className="review-doctor">{review.doctorName}</p>
                         <div className="review-rating">
                           {[...Array(5)].map((_, i) => (
-                            <span key={i} className={i < review.rating ? 'star filled' : 'star'}>
-                              ⭐
-                            </span>
+                            <Star 
+                              key={i} 
+                              size={14} 
+                              className={i < review.rating ? 'star filled' : 'star'} 
+                            />
                           ))}
                         </div>
                       </div>
@@ -716,29 +978,33 @@ const PatientDashboard = ({ navigate }) => {
                   </div>
                 ))
               ) : (
-                <p className="empty-state">No reviews yet.</p>
+                <div className="empty-state">
+                  <Star size={32} className="empty-state-icon" />
+                  <h4>No reviews submitted yet</h4>
+                  <p>Leave feedback for your past consultations to help improve clinical service.</p>
+                </div>
               )}
             </div>
 
             <div className="add-review-section">
-              <h3>Leave a Review</h3>
+              <h3>Rate a Doctor / Completed Visit</h3>
               <form className="review-form" onSubmit={handleReviewSubmit}>
                 <div className="form-group">
-                  <label htmlFor="doctor-select">Select Appointment</label>
+                  <label htmlFor="doctor-select">Select Completed Appointment</label>
                   <select 
                     id="doctor-select" 
                     value={reviewForm.appointmentId} 
                     onChange={e => setReviewForm({...reviewForm, appointmentId: e.target.value})}
                   >
                     <option value="">Choose a completed appointment...</option>
-                    {appointmentHistory.filter(a => a.status === 'COMPLETED').map((apt) => (
-                      <option key={apt.id} value={apt.id}>{apt.date} - {apt.doctorName}</option>
+                    {appointmentHistory.map((apt) => (
+                      <option key={apt.id} value={apt.id}>{apt.date} - {apt.doctorName} ({apt.specialization})</option>
                     ))}
                   </select>
                 </div>
 
                 <div className="form-group">
-                  <label>Rating</label>
+                  <label>Rating Score</label>
                   <div className="rating-input">
                     {[1, 2, 3, 4, 5].map((num) => (
                       <button 
@@ -746,26 +1012,30 @@ const PatientDashboard = ({ navigate }) => {
                         type="button" 
                         className={`star-btn ${num <= reviewForm.rating ? 'filled' : ''}`}
                         onClick={() => setReviewForm({...reviewForm, rating: num})}
-                        style={{ fontSize: '24px', background: 'none', border: 'none', cursor: 'pointer', color: num <= reviewForm.rating ? '#FFD700' : '#ccc' }}
+                        aria-label={`Rate ${num} stars`}
                       >
-                        ★
+                        <Star size={20} className={num <= reviewForm.rating ? 'star-filled' : 'star-empty'} />
                       </button>
                     ))}
                   </div>
+                  <span className="rating-label-hint">{getRatingLabel(reviewForm.rating)}</span>
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="review-text">Review</label>
+                  <label htmlFor="review-text">Review Comments</label>
                   <textarea 
                     id="review-text" 
-                    placeholder="Share your experience..." 
-                    rows="4" 
+                    placeholder="Share your experience regarding the consultation, doctor attentiveness, and diagnosis..." 
+                    rows="3" 
                     value={reviewForm.comment}
                     onChange={e => setReviewForm({...reviewForm, comment: e.target.value})}
                   />
                 </div>
 
-                <button type="submit" className="primary-btn submit-review-btn">Submit Review</button>
+                <button type="submit" className="primary-btn submit-review-btn">
+                  <Star size={15} />
+                  <span>Submit Review</span>
+                </button>
               </form>
             </div>
           </section>
@@ -778,135 +1048,313 @@ const PatientDashboard = ({ navigate }) => {
   if (joinedConsultation) {
     return (
       <div className="patient-dashboard" style={{ display: 'block', padding: '20px' }}>
-        <ConsultationArea appointment={joinedConsultation} role="PATIENT" onBack={() => setJoinedConsultation(null)} />
+        <ConsultationArea 
+          appointment={joinedConsultation} 
+          role="PATIENT" 
+          onBack={() => setJoinedConsultation(null)}
+          onRateDoctor={(apt) => {
+            setJoinedConsultation(null);
+            handleOpenRatingModal(apt);
+          }}
+        />
       </div>
     )
   }
 
+  const patientFirstName = profileData?.firstName || profileData?.name?.split(' ')[0] || 'Patient';
+
   return (
-    <div className="patient-dashboard">
-      <aside className={`dashboard-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
+    <div className="patient-dashboard-layout">
+      {/* Mobile Drawer Backdrop */}
+      {sidebarOpen && (
+        <div 
+          className="sidebar-backdrop" 
+          onClick={() => setSidebarOpen(false)} 
+          aria-hidden="true" 
+        />
+      )}
+
+      {/* Sidebar Navigation */}
+      <aside className={`dashboard-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
-          <h1 className="sidebar-title">HealPoint</h1>
+          <div className="sidebar-brand">
+            <div className="brand-icon-wrap">
+              <Stethoscope size={18} aria-hidden="true" />
+            </div>
+            <span className="brand-name">HealPoint</span>
+          </div>
           <button
             type="button"
-            className="sidebar-toggle"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            aria-label="Toggle sidebar"
+            className="sidebar-close-btn"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close sidebar"
           >
-            ☰
+            <X size={18} />
           </button>
         </div>
 
-        {profileData && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-            <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#334155', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: '0.5rem' }}>
-              {profileData.profilePicture ? (
-                <img src={profileData.profilePicture} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                <span style={{ fontSize: '2rem' }}>👤</span>
-              )}
-            </div>
-            {sidebarOpen && <p style={{ color: 'white', fontWeight: 600, margin: 0 }}>{profileData.name}</p>}
+        {/* Profile Card in Sidebar */}
+        <div className="sidebar-profile-card">
+          <div className="sidebar-avatar-wrap">
+            {profileData?.profilePicture && !imageError ? (
+              <img 
+                src={profileData.profilePicture} 
+                alt={profileData.name} 
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <div className="avatar-initials">
+                {getInitials(profileData?.name)}
+              </div>
+            )}
           </div>
-        )}
+          <div className="sidebar-profile-info">
+            <p className="sidebar-patient-name">{profileData?.name || 'Demo Patient'}</p>
+            <span className="patient-tag">Patient Account</span>
+          </div>
+        </div>
 
-        <nav className="sidebar-nav">
+        {/* Navigation Items */}
+        <nav className="sidebar-nav" aria-label="Patient Dashboard Navigation">
           <button
             type="button"
-            className="nav-item"
-            onClick={() => window.location.href = '/doctors'}
-            style={{ backgroundColor: '#2563eb', color: 'white', fontWeight: 'bold' }}
+            className="nav-item book-doctor-action"
+            onClick={() => {
+              setSidebarOpen(false);
+              if (navigate) navigate('/doctors');
+              else window.location.href = '/doctors';
+            }}
           >
-            🩺 Book Doctor
+            <Stethoscope size={16} aria-hidden="true" />
+            <span>Book Doctor</span>
           </button>
-          <button
-            type="button"
-            className={`nav-item ${activeTab === 'lab-reports' ? 'active' : ''}`}
-            onClick={() => setActiveTab('lab-reports')}
-            style={activeTab === 'lab-reports' ? { backgroundColor: '#0f766e', color: 'white', fontWeight: 'bold' } : { color: '#2dd4bf' }}
-          >
-            🧪 Report Analyzer
-          </button>
+
           <button
             type="button"
             className={`nav-item ${activeTab === 'upcoming' ? 'active' : ''}`}
-            onClick={() => setActiveTab('upcoming')}
+            onClick={() => { setActiveTab('upcoming'); setSidebarOpen(false); }}
           >
-            📅 Upcoming
+            <Calendar size={16} aria-hidden="true" />
+            <span>Upcoming</span>
           </button>
+
+          <button
+            type="button"
+            className={`nav-item ${activeTab === 'lab-reports' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('lab-reports'); setSidebarOpen(false); }}
+          >
+            <FileText size={16} aria-hidden="true" />
+            <span>Report Analyzer</span>
+          </button>
+
           <button
             type="button"
             className={`nav-item ${activeTab === 'history' ? 'active' : ''}`}
-            onClick={() => setActiveTab('history')}
+            onClick={() => { setActiveTab('history'); setSidebarOpen(false); }}
           >
-            📜 History
+            <HistoryIcon size={16} aria-hidden="true" />
+            <span>History</span>
           </button>
+
           <button
             type="button"
             className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`}
-            onClick={() => setActiveTab('profile')}
+            onClick={() => { setActiveTab('profile'); setSidebarOpen(false); }}
           >
-            👤 Profile
+            <User size={16} aria-hidden="true" />
+            <span>Profile</span>
           </button>
+
           <button
             type="button"
             className={`nav-item ${activeTab === 'payments' ? 'active' : ''}`}
-            onClick={() => setActiveTab('payments')}
+            onClick={() => { setActiveTab('payments'); setSidebarOpen(false); }}
           >
-            💳 Payments
+            <CreditCard size={16} aria-hidden="true" />
+            <span>Payments</span>
           </button>
+
           <button
             type="button"
             className={`nav-item ${activeTab === 'reviews' ? 'active' : ''}`}
-            onClick={() => setActiveTab('reviews')}
+            onClick={() => { setActiveTab('reviews'); setSidebarOpen(false); }}
           >
-            ⭐ Reviews
+            <Star size={16} aria-hidden="true" />
+            <span>Reviews</span>
           </button>
         </nav>
 
+        {/* Sidebar Footer Logout */}
         <div className="sidebar-footer">
-          <button type="button" className="secondary-btn logout-btn" onClick={handleLogout}>Logout</button>
+          <button 
+            type="button" 
+            className="sidebar-logout-btn" 
+            onClick={handleLogout}
+          >
+            <LogOut size={16} aria-hidden="true" />
+            <span>Logout</span>
+          </button>
         </div>
       </aside>
 
+      {/* Main Content Area */}
       <main className="dashboard-content">
-        <div className="dashboard-top">
-          <button
-            type="button"
-            className="mobile-menu-toggle"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            aria-label="Toggle sidebar"
-          >
-            ☰
-          </button>
-          <h1 className="content-title">My Dashboard</h1>
-          <button 
-            type="button" 
-            onClick={() => navigate('/')} 
-            style={{ marginLeft: 'auto', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            aria-label="Go to Home"
-            title="Go to Home"
-          >
-            🏠
-          </button>
+        <div className="content-max-width">
+          {/* Dashboard Welcome Header */}
+          <header className="dashboard-top-header">
+            <div className="top-header-left">
+              <button
+                type="button"
+                className="mobile-menu-toggle"
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Open sidebar navigation"
+              >
+                <Menu size={20} />
+              </button>
+              <div>
+                <h1 className="welcome-title">Welcome back, {patientFirstName}</h1>
+                <p className="welcome-subtitle">Manage appointments, lab reports, and AI medical consultations.</p>
+              </div>
+            </div>
+
+            <div className="top-header-right">
+              <button 
+                type="button" 
+                className="home-nav-btn"
+                onClick={() => { if (navigate) navigate('/'); else window.location.href = '/'; }} 
+                aria-label="Go to HealPoint Home"
+                title="Go to Home"
+              >
+                <Home size={17} />
+                <span className="home-btn-label">Home</span>
+              </button>
+            </div>
+          </header>
+
+          {/* Ghasitaram AI Assistant Banner */}
+          <AiDashboardBanner 
+            onTriggerAiAction={(query) => {
+              window.dispatchEvent(new CustomEvent('openHealPointAi', { detail: { query } }))
+            }} 
+            onNavigateTab={(tab) => setActiveTab(tab)}
+          />
+
+          {/* Tab Content */}
+          <div className="tab-content-container">
+            {renderContent()}
+          </div>
         </div>
-
-        <AiDashboardBanner 
-          onTriggerAiAction={(query) => {
-            window.dispatchEvent(new CustomEvent('openHealPointAi', { detail: { query } }))
-          }} 
-        />
-
-        {renderContent()}
       </main>
+
+      {/* Post-Visit Doctor Rating Modal */}
+      {ratingModalApt && (
+        <div className="rating-modal-overlay" onClick={() => !ratingSubmitting && setRatingModalApt(null)}>
+          <div className="rating-modal-card" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="rating-modal-title">
+            <div className="rating-modal-header">
+              <div className="rating-header-left">
+                <div className="rating-star-circle">
+                  <Star size={20} className="star-icon-header" />
+                </div>
+                <div>
+                  <h3 id="rating-modal-title" className="rating-modal-title">Rate Your Visit</h3>
+                  <p className="rating-modal-subtitle">Consultation with {ratingModalApt.doctorName}</p>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                className="rating-modal-close" 
+                onClick={() => setRatingModalApt(null)}
+                disabled={ratingSubmitting}
+                aria-label="Close rating modal"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {ratingSuccessMsg ? (
+              <div className="rating-success-box">
+                <CheckCircle2 size={36} className="success-icon" />
+                <h4>Thank You For Your Feedback!</h4>
+                <p>{ratingSuccessMsg}</p>
+              </div>
+            ) : (
+              <form onSubmit={handlePostVisitRatingSubmit} className="rating-modal-form">
+                <div className="rating-field-group">
+                  <label className="rating-field-label">How was your clinical consultation?</label>
+                  <div className="interactive-stars-row">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        className={`star-btn-lg ${(ratingHover || ratingForm.rating) >= star ? 'active' : ''}`}
+                        onMouseEnter={() => setRatingHover(star)}
+                        onMouseLeave={() => setRatingHover(0)}
+                        onClick={() => setRatingForm({ ...ratingForm, rating: star })}
+                        aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                      >
+                        <Star 
+                          size={28} 
+                          fill={(ratingHover || ratingForm.rating) >= star ? '#F59E0B' : 'transparent'} 
+                          stroke={(ratingHover || ratingForm.rating) >= star ? '#D97706' : '#94A3B8'} 
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  <span className="rating-feedback-label">
+                    {getRatingLabel(ratingHover || ratingForm.rating)}
+                  </span>
+                </div>
+
+                <div className="rating-field-group">
+                  <label htmlFor="rating-comments" className="rating-field-label">
+                    Comments / Feedback (Optional)
+                  </label>
+                  <textarea
+                    id="rating-comments"
+                    rows="3"
+                    className="rating-textarea"
+                    placeholder="Share specific details about doctor communication, diagnosis, clarity, and overall care..."
+                    value={ratingForm.comment}
+                    onChange={(e) => setRatingForm({ ...ratingForm, comment: e.target.value })}
+                  />
+                </div>
+
+                <div className="rating-modal-actions">
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    onClick={() => setRatingModalApt(null)}
+                    disabled={ratingSubmitting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="primary-btn submit-rating-btn"
+                    disabled={ratingSubmitting}
+                  >
+                    {ratingSubmitting ? (
+                      <span>Saving...</span>
+                    ) : (
+                      <>
+                        <Star size={15} />
+                        <span>Submit Rating</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
 export default PatientDashboard
 
-const ConsultationArea = ({ appointment, role, onBack }) => {
+const ConsultationArea = ({ appointment, role, onBack, onRateDoctor }) => {
   const [messages, setMessages] = useState([])
   const [inputText, setInputText] = useState('')
   const [callStatus, setCallStatus] = useState('Disconnected')
@@ -1061,82 +1509,109 @@ const ConsultationArea = ({ appointment, role, onBack }) => {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '80vh', backgroundColor: '#f8fafc', borderRadius: '12px', overflow: 'hidden', border: '1px solid #cbd5e1' }}>
+    <div className="consultation-area-container">
       {/* Header */}
-      <div style={{ padding: '16px', background: '#0f766e', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <button onClick={onBack} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', marginRight: '10px', fontSize: '1.1rem' }}>⬅ Back</button>
-          <span style={{ fontWeight: 'bold' }}>Consultation with {role === 'DOCTOR' ? appointment.patientName : appointment.doctorName}</span>
-          <span style={{ marginLeft: '12px', background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>{appointment.type}</span>
+      <div className="consultation-header">
+        <div className="header-left">
+          <button onClick={onBack} className="back-btn" aria-label="Return to Dashboard">
+            <ArrowLeft size={16} />
+            <span>Dashboard</span>
+          </button>
+          <div className="consultation-title-wrap">
+            <span className="doc-name">Consultation with {role === 'DOCTOR' ? appointment.patientName : appointment.doctorName}</span>
+            <span className="type-badge">{appointment.type}</span>
+          </div>
         </div>
-        <div>
+        <div className="consultation-header-actions">
+          {role === 'PATIENT' && onRateDoctor && (
+            <button 
+              type="button" 
+              className="rate-doc-header-btn"
+              onClick={() => onRateDoctor(appointment)}
+              title="Rate doctor consultation"
+            >
+              <Star size={14} className="star-icon filled" />
+              <span>Rate Doctor</span>
+            </button>
+          )}
           {appointment.type !== 'MESSAGING' && (
-            <span>Status: <strong>{callStatus}</strong></span>
+            <span className="call-status-tag">Status: <strong>{callStatus}</strong></span>
           )}
         </div>
       </div>
 
       {/* Main body */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div className="consultation-body">
         {/* Media Pane */}
         {appointment.type !== 'MESSAGING' && (
-          <div style={{ flex: 1.5, background: '#1e293b', display: 'flex', flexDirection: 'column', padding: '20px', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+          <div className="media-pane">
             {appointment.type === 'VIDEO' ? (
-              <div style={{ display: 'flex', gap: '20px', width: '100%', height: '80%', justifyContent: 'center' }}>
+              <div className="video-streams-wrap">
                 {/* Remote Stream */}
-                <div style={{ flex: 1, background: '#0f172a', borderRadius: '8px', overflow: 'hidden', position: 'relative' }}>
-                  <video ref={remoteVideoRef} autoPlay playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  <span style={{ position: 'absolute', bottom: '10px', left: '10px', color: 'white', background: 'rgba(0,0,0,0.5)', padding: '2px 8px', borderRadius: '4px' }}>
+                <div className="remote-stream-box">
+                  <video ref={remoteVideoRef} autoPlay playsInline />
+                  <span className="stream-label">
                     {role === 'DOCTOR' ? 'Patient' : 'Doctor'}
                   </span>
                 </div>
                 {/* Local Stream */}
-                <div style={{ width: '150px', height: '110px', background: '#0f172a', borderRadius: '8px', overflow: 'hidden', position: 'absolute', top: '30px', right: '30px', border: '2px solid white' }}>
-                  <video ref={localVideoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  <span style={{ position: 'absolute', bottom: '5px', left: '5px', color: 'white', background: 'rgba(0,0,0,0.5)', padding: '1px 4px', borderRadius: '2px', fontSize: '0.7rem' }}>
-                    You
-                  </span>
+                <div className="local-stream-box">
+                  <video ref={localVideoRef} autoPlay playsInline muted />
+                  <span className="stream-label">You</span>
                 </div>
               </div>
             ) : (
-              <div style={{ color: 'white', textAlign: 'center' }}>
-                <div style={{ fontSize: '4rem', marginBottom: '10px' }}>📞</div>
-                <h3>Audio Call</h3>
+              <div className="audio-call-box">
+                <PhoneCall size={48} className="audio-icon" />
+                <h3>Audio Consultation</h3>
                 <audio ref={remoteAudioRef} autoPlay />
                 <audio ref={localAudioRef} autoPlay muted />
               </div>
             )}
 
             {/* Media Controls */}
-            <div style={{ marginTop: '20px', display: 'flex', gap: '15px' }}>
+            <div className="media-controls-row">
               {!activeCall ? (
-                <button onClick={handleStartCall} className="primary-btn" style={{ background: '#10b981', padding: '10px 20px' }}>Connect Call</button>
+                <>
+                  <button onClick={handleStartCall} className="primary-btn call-connect-btn">
+                    <PhoneCall size={16} />
+                    <span>Connect Call</span>
+                  </button>
+                  {role === 'PATIENT' && onRateDoctor && callStatus === 'Call ended' && (
+                    <button 
+                      type="button" 
+                      onClick={() => onRateDoctor(appointment)} 
+                      className="primary-btn rate-post-call-btn"
+                    >
+                      <Star size={15} />
+                      <span>Rate Dr. {appointment.doctorName}</span>
+                    </button>
+                  )}
+                </>
               ) : (
-                <button onClick={handleEndCall} className="secondary-btn" style={{ background: '#ef4444', color: 'white', border: 'none', padding: '10px 20px' }}>Disconnect</button>
+                <button onClick={handleEndCall} className="disconnect-btn">
+                  <PhoneOff size={16} />
+                  <span>Disconnect</span>
+                </button>
               )}
             </div>
           </div>
         )}
 
         {/* Chat Pane */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', borderLeft: '1px solid #cbd5e1', background: 'white' }}>
-          <div style={{ padding: '10px', borderBottom: '1px solid #cbd5e1', fontWeight: 'bold', color: '#1e293b' }}>Chat Messages</div>
+        <div className="chat-pane">
+          <div className="chat-pane-header">Clinical Chat Messages</div>
           
           {/* Messages list */}
-          <div style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="messages-list">
             {messages.map((msg, idx) => {
               const isMe = msg.sender_id === user.user_id;
               return (
-                <div key={idx} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>
-                  <div style={{ fontSize: '0.75rem', color: '#64748b', textAlign: isMe ? 'right' : 'left', marginBottom: '2px' }}>
+                <div key={idx} className={`msg-item ${isMe ? 'mine' : 'theirs'}`}>
+                  <div className="msg-sender">
                     {isMe ? 'You' : msg.User?.email || msg.sender_role}
                   </div>
-                  <div style={{
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    backgroundColor: isMe ? '#0f766e' : '#f1f5f9',
-                    color: isMe ? 'white' : '#1e293b'
-                  }}>
+                  <div className="msg-bubble">
                     {msg.message_text}
                   </div>
                 </div>
@@ -1145,15 +1620,16 @@ const ConsultationArea = ({ appointment, role, onBack }) => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSendMessage} style={{ padding: '12px', borderTop: '1px solid #cbd5e1', display: 'flex', gap: '8px' }}>
+          <form onSubmit={handleSendMessage} className="chat-form">
             <input
               type="text"
-              placeholder="Type a message..."
+              placeholder="Type message to doctor..."
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
             />
-            <button type="submit" className="primary-btn" style={{ padding: '8px 16px', background: '#0f766e' }}>Send</button>
+            <button type="submit" className="primary-btn sm" aria-label="Send message">
+              <Send size={14} />
+            </button>
           </form>
         </div>
       </div>

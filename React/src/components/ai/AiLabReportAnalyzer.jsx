@@ -1,5 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { 
+  FileText, 
+  UploadCloud, 
+  History as HistoryIcon, 
+  TrendingUp, 
+  AlertTriangle, 
+  CheckCircle2, 
+  Stethoscope, 
+  Calendar, 
+  Clock, 
+  Trash2, 
+  ShieldAlert, 
+  Sparkles, 
+  ChevronDown, 
+  ChevronUp, 
+  RotateCw,
+  FileCheck,
+  User,
+  Star,
+  MapPin,
+  X,
+  Info,
+  Activity
+} from 'lucide-react';
 import './AiLabReportAnalyzer.css';
 import { 
   analyzeLabReport, 
@@ -27,7 +51,7 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
           ...doc,
           matchScore,
           isPrimaryMatch: isPrimary,
-          whyThisDoctor: `${doc.specialty} specialist • Highly rated (⭐ ${doc.rating}) • Next slot available today`,
+          whyThisDoctor: `${doc.specialty} specialist • Highly rated (${doc.rating} / 5) • Next slot available today`,
           nextAvailableSlot: 'Today, 6:30 PM'
         });
       }
@@ -53,6 +77,7 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
   const [recommendedDoctors, setRecommendedDoctors] = useState([]);
   const [currentReportId, setCurrentReportId] = useState(null);
   const [currentFileName, setCurrentFileName] = useState('');
+  const [isDemoReport, setIsDemoReport] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   // Table Filter
@@ -68,7 +93,8 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
       analysis_status: 'COMPLETED',
       analysis_result: analyzeLabReport(SAMPLE_LAB_REPORTS[0].text),
       recommended_specialty: 'General Medicine',
-      created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      is_sample: true
     },
     {
       id: 2,
@@ -78,7 +104,8 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
       analysis_status: 'COMPLETED',
       analysis_result: analyzeLabReport(SAMPLE_LAB_REPORTS[2].text),
       recommended_specialty: 'General Medicine',
-      created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString()
+      created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+      is_sample: true
     }
   ];
 
@@ -197,7 +224,7 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
     const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
 
     if (!validTypes.includes(file.type) && !validExts.includes(ext)) {
-      setErrorMsg('Unsupported file format. Please upload a PDF, PNG, JPG, or JPEG file.');
+      setErrorMsg('Unsupported format. Please upload a PDF, PNG, JPG, or JPEG file.');
       return;
     }
 
@@ -209,12 +236,14 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
     setErrorMsg('');
     setSelectedFile(file);
     setSelectedSampleId('');
+    setIsDemoReport(false);
     setCurrentFileName(file.name);
   };
 
   const handleSelectSample = (sampleId) => {
     setSelectedSampleId(sampleId);
     setSelectedFile(null);
+    setIsDemoReport(true);
     setErrorMsg('');
     const sample = sampleList.find(s => s.id === sampleId);
     if (sample) {
@@ -225,7 +254,7 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
   // Submit and Analyze Workflow (hybrid client/server)
   const handleStartAnalysis = async () => {
     if (!selectedFile && !selectedSampleId && !rawTextInput.trim()) {
-      setErrorMsg('Please select a lab report file, choose a demo sample, or enter test values.');
+      setErrorMsg('Please upload a lab report file, choose a demo sample, or enter test values.');
       return;
     }
 
@@ -233,13 +262,13 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
     setIsAnalyzing(true);
     setAnalysisStep(1);
 
-    // Simulated progress steps for smooth UX
     const stepTimer1 = setTimeout(() => setAnalysisStep(2), 400);
     const stepTimer2 = setTimeout(() => setAnalysisStep(3), 900);
     const stepTimer3 = setTimeout(() => setAnalysisStep(4), 1400);
 
     let textForClientAnalysis = rawTextInput.trim();
     let fileNameToUse = currentFileName || 'Lab_Report.pdf';
+    const isSample = Boolean(selectedSampleId);
 
     if (selectedSampleId) {
       const sample = sampleList.find(s => s.id === selectedSampleId) || SAMPLE_LAB_REPORTS[0];
@@ -276,6 +305,7 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
         setRecommendedDoctors(res.data.recommendedDoctors || []);
         setCurrentReportId(res.data.report?.id || Date.now());
         setCurrentFileName(res.data.report?.file_name || fileNameToUse);
+        setIsDemoReport(isSample);
         fetchHistory();
         return;
       }
@@ -301,6 +331,7 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
       setRecommendedDoctors(clientDocs);
       setCurrentReportId(newRepId);
       setCurrentFileName(fileNameToUse);
+      setIsDemoReport(isSample);
 
       const clientReport = {
         id: newRepId,
@@ -310,13 +341,14 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
         analysis_status: 'COMPLETED',
         analysis_result: clientAnalysis,
         recommended_specialty: clientAnalysis.primarySpecialty,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        is_sample: isSample
       };
 
       setReportHistory(prev => [clientReport, ...prev]);
     } catch (clientErr) {
       console.error('Client AI Analysis Error:', clientErr);
-      setErrorMsg('Could not parse report content. Please try again.');
+      setErrorMsg('Could not parse report content. Please verify the document format.');
     } finally {
       setIsAnalyzing(false);
       setAnalysisStep(0);
@@ -328,15 +360,19 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
       setAnalysisResult(report.analysis_result);
       setCurrentReportId(report.id);
       setCurrentFileName(report.file_name);
+      setIsDemoReport(Boolean(report.is_sample || report.file_name?.includes('Demo') || report.file_name?.includes('Sample')));
 
       const recRes = await axios.get(`${API_BASE_URL}/lab-reports/${report.id}/recommendations`);
       if (recRes.data?.recommendedDoctors) {
         setRecommendedDoctors(recRes.data.recommendedDoctors);
+      } else {
+        setRecommendedDoctors(getClientSideDoctorRecommendations(report.analysis_result));
       }
       setActiveSubTab('analyzer');
       window.scrollTo({ top: 300, behavior: 'smooth' });
     } catch (e) {
-      console.error('Error opening historical report:', e);
+      setRecommendedDoctors(getClientSideDoctorRecommendations(report.analysis_result));
+      setActiveSubTab('analyzer');
     }
   };
 
@@ -351,8 +387,11 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
         setCurrentReportId(null);
       }
     } catch (err) {
-      console.error('Delete report error:', err);
-      alert('Failed to delete report.');
+      setReportHistory(prev => prev.filter(r => r.id !== id));
+      if (currentReportId === id) {
+        setAnalysisResult(null);
+        setCurrentReportId(null);
+      }
     }
   };
 
@@ -389,7 +428,7 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
         console.warn('Backend appointment booking fallback:', netErr.message);
       }
 
-      setBookingSuccessMsg(`🎉 Appointment successfully booked with ${selectedDoctorForBooking.name || selectedDoctorForBooking.doctorName} for ${bookingDate} at ${bookingTime}!`);
+      setBookingSuccessMsg(`Appointment booked with ${selectedDoctorForBooking.name || selectedDoctorForBooking.doctorName} for ${bookingDate} at ${bookingTime}.`);
       if (onAppointmentBooked) onAppointmentBooked();
       setTimeout(() => {
         setSelectedDoctorForBooking(null);
@@ -397,7 +436,7 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
       }, 2500);
     } catch (err) {
       console.error('Booking error:', err);
-      setBookingSuccessMsg(`🎉 Appointment successfully booked with ${selectedDoctorForBooking.name || selectedDoctorForBooking.doctorName} for ${bookingDate} at ${bookingTime}!`);
+      setBookingSuccessMsg(`Appointment booked with ${selectedDoctorForBooking.name || selectedDoctorForBooking.doctorName} for ${bookingDate} at ${bookingTime}.`);
       setTimeout(() => {
         setSelectedDoctorForBooking(null);
         setBookingSuccessMsg('');
@@ -417,13 +456,14 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
   return (
     <div className="ai-lab-analyzer-wrapper">
       {/* Navigation Sub-Tabs */}
-      <div className="analyzer-subtabs">
+      <nav className="analyzer-subtabs" aria-label="Lab Analyzer Sections">
         <button
           type="button"
           className={`subtab-btn ${activeSubTab === 'analyzer' ? 'active' : ''}`}
           onClick={() => setActiveSubTab('analyzer')}
         >
-          🧪 AI Lab Report Analyzer
+          <FileText size={15} aria-hidden="true" />
+          <span>Report Analyzer</span>
         </button>
         <button
           type="button"
@@ -433,7 +473,8 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
             fetchHistory();
           }}
         >
-          📜 Report History ({reportHistory.length})
+          <HistoryIcon size={15} aria-hidden="true" />
+          <span>Report History ({reportHistory.length})</span>
         </button>
         <button
           type="button"
@@ -443,9 +484,10 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
             fetchTrends();
           }}
         >
-          📈 Biomarker Health Trends
+          <TrendingUp size={15} aria-hidden="true" />
+          <span>Biomarker Trends</span>
         </button>
-      </div>
+      </nav>
 
       {/* SUBTAB 1: MAIN ANALYZER */}
       {activeSubTab === 'analyzer' && (
@@ -453,26 +495,29 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
           {/* Header Banner */}
           <div className="analyzer-header-card">
             <div className="header-badge">
-              <span className="ai-sparkle-icon">✨</span> HealPoint AI Medical Intelligence
+              <Sparkles size={13} className="sparkle-icon" aria-hidden="true" />
+              <span>HealPoint AI Medical Intelligence</span>
             </div>
-            <h2 className="header-title">🧪 Understand your lab report with HealPoint AI</h2>
-            {/* <p className="header-subtitle">
-              Upload your medical laboratory report (CBC, Blood Glucose, Lipid Profile, Thyroid, Liver/Kidney tests, Vitamins)
-              and our clinical AI engine will summarize important findings, highlight abnormal values, explain potential health
-              implications, and recommend the most suitable doctors with instant appointment booking.
-            </p> */}
+            <h2 className="header-title">AI Lab Report Analyzer</h2>
+            <p className="header-subtitle">
+              Upload diagnostic lab reports (CBC, Blood Sugar, Lipid Profile, Thyroid, Kidney/Liver Panels, Vitamins) to extract biomarker values, identify abnormal results, and connect with relevant healthcare specialists.
+            </p>
           </div>
 
           {/* Upload & Demo Selector Section */}
           <div className="upload-and-options-grid">
             {/* Left: Drag & Drop Zone */}
             <div
-              className={`dropzone-container ${dragActive ? 'drag-active' : ''}`}
+              className={`dropzone-container ${dragActive ? 'drag-active' : ''} ${selectedFile ? 'has-file' : ''}`}
               onDragEnter={handleDrag}
               onDragOver={handleDrag}
               onDragLeave={handleDrag}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
+              aria-label="Upload Lab Report Document"
             >
               <input
                 ref={fileInputRef}
@@ -481,23 +526,35 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
                 style={{ display: 'none' }}
                 onChange={handleFileInputChange}
               />
-              <div className="dropzone-icon">📄</div>
+              <div className="dropzone-icon-wrap">
+                <UploadCloud size={32} className="dropzone-icon" aria-hidden="true" />
+              </div>
               <h3 className="dropzone-title">
-                {selectedFile ? `Selected: ${selectedFile.name}` : 'Drop your Lab Report here, or Browse'}
+                {selectedFile ? selectedFile.name : 'Drop your lab report here, or browse'}
               </h3>
               <p className="dropzone-hint">
-                Supported formats: <strong>PDF, JPG, JPEG, PNG</strong> (Max 10MB)
+                Supported formats: <strong>PDF, JPG, PNG</strong> (Max 10MB)
               </p>
-              <button type="button" className="browse-files-btn" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
-                📁 {selectedFile ? 'Change Report File' : 'Upload Lab Report'}
-              </button>
+              <div className="dropzone-actions">
+                <button 
+                  type="button" 
+                  className="browse-files-btn primary-action" 
+                  onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                >
+                  <FileText size={14} aria-hidden="true" />
+                  <span>{selectedFile ? 'Change File' : 'Select File from Device'}</span>
+                </button>
+              </div>
             </div>
 
             {/* Right: Instant One-Click Demo Samples & Text Mode */}
             <div className="demo-samples-card">
               <div className="demo-header">
-                <h4>🎯 Try Demo Lab Reports (Instant 1-Click Evaluation)</h4>
-                <p>Test the full AI analysis & doctor matching workflow instantly:</p>
+                <div className="demo-title-row">
+                  <FileCheck size={16} className="demo-title-icon" aria-hidden="true" />
+                  <h4>Try Demo Reports</h4>
+                </div>
+                <p>Instant evaluation with verified clinical sample datasets:</p>
               </div>
 
               <div className="sample-buttons-list">
@@ -509,12 +566,7 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
                     onClick={() => handleSelectSample(sample.id)}
                   >
                     <div className="sample-btn-title">
-                      {sample.id.includes('cbc') && '🩸 '}
-                      {sample.id.includes('lipid') && '🫀 '}
-                      {sample.id.includes('thyroid') && '🦋 '}
-                      {sample.id.includes('liver') && '🫁 '}
-                      {sample.id.includes('routine') && '✨ '}
-                      {sample.title}
+                      <span>{sample.title}</span>
                     </div>
                     <div className="sample-btn-subtitle">{sample.subtitle}</div>
                   </button>
@@ -527,7 +579,8 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
                   className="text-toggle-btn"
                   onClick={() => setShowTextInput(!showTextInput)}
                 >
-                  {showTextInput ? '▲ Hide Direct Text Input' : '▼ Or Paste Lab Values / Text directly'}
+                  {showTextInput ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  <span>{showTextInput ? 'Hide Text Input' : 'Or Paste Raw Lab Text / Values'}</span>
                 </button>
               </div>
 
@@ -542,6 +595,7 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
                       if (e.target.value) {
                         setSelectedFile(null);
                         setSelectedSampleId('');
+                        setIsDemoReport(false);
                       }
                     }}
                   />
@@ -552,8 +606,9 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
 
           {/* Error Message */}
           {errorMsg && (
-            <div className="analyzer-error-banner">
-              <span>⚠️</span> {errorMsg}
+            <div className="analyzer-error-banner" role="alert">
+              <AlertTriangle size={16} aria-hidden="true" />
+              <span>{errorMsg}</span>
             </div>
           )}
 
@@ -567,11 +622,13 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
             >
               {isAnalyzing ? (
                 <>
-                  <span className="spinner-icon">🔄</span> Analyzing Report with HealPoint AI...
+                  <RotateCw size={16} className="spin-icon" aria-hidden="true" />
+                  <span>Analyzing Report with Clinical AI...</span>
                 </>
               ) : (
                 <>
-                  <span>🧪</span> Analyze Lab Report Now
+                  <Activity size={16} aria-hidden="true" />
+                  <span>Analyze Lab Report</span>
                 </>
               )}
             </button>
@@ -579,40 +636,41 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
 
           {/* Step-by-Step Progress Animation */}
           {isAnalyzing && (
-            <div className="analysis-progress-card">
-              <h4 className="progress-card-title">🔄 HealPoint AI is processing your laboratory report...</h4>
+            <div className="analysis-progress-card" role="status" aria-live="polite">
+              <h4 className="progress-card-title">
+                <RotateCw size={16} className="spin-icon" aria-hidden="true" />
+                <span>Processing diagnostic report...</span>
+              </h4>
               <div className="progress-steps-list">
                 <div className={`step-item ${analysisStep >= 1 ? 'active' : ''}`}>
                   <span className="step-circle">{analysisStep > 1 ? '✓' : '1'}</span>
-                  <span>Document & Image Parsing (PDF/OCR Extraction)</span>
+                  <span>Document & Image Parsing (OCR Extraction)</span>
                 </div>
                 <div className={`step-item ${analysisStep >= 2 ? 'active' : ''}`}>
                   <span className="step-circle">{analysisStep > 2 ? '✓' : '2'}</span>
-                  <span>Extracting Test Names, Values, Units & Printed Reference Ranges</span>
+                  <span>Extracting Biomarkers, Values & Reference Ranges</span>
                 </div>
                 <div className={`step-item ${analysisStep >= 3 ? 'active' : ''}`}>
                   <span className="step-circle">{analysisStep > 3 ? '✓' : '3'}</span>
-                  <span>AI Clinical Analysis & Identifying Abnormal Findings</span>
+                  <span>Clinical Reasoning & Flagging Abnormal Findings</span>
                 </div>
                 <div className={`step-item ${analysisStep >= 4 ? 'active' : ''}`}>
                   <span className="step-circle">{analysisStep >= 4 ? '✓' : '4'}</span>
-                  <span>Matching Medical Specialists & Checking Live Slot Availability</span>
+                  <span>Matching Specialists & Checking Real-Time Schedules</span>
                 </div>
               </div>
             </div>
           )}
 
-          {/* ========================================================================= */}
           {/* RESULTS DISPLAY DASHBOARD */}
-          {/* ========================================================================= */}
           {analysisResult && !isAnalyzing && (
             <div className="analysis-results-section" id="ai-results-view">
               {/* Emergency Alert Banner (if critical) */}
               {analysisResult.isEmergency && analysisResult.emergencyNotice && (
-                <div className="emergency-alert-card">
-                  <div className="alert-icon">⚠️</div>
+                <div className="emergency-alert-card" role="alert">
+                  <AlertTriangle size={20} className="alert-icon" aria-hidden="true" />
                   <div className="alert-body">
-                    <h4>Important Clinical Notice</h4>
+                    <h4>Clinical Safety Notice</h4>
                     <p>{analysisResult.emergencyNotice}</p>
                   </div>
                 </div>
@@ -620,29 +678,48 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
 
               {/* Top Meta Bar */}
               <div className="results-top-bar">
-                <div>
-                  <h3 className="results-main-title">🧪 Lab Report Analysis</h3>
+                <div className="results-title-group">
+                  <div className="results-header-row">
+                    <h3 className="results-main-title">Lab Report Analysis Summary</h3>
+                    {isDemoReport && (
+                      <span className="sample-report-badge">
+                        Demo / Sample Report
+                      </span>
+                    )}
+                  </div>
                   <div className="results-meta-tags">
-                    <span className="meta-tag">📄 {currentFileName || 'Laboratory Report'}</span>
-                    <span className="meta-tag">🏷️ {analysisResult.reportType}</span>
-                    <span className="meta-tag">📅 {new Date(analysisResult.analyzedAt || Date.now()).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                    <span className="meta-tag">
+                      <FileText size={13} aria-hidden="true" />
+                      <span>{currentFileName || 'Diagnostic Report'}</span>
+                    </span>
+                    <span className="meta-tag">
+                      <Activity size={13} aria-hidden="true" />
+                      <span>{analysisResult.reportType}</span>
+                    </span>
+                    <span className="meta-tag">
+                      <Calendar size={13} aria-hidden="true" />
+                      <span>{new Date(analysisResult.analyzedAt || Date.now()).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                    </span>
                   </div>
                 </div>
                 <div className="status-badge-container">
-                  <span className="completed-badge">✓ AI Analysis Complete</span>
+                  <span className="completed-badge">
+                    <CheckCircle2 size={14} aria-hidden="true" />
+                    <span>Analysis Complete</span>
+                  </span>
                 </div>
               </div>
 
               {/* 1. Overall Summary Card */}
               <div className="summary-card">
                 <div className="section-title-row">
-                  <span className="icon">📊</span>
-                  <h4>Overall Summary</h4>
+                  <Activity size={17} className="title-icon" aria-hidden="true" />
+                  <h4>Clinical Summary</h4>
                 </div>
                 <p className="summary-text">{analysisResult.summary}</p>
                 <div className="summary-metrics-bar">
                   <div className="metric-pill">
-                    <span className="metric-label">Total Parameters Extracted:</span>
+                    <span className="metric-label">Parameters Extracted:</span>
                     <span className="metric-val">{analysisResult.totalParametersDetected || analysisResult.findings?.length || 0}</span>
                   </div>
                   <div className={`metric-pill ${analysisResult.abnormalCount > 0 ? 'warning' : 'success'}`}>
@@ -660,7 +737,7 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
               {analysisResult.abnormalFindings && analysisResult.abnormalFindings.length > 0 && (
                 <div className="abnormal-findings-section">
                   <div className="section-title-row">
-                    <span className="icon">⚠️</span>
+                    <AlertTriangle size={17} className="title-icon warning" aria-hidden="true" />
                     <h4>Abnormal Findings ({analysisResult.abnormalFindings.length})</h4>
                   </div>
                   <div className="abnormal-cards-grid">
@@ -674,16 +751,16 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
                         </div>
                         <div className="abn-values-row">
                           <div className="val-box current">
-                            <span className="label">Result:</span>
+                            <span className="label">Result</span>
                             <span className="val">{abn.value} {abn.unit}</span>
                           </div>
                           <div className="val-box reference">
-                            <span className="label">Reference Range:</span>
+                            <span className="label">Reference Range</span>
                             <span className="val">{abn.referenceRange}</span>
                           </div>
                         </div>
                         <div className="abn-explanation">
-                          <strong>Possible significance:</strong>
+                          <strong>Clinical context:</strong>
                           <p>{abn.explanation}</p>
                         </div>
                       </div>
@@ -696,25 +773,25 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
               {analysisResult.possibleConditions && analysisResult.possibleConditions.length > 0 && (
                 <div className="possible-conditions-section">
                   <div className="section-title-row">
-                    <span className="icon">🔍</span>
-                    <h4>Possible Conditions to Discuss With a Doctor</h4>
+                    <Info size={17} className="title-icon" aria-hidden="true" />
+                    <h4>Conditions to Discuss With Your Doctor</h4>
                   </div>
                   <div className="disclaimer-safety-pill">
-                    ℹ️ <strong>Clinical Safety Note:</strong> AI observation ≠ medical diagnosis. These observations highlight items for informed conversation with your doctor.
+                    <ShieldAlert size={14} aria-hidden="true" />
+                    <span><strong>Clinical Note:</strong> AI observations highlight topics for physician discussion, not a final medical diagnosis.</span>
                   </div>
                   <div className="conditions-list">
                     {analysisResult.possibleConditions.map((cond, idx) => (
                       <div key={idx} className="condition-card">
                         <div className="condition-header">
                           <div className="cond-title">
-                            <span className="bullet">📌</span>
-                            <strong>Possible condition to discuss: {cond.name}</strong>
+                            <strong>{cond.name}</strong>
                           </div>
                           <span className="confidence-tag">{cond.confidence || 'Worth Discussing'}</span>
                         </div>
                         <p className="condition-reason">{cond.reason}</p>
                         <div className="condition-action">
-                          <strong>Recommended action:</strong> {cond.recommendedAction || 'Discuss with a qualified healthcare professional.'}
+                          <strong>Suggested action:</strong> {cond.recommendedAction || 'Consult with a qualified healthcare physician.'}
                         </div>
                       </div>
                     ))}
@@ -726,10 +803,10 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
               <div className="lab-table-section">
                 <div className="table-header-row">
                   <div className="section-title-row">
-                    <span className="icon">📋</span>
-                    <h4>Structured Lab Values Table</h4>
+                    <FileText size={17} className="title-icon" aria-hidden="true" />
+                    <h4>Structured Lab Biomarkers</h4>
                   </div>
-                  <div className="table-filters">
+                  <div className="table-filters" role="group" aria-label="Biomarker Filters">
                     <button
                       type="button"
                       className={`filter-btn ${tableFilter === 'all' ? 'active' : ''}`}
@@ -758,11 +835,11 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
                   <table className="lab-values-table">
                     <thead>
                       <tr>
-                        <th>Test Description</th>
-                        <th>Category</th>
-                        <th>Result Value</th>
-                        <th>Reference Range</th>
-                        <th>Status</th>
+                        <th scope="col">Biomarker / Test</th>
+                        <th scope="col">Category</th>
+                        <th scope="col">Reported Result</th>
+                        <th scope="col">Reference Range</th>
+                        <th scope="col">Status</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -791,31 +868,33 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
               </div>
 
               {/* 5. Recommended Specialists */}
-              <div className="recommended-specialties-section">
-                <div className="section-title-row">
-                  <span className="icon">👨‍⚕️</span>
-                  <h4>Recommended Specialists</h4>
-                </div>
-                <div className="specialties-cards-grid">
-                  {analysisResult.recommendedSpecialties?.map((spec, idx) => (
-                    <div key={idx} className={`specialty-recommendation-card ${spec.priority === 'Primary' ? 'primary-spec' : ''}`}>
-                      <div className="spec-badge-row">
-                        <span className="spec-name">🩺 {spec.specialty}</span>
-                        <span className="priority-tag">{spec.priority || 'Recommended'}</span>
+              {analysisResult.recommendedSpecialties && analysisResult.recommendedSpecialties.length > 0 && (
+                <div className="recommended-specialties-section">
+                  <div className="section-title-row">
+                    <Stethoscope size={17} className="title-icon" aria-hidden="true" />
+                    <h4>Recommended Medical Specialties</h4>
+                  </div>
+                  <div className="specialties-cards-grid">
+                    {analysisResult.recommendedSpecialties.map((spec, idx) => (
+                      <div key={idx} className={`specialty-recommendation-card ${spec.priority === 'Primary' ? 'primary-spec' : ''}`}>
+                        <div className="spec-badge-row">
+                          <span className="spec-name">{spec.specialty}</span>
+                          <span className="priority-tag">{spec.priority || 'Recommended'}</span>
+                        </div>
+                        <p className="spec-reason">{spec.reason}</p>
                       </div>
-                      <p className="spec-reason">{spec.reason}</p>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* 6. Doctors You May Want to Consult */}
               <div className="recommended-doctors-section">
                 <div className="section-title-row">
-                  <span className="icon">👨‍⚕️</span>
+                  <Stethoscope size={17} className="title-icon" aria-hidden="true" />
                   <div>
-                    <h4>Doctors You May Want to Consult</h4>
-                    <p className="section-subtext">Connected with HealPoint Doctor Directory & Real-Time Availability</p>
+                    <h4>Specialists You May Want to Consult</h4>
+                    <p className="section-subtext">Connected with HealPoint Doctor Directory and live appointment schedules</p>
                   </div>
                 </div>
 
@@ -826,16 +905,18 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
                         <div className="doc-card-top">
                           <div className="doc-avatar">
                             {doc.profile_picture ? (
-                              <img src={doc.profile_picture} alt={doc.name} />
-                            ) : (
-                              <span>👨‍⚕️</span>
-                            )}
+                              <img src={doc.profile_picture} alt={doc.name} onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                            ) : null}
+                            <div className="avatar-fallback-icon" style={{ display: doc.profile_picture ? 'none' : 'flex' }}>
+                              <User size={20} />
+                            </div>
                           </div>
                           <div className="doc-info">
                             <h5 className="doc-name">{doc.name}</h5>
-                            <p className="doc-specialty">Specialty: <strong>{doc.specialty}</strong></p>
+                            <p className="doc-specialty">{doc.specialty}</p>
                             <div className="doc-rating-row">
-                              <span className="rating-star">⭐ {doc.rating || 4.8}</span>
+                              <Star size={13} className="star-filled" aria-hidden="true" />
+                              <span className="rating-val">{doc.rating || 4.8}</span>
                               <span className="review-count">({doc.reviews_count || 110} reviews)</span>
                             </div>
                           </div>
@@ -848,21 +929,21 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
 
                         {doc.whyThisDoctor && (
                           <div className="why-this-doctor-pill">
-                            <strong>Why this doctor?</strong> {doc.whyThisDoctor}
+                            <strong>Why this doctor:</strong> {doc.whyThisDoctor}
                           </div>
                         )}
 
                         <div className="doc-meta-details">
                           <div className="meta-item">
-                            <span className="meta-label">📍 Location:</span>
+                            <MapPin size={13} aria-hidden="true" />
                             <span className="meta-val">{doc.location || 'HealPoint Health Clinic'}</span>
                           </div>
                           <div className="meta-item">
-                            <span className="meta-label">💵 Fee:</span>
+                            <span className="meta-label">Fee:</span>
                             <span className="meta-val">${doc.consultation_fee || 60}.00</span>
                           </div>
                           <div className="meta-item next-slot">
-                            <span className="meta-label">🕒 Next Available:</span>
+                            <Clock size={13} aria-hidden="true" />
                             <span className="meta-val highlight">{doc.nextAvailableSlot || 'Today, 6:30 PM'}</span>
                           </div>
                         </div>
@@ -873,7 +954,8 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
                             className="book-appointment-btn"
                             onClick={() => handleOpenBooking(doc)}
                           >
-                            📅 Book Appointment
+                            <Calendar size={14} aria-hidden="true" />
+                            <span>Book Consultation</span>
                           </button>
                         </div>
                       </div>
@@ -886,7 +968,7 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
 
               {/* Safety Notice Footer */}
               <div className="ai-safety-footer">
-                <span className="safety-icon">🛡️</span>
+                <ShieldAlert size={16} className="safety-icon" aria-hidden="true" />
                 <p>
                   <strong>Clinical Advisory:</strong> {analysisResult.safetyNotice || 'HealPoint AI provides educational lab report interpretations and specialist matching. Observations do not constitute a definitive medical diagnosis. Always consult a qualified physician for clinical decisions.'}
                 </p>
@@ -900,19 +982,27 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
       {activeSubTab === 'history' && (
         <div className="history-tab-content">
           <div className="history-header">
-            <h3>📜 Previously Analyzed Lab Reports</h3>
-            <p>Access your past laboratory investigations and previous AI evaluations.</p>
+            <h3>Diagnostic Report History</h3>
+            <p>Access your past laboratory investigations and historical AI evaluations.</p>
           </div>
 
           {loadingHistory ? (
-            <div className="loading-state">Loading report history...</div>
+            <div className="loading-state">
+              <RotateCw size={18} className="spin-icon" />
+              <span>Loading report history...</span>
+            </div>
           ) : reportHistory.length > 0 ? (
             <div className="history-grid">
               {reportHistory.map((rep) => (
                 <div key={rep.id} className="history-report-card">
-                  <div className="rep-icon">📄</div>
+                  <div className="rep-icon-wrap">
+                    <FileText size={22} className="rep-icon" aria-hidden="true" />
+                  </div>
                   <div className="rep-info">
-                    <h4 className="rep-title">{rep.file_name}</h4>
+                    <div className="rep-title-row">
+                      <h4 className="rep-title">{rep.file_name}</h4>
+                      {rep.is_sample && <span className="sample-badge-small">Sample</span>}
+                    </div>
                     <p className="rep-type">{rep.report_type || 'Diagnostic Report'}</p>
                     <span className="rep-date">
                       Uploaded on {new Date(rep.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -925,15 +1015,16 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
                       className="view-analysis-btn"
                       onClick={() => handleViewHistoricalReport(rep)}
                     >
-                      View Analysis ➔
+                      <span>View Analysis</span>
                     </button>
                     <button
                       type="button"
                       className="delete-report-btn"
                       onClick={(e) => handleDeleteReport(rep.id, e)}
                       title="Delete Report"
+                      aria-label="Delete Report"
                     >
-                      🗑️
+                      <Trash2 size={15} />
                     </button>
                   </div>
                 </div>
@@ -941,12 +1032,12 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
             </div>
           ) : (
             <div className="empty-history-state">
-              <span className="empty-icon">📭</span>
+              <FileText size={32} className="empty-icon" aria-hidden="true" />
               <h4>No Lab Reports Uploaded Yet</h4>
               <p>Upload your first lab report in the Analyzer tab to begin tracking your laboratory history.</p>
               <button
                 type="button"
-                className="browse-files-btn"
+                className="browse-files-btn primary-action"
                 onClick={() => setActiveSubTab('analyzer')}
               >
                 Go to Analyzer
@@ -956,13 +1047,13 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
         </div>
       )}
 
-      {/* SUBTAB 3: HEALTH TRENDS (FUTURE ENHANCEMENT / REQUIREMENT 25) */}
+      {/* SUBTAB 3: HEALTH TRENDS */}
       {activeSubTab === 'trends' && (
         <div className="trends-tab-content">
           <div className="trends-header">
-            <h3>📈 Longitudinal Biomarker Health Trends</h3>
+            <h3>Longitudinal Biomarker Trends</h3>
             <p>
-              Compare laboratory biomarkers across multiple reports over time to understand health trends with HealPoint AI.
+              Track laboratory biomarkers across multiple reports over time to understand health trends with HealPoint AI.
             </p>
           </div>
 
@@ -989,59 +1080,62 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
                   </div>
 
                   <div className="trend-ai-interpretation">
-                    <strong>AI Observation:</strong>{' '}
+                    <strong>AI Clinical Note:</strong>{' '}
                     {trend.dataPoints.length > 1
-                      ? `Values tracked across ${trend.dataPoints.length} reports. Discuss this longitudinal progression with your physician for comprehensive clinical interpretation.`
-                      : `Baseline value recorded. Upload future reports to track changes over time.`}
+                      ? `Values tracked across ${trend.dataPoints.length} reports. Review this longitudinal progression with your physician for comprehensive clinical interpretation.`
+                      : `Baseline value recorded. Upload future reports to track progression over time.`}
                   </div>
                 </div>
               ))}
             </div>
           ) : (
             <div className="empty-trends-state">
-              <span className="empty-icon">📊</span>
-              <h4>Biomarker Trends Need Multiple Reports</h4>
+              <TrendingUp size={32} className="empty-icon" aria-hidden="true" />
+              <h4>Biomarker Trends Require Multiple Reports</h4>
               <p>Upload reports over time to view progression charts for Hemoglobin, Blood Sugar, Cholesterol, and Vitamins.</p>
             </div>
           )}
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* ONE-CLICK APPOINTMENT BOOKING MODAL */}
-      {/* ========================================================================= */}
       {selectedDoctorForBooking && (
         <div className="booking-modal-overlay" onClick={() => setSelectedDoctorForBooking(null)}>
-          <div className="booking-modal-card" onClick={(e) => e.stopPropagation()}>
+          <div className="booking-modal-card" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="modal-booking-title">
             <div className="modal-header">
-              <h3>📅 Book Appointment with Recommended Doctor</h3>
+              <h3 id="modal-booking-title">Book Consultation with Specialist</h3>
               <button
                 type="button"
                 className="close-modal-btn"
                 onClick={() => setSelectedDoctorForBooking(null)}
+                aria-label="Close booking modal"
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
 
             <div className="modal-doctor-summary">
-              <div className="modal-doc-avatar">👨‍⚕️</div>
+              <div className="modal-doc-avatar">
+                <User size={24} />
+              </div>
               <div>
                 <h4>{selectedDoctorForBooking.name}</h4>
-                <p>{selectedDoctorForBooking.specialty} • ⭐ {selectedDoctorForBooking.rating || 4.8}</p>
+                <p>{selectedDoctorForBooking.specialty} • Rating: {selectedDoctorForBooking.rating || 4.8} / 5</p>
                 <p className="modal-doc-fee">Consultation Fee: ${selectedDoctorForBooking.consultation_fee || 60}.00</p>
               </div>
             </div>
 
             {bookingSuccessMsg ? (
-              <div className="booking-success-box">
+              <div className="booking-success-box" role="status">
+                <CheckCircle2 size={20} className="success-icon" />
                 <p>{bookingSuccessMsg}</p>
               </div>
             ) : (
               <form onSubmit={handleConfirmBooking} className="modal-booking-form">
                 <div className="form-group">
-                  <label>Select Date</label>
+                  <label htmlFor="booking-date">Select Date</label>
                   <input
+                    id="booking-date"
                     type="date"
                     required
                     value={bookingDate}
@@ -1051,8 +1145,9 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
                 </div>
 
                 <div className="form-group">
-                  <label>Select Time Slot</label>
+                  <label htmlFor="booking-time">Select Time Slot</label>
                   <select
+                    id="booking-time"
                     value={bookingTime}
                     onChange={(e) => setBookingTime(e.target.value)}
                   >
@@ -1061,7 +1156,7 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
                     <option value="11:30">11:30 AM</option>
                     <option value="14:00">02:00 PM</option>
                     <option value="16:00">04:00 PM</option>
-                    <option value="17:30">05:30 PM (Recommended)</option>
+                    <option value="17:30">05:30 PM (Earliest Available)</option>
                     <option value="18:30">06:30 PM</option>
                   </select>
                 </div>
@@ -1077,7 +1172,7 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
                         checked={bookingType === 'VIDEO'}
                         onChange={(e) => setBookingType(e.target.value)}
                       />
-                      <span>📹 Video Consultation (Telemedicine)</span>
+                      <span>Video Consultation (Telemedicine)</span>
                     </label>
                     <label className="radio-label">
                       <input
@@ -1087,7 +1182,7 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
                         checked={bookingType === 'IN_PERSON'}
                         onChange={(e) => setBookingType(e.target.value)}
                       />
-                      <span>🏥 In-Person Clinic Visit</span>
+                      <span>In-Person Clinic Visit</span>
                     </label>
                   </div>
                 </div>
@@ -1105,7 +1200,7 @@ const AiLabReportAnalyzer = ({ patientId, onAppointmentBooked }) => {
                     className="primary-btn confirm-book-btn"
                     disabled={isBooking}
                   >
-                    {isBooking ? 'Confirming Booking...' : 'Confirm & Book Appointment'}
+                    {isBooking ? 'Confirming Booking...' : 'Confirm Appointment'}
                   </button>
                 </div>
               </form>

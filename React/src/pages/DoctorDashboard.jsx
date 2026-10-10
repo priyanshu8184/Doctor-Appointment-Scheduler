@@ -12,7 +12,9 @@ const DoctorDashboard = ({ navigate }) => {
     window.location.href = '/login'
   }
 
-  const [activeTab, setActiveTab] = useState('today')
+  const queryParams = new URLSearchParams(window.location.search)
+  const initialTab = queryParams.get('tab') || 'today'
+  const [activeTab, setActiveTab] = useState(initialTab)
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
   const [loading, setLoading] = useState(true)

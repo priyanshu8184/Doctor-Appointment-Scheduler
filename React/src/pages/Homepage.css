@@ -1199,9 +1199,10 @@
   flex-shrink: 0;
 }
 
-.patient-name {
+.patient-name,
+.testimonial-card .patient-name {
   font-size: 0.9375rem;
-  color: var(--navy);
+  color: #111C2F !important;
   margin: 0 0 0.15rem 0;
   font-weight: 700;
 }

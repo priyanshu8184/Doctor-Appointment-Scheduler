@@ -1,5 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { 
+  Bot, 
+  Send, 
+  RotateCcw, 
+  Minus, 
+  Square, 
+  X, 
+  Calendar, 
+  Video, 
+  MapPin, 
+  Star, 
+  User, 
+  AlertTriangle, 
+  CheckCircle2, 
+  FileText, 
+  Sparkles,
+  Stethoscope,
+  Clock,
+  ChevronRight
+} from 'lucide-react';
 import './HealPointAiChat.css';
 import { processUserMessage, SAMPLE_DOCTORS } from '../../../../AI/index.js';
 
@@ -80,6 +100,17 @@ const renderFormattedMessage = (rawText) => {
   return elements;
 };
 
+const formatSlotDate = (dateStr) => {
+  if (!dateStr) return '';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  } catch (e) {
+    return dateStr;
+  }
+};
+
 const HealPointAiChat = ({ navigate }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -87,14 +118,14 @@ const HealPointAiChat = ({ navigate }) => {
     {
       id: 'welcome_1',
       sender: 'ai',
-      text: "Hello! I'm Ghasitaram “Health ka jhatpat jawab.” 🩺\n\nHow can I help you today? You can search for specialists, book appointment slots, check your schedule, or analyze medical lab reports.",
+      text: "Hello! I'm Ghasitaram, your HealPoint AI assistant. How can I help you today? You can search for specialists, check your schedule, book appointment slots, or summarize lab reports.",
       intent: 'WELCOME',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       quickActions: [
-        { label: '🩺 Find a doctor for symptoms', query: 'I have persistent headaches and dizziness' },
-        { label: '📅 Book an appointment', query: 'Find me a dermatologist tomorrow evening' },
-        { label: '🕒 Show my next appointment', query: 'When is my next appointment?' },
-        { label: '📄 Summarize lab report', query: '/summarize CBC Report: Hemoglobin 10.2 g/dL, WBC 12500 /mcL, Platelets 220000 /mcL, Fasting Glucose 115 mg/dL' }
+        { label: 'Find a doctor by symptoms', query: 'I have persistent headaches and dizziness' },
+        { label: 'Book an appointment', query: 'Find me a dermatologist tomorrow evening' },
+        { label: 'Show my next appointment', query: 'When is my next appointment?' },
+        { label: 'Summarize lab report', query: '/summarize CBC Report: Hemoglobin 10.2 g/dL, WBC 12500 /mcL, Platelets 220000 /mcL, Fasting Glucose 115 mg/dL' }
       ]
     }
   ]);
@@ -125,10 +156,10 @@ const HealPointAiChat = ({ navigate }) => {
     let timer;
     if (isThinking) {
       const phases = [
-        'Ghasitaram is analyzing your request...',
-        'Matching medical specialties & symptoms...',
+        'Analyzing symptoms & clinical intent...',
+        'Matching specialties & doctor schedules...',
         'Checking real-time doctor availability...',
-        '“Health ka jhatpat jawab” preparing...'
+        'Preparing clinical response...'
       ];
       let i = 0;
       timer = setInterval(() => {
@@ -179,7 +210,7 @@ const HealPointAiChat = ({ navigate }) => {
         }, { timeout: 3500 });
         data = res.data;
       } catch (networkErr) {
-        console.warn('Backend endpoint unavailable, executing client-side AI processing fallback:', networkErr.message);
+        console.warn('Backend endpoint unreachable, executing client-side AI processing fallback:', networkErr.message);
         data = await processUserMessage({
           message: query,
           conversationId,
@@ -190,7 +221,7 @@ const HealPointAiChat = ({ navigate }) => {
       const aiMsgObj = {
         id: `ai_${Date.now()}`,
         sender: 'ai',
-        text: data.message || "I'm here to assist you with your appointment.",
+        text: data.message || "I'm here to assist you with your healthcare inquiry.",
         intent: data.intent,
         doctors: data.doctors || [],
         availableSlots: data.availableSlots || [],
@@ -207,17 +238,17 @@ const HealPointAiChat = ({ navigate }) => {
 
       setMessages((prev) => [...prev, aiMsgObj]);
     } catch (err) {
-      console.error('Fatal AI processing error:', err);
+      console.error('AI processing error:', err);
       setMessages((prev) => [
         ...prev,
         {
           id: `ai_${Date.now()}`,
           sender: 'ai',
-          text: "I can help you find specialists, book appointments, or check your schedule. What would you like to do?",
+          text: "I can help you find specialists, book appointments, or check your schedule. How would you like to proceed?",
           intent: 'GENERAL_HEALTH_INFORMATION',
           suggestedActions: [
-            { label: '🩺 Find a Doctor', action: 'find_doctor' },
-            { label: '📅 Available Slots', action: 'find_slots' }
+            { label: 'Find a Doctor', action: 'find_doctor' },
+            { label: 'Available Slots', action: 'find_slots' }
           ],
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
@@ -269,12 +300,12 @@ const HealPointAiChat = ({ navigate }) => {
       {
         id: 'welcome_reset',
         sender: 'ai',
-        text: "Conversation refreshed. I'm **Ghasitaram** — *“Health ka jhatpat jawab.”* How can I assist you right now?",
+        text: "Conversation refreshed. I'm **Ghasitaram**, your HealPoint healthcare assistant. How can I assist you right now?",
         intent: 'WELCOME',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         quickActions: [
-          { label: '🩺 Find a doctor', query: 'Find me a cardiologist' },
-          { label: '📅 Book slots', query: 'Show available appointments this Friday' }
+          { label: 'Find a doctor', query: 'Find me a cardiologist' },
+          { label: 'Book slots', query: 'Show available appointments this Friday' }
         ]
       }
     ]);
@@ -287,14 +318,10 @@ const HealPointAiChat = ({ navigate }) => {
         <button 
           className="ai-launcher-button"
           onClick={() => setIsOpen(true)}
-          aria-label="Open Ghasitaram Medical Assistant"
+          aria-label="Open Ghasitaram AI Assistant"
         >
           <div className="ai-launcher-icon-wrap">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-              <path d="M12 7v6"/>
-              <path d="M9 10h6"/>
-            </svg>
+            <Bot size={18} aria-hidden="true" />
             <span className="ai-launcher-online-dot" />
           </div>
           <div className="ai-launcher-content">
@@ -311,11 +338,7 @@ const HealPointAiChat = ({ navigate }) => {
           <div className="ai-chat-header">
             <div className="ai-header-left">
               <div className="ai-header-avatar">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                  <path d="M12 7v6"/>
-                  <path d="M9 10h6"/>
-                </svg>
+                <Bot size={18} aria-hidden="true" />
               </div>
               <div className="ai-header-details">
                 <div className="ai-header-title">
@@ -335,9 +358,7 @@ const HealPointAiChat = ({ navigate }) => {
                 aria-label="Reset Conversation"
                 onClick={clearChat}
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-                </svg>
+                <RotateCcw size={14} />
               </button>
               <button 
                 type="button"
@@ -346,57 +367,60 @@ const HealPointAiChat = ({ navigate }) => {
                 aria-label={isMinimized ? "Maximize" : "Minimize"}
                 onClick={() => setIsMinimized(!isMinimized)}
               >
-                {isMinimized ? (
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                  </svg>
-                ) : (
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                    <line x1="5" y1="12" x2="19" y2="12"/>
-                  </svg>
-                )}
+                {isMinimized ? <Square size={13} /> : <Minus size={13} />}
               </button>
               <button 
                 type="button"
-                className="ai-ctrl-btn close-btn" 
-                title="Close AI Assistant" 
-                aria-label="Close AI Assistant"
+                className="ai-ctrl-btn" 
+                title="Close Chat" 
+                aria-label="Close Chat"
                 onClick={() => setIsOpen(false)}
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"/>
-                  <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
+                <X size={15} />
               </button>
             </div>
           </div>
 
           {!isMinimized && (
             <>
-              {/* Messages Body */}
-              <div className="ai-chat-body">
+              {/* Message List */}
+              <div className="ai-chat-messages" role="log" aria-live="polite">
                 {messages.map((msg) => (
                   <div key={msg.id} className={`ai-message-row ${msg.sender}`}>
-                    {msg.sender === 'ai' && <div className="ai-msg-avatar">✨</div>}
-                    
-                    <div className={`ai-message-bubble ${msg.isEmergency ? 'emergency-bubble' : ''}`}>
-                      <div className="ai-msg-text">
+                    {msg.sender === 'ai' && (
+                      <div className="ai-msg-avatar">
+                        <Bot size={14} />
+                      </div>
+                    )}
+                    <div className="ai-message-bubble">
+                      {/* Emergency Notice */}
+                      {msg.isEmergency && (
+                        <div className="ai-emergency-badge">
+                          <AlertTriangle size={14} />
+                          <span>Immediate Medical Attention Recommended</span>
+                        </div>
+                      )}
+
+                      {/* Main Message Text */}
+                      <div className="ai-msg-content">
                         {renderFormattedMessage(msg.text)}
                       </div>
 
-                      {/* Render Appointment Booking Confirmation Summary Card */}
+                      {/* Render Structured Booking Confirmation */}
                       {msg.bookingDetails && (
                         <div className="ai-booking-confirmation-card">
                           <div className="ai-booking-header">
-                            <div className="ai-booking-status-pill">
-                              <span className="ai-status-check">✓</span> Appointment Confirmed
-                            </div>
-                            <span className="ai-booking-ref">#{msg.bookingDetails.appointmentId || '1042'}</span>
+                            <span className="ai-booking-tag">
+                              <CheckCircle2 size={13} /> Appointment Reserved
+                            </span>
+                            <span className="ai-booking-id">ID: {msg.bookingDetails.appointmentId || '#HP-8891'}</span>
                           </div>
-                          
-                          <div className="ai-booking-doc-row">
-                            <div className="ai-booking-avatar">👨‍⚕️</div>
-                            <div className="ai-booking-doc-details">
+
+                          <div className="ai-booking-doc-info">
+                            <div className="ai-booking-avatar">
+                              <User size={18} />
+                            </div>
+                            <div>
                               <h4 className="ai-booking-doc-name">{msg.bookingDetails.doctor?.name || 'Dr. Priya Nair'}</h4>
                               <span className="ai-booking-doc-spec">{msg.bookingDetails.doctor?.specialty || 'General Medicine'}</span>
                             </div>
@@ -404,21 +428,21 @@ const HealPointAiChat = ({ navigate }) => {
 
                           <ul className="ai-booking-bullet-details">
                             <li>
-                              <span className="ai-bullet-icon">📅</span>
+                              <Calendar size={13} className="ai-bullet-icon" />
                               <div className="ai-bullet-text">
                                 <strong>Date & Time:</strong> {msg.bookingDetails.date || 'Tomorrow'} at {msg.bookingDetails.time || '5:30 PM'}
                               </div>
                             </li>
                             <li>
-                              <span className="ai-bullet-icon">📹</span>
+                              <Video size={13} className="ai-bullet-icon" />
                               <div className="ai-bullet-text">
                                 <strong>Consultation Type:</strong> {msg.bookingDetails.type || 'Video Consultation (WebRTC)'}
                               </div>
                             </li>
                             <li>
-                              <span className="ai-bullet-icon">📍</span>
+                              <MapPin size={13} className="ai-bullet-icon" />
                               <div className="ai-bullet-text">
-                                <strong>Location / Link:</strong> {msg.bookingDetails.location || msg.bookingDetails.doctor?.location || 'Ready in Patient Dashboard'}
+                                <strong>Location / Link:</strong> {msg.bookingDetails.location || msg.bookingDetails.doctor?.location || 'HealPoint Patient Dashboard'}
                               </div>
                             </li>
                           </ul>
@@ -434,7 +458,8 @@ const HealPointAiChat = ({ navigate }) => {
                               className="ai-chip-btn"
                               onClick={() => handleSendMessage(qa.query)}
                             >
-                              {qa.label}
+                              <Sparkles size={12} className="chip-icon" />
+                              <span>{qa.label}</span>
                             </button>
                           ))}
                         </div>
@@ -444,37 +469,32 @@ const HealPointAiChat = ({ navigate }) => {
                       {msg.doctors && msg.doctors.length > 0 && (
                         <div className="ai-doctors-grid">
                           {msg.doctors.map((doc) => (
-                            <div key={doc.doctor_id} className="ai-doctor-card">
+                            <div key={doc.doctor_id} className="ai-chat-doctor-card">
                               <div className="ai-doc-header">
-                                <div className="ai-doc-avatar">👨‍⚕️</div>
+                                <div className="ai-doc-avatar">
+                                  <User size={15} />
+                                </div>
                                 <div className="ai-doc-info">
                                   <h4 className="ai-doc-name">{doc.name}</h4>
                                   <span className="ai-doc-spec">{doc.specialty}</span>
                                 </div>
                                 <div className="ai-doc-rating">
-                                  ⭐ {doc.rating}
+                                  <Star size={11} className="star-filled" />
+                                  <span>{doc.rating}</span>
                                 </div>
                               </div>
                               <p className="ai-doc-bio">{doc.bio}</p>
                               <div className="ai-doc-meta">
-                                <span className="ai-meta-fee">Fee: ${doc.consultation_fee}</span>
-                                <span className="ai-meta-loc">📍 {doc.location}</span>
-                              </div>
-                              <div className="ai-doc-actions">
+                                <div className="ai-meta-fee-wrap">
+                                  <span className="fee-label">Consultation Fee:</span>
+                                  <span className="fee-amount">${doc.consultation_fee}</span>
+                                </div>
                                 <button 
-                                  className="ai-btn-book"
-                                  onClick={() => handleSendMessage(`Book appointment with ${doc.name}`)}
+                                  className="ai-book-slot-btn"
+                                  onClick={() => handleSendMessage(`Book appointment with ${doc.name} for tomorrow`)}
                                 >
-                                  Book Appointment
-                                </button>
-                                <button 
-                                  className="ai-btn-profile"
-                                  onClick={() => {
-                                    if (navigate) navigate(`/doctors?search=${encodeURIComponent(doc.first_name)}`);
-                                    else window.location.href = `/doctors?search=${encodeURIComponent(doc.first_name)}`;
-                                  }}
-                                >
-                                  View Profile
+                                  <Calendar size={13} />
+                                  <span>Book Slot</span>
                                 </button>
                               </div>
                             </div>
@@ -485,20 +505,45 @@ const HealPointAiChat = ({ navigate }) => {
                       {/* Render Available Appointment Slots */}
                       {msg.availableSlots && msg.availableSlots.length > 0 && (
                         <div className="ai-slots-container">
-                          <div className="ai-slots-title">Available Slots:</div>
+                          <div className="ai-slots-title">
+                            <Clock size={13} className="slots-clock-icon" />
+                            <span>Select an available time slot:</span>
+                          </div>
                           <div className="ai-slots-grid">
                             {msg.availableSlots.map((slot, idx) => (
                               <button 
                                 key={idx} 
-                                className="ai-slot-badge"
+                                className="ai-slot-pill"
                                 onClick={() => handleBookSlot(slot)}
                               >
-                                <span className="slot-day">{slot.dayOfWeek}</span>
                                 <span className="slot-time">{slot.time}</span>
-                                <span className="slot-doc">{slot.doctorName}</span>
+                                <span className="slot-divider">•</span>
+                                <span className="slot-date">{formatSlotDate(slot.date)}</span>
                               </button>
                             ))}
                           </div>
+                        </div>
+                      )}
+
+                      {/* Render User Appointments List */}
+                      {msg.appointments && msg.appointments.length > 0 && (
+                        <div className="ai-appointments-list">
+                          <div className="ai-apts-header">
+                            <Calendar size={13} />
+                            <span>Your Upcoming Appointments:</span>
+                          </div>
+                          {msg.appointments.map((apt, idx) => (
+                            <div key={idx} className="ai-apt-card">
+                              <div className="ai-apt-top">
+                                <strong>{apt.doctor_name || apt.doctorName || 'Doctor Consultation'}</strong>
+                                <span className="ai-apt-status">{apt.status || 'SCHEDULED'}</span>
+                              </div>
+                              <div className="ai-apt-meta">
+                                <span>📅 {apt.appointment_datetime || apt.date}</span>
+                                <span>📍 {apt.location || 'Online Video'}</span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       )}
 
@@ -520,7 +565,9 @@ const HealPointAiChat = ({ navigate }) => {
                       {/* Render Medical Report Summary */}
                       {msg.reportSummary && (
                         <div className="ai-report-card">
-                          <div className="ai-report-badge">📋 {msg.reportSummary.reportType}</div>
+                          <div className="ai-report-badge">
+                            <FileText size={13} /> {msg.reportSummary.reportType}
+                          </div>
                           {msg.reportSummary.abnormalFindings && msg.reportSummary.abnormalFindings.length > 0 && (
                             <div className="ai-report-abnormal">
                               <strong>Flags for Discussion:</strong>
@@ -534,7 +581,7 @@ const HealPointAiChat = ({ navigate }) => {
                             </div>
                           )}
                           <div className="ai-report-disclaimer">
-                            ⚠️ {msg.reportSummary.safetyDisclaimer}
+                            <AlertTriangle size={13} /> {msg.reportSummary.safetyDisclaimer}
                           </div>
                         </div>
                       )}
@@ -548,7 +595,8 @@ const HealPointAiChat = ({ navigate }) => {
                               className="ai-action-pill"
                               onClick={() => handleActionClick(sa.action)}
                             >
-                              {sa.label}
+                              <span>{sa.label}</span>
+                              <ChevronRight size={13} className="pill-chevron" />
                             </button>
                           ))}
                         </div>
@@ -556,7 +604,7 @@ const HealPointAiChat = ({ navigate }) => {
 
                       {msg.safetyNotice && (
                         <div className="ai-safety-footer">
-                          ℹ️ {msg.safetyNotice}
+                          <span>{msg.safetyNotice}</span>
                         </div>
                       )}
 
@@ -568,7 +616,9 @@ const HealPointAiChat = ({ navigate }) => {
                 {/* Thinking Indicator */}
                 {isThinking && (
                   <div className="ai-message-row ai">
-                    <div className="ai-msg-avatar">✨</div>
+                    <div className="ai-msg-avatar">
+                      <Bot size={14} />
+                    </div>
                     <div className="ai-message-bubble thinking-bubble">
                       <div className="ai-thinking-text">{thinkingPhase}</div>
                       <div className="ai-typing-dots">
@@ -605,10 +655,7 @@ const HealPointAiChat = ({ navigate }) => {
                   disabled={!inputMessage.trim() || isThinking}
                   aria-label="Send message"
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                  </svg>
+                  <Send size={15} />
                 </button>
               </form>
             </>

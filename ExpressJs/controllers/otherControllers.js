@@ -28,6 +28,23 @@ export const getReviewsByPatient = (req, res) => {
   });
 };
 
+export const createReview = (req, res) => {
+  const { appointment_id, patient_id, doctor_id, rating, comment } = req.body;
+  res.json({
+    success: true,
+    message: 'Review submitted successfully',
+    review: {
+      review_id: Date.now(),
+      appointment_id,
+      patient_id,
+      doctor_id,
+      rating: Number(rating) || 5,
+      comment,
+      created_at: new Date().toISOString()
+    }
+  });
+};
+
 export const getPendingDoctors = (req, res) => {
   res.json({ doctors: [] });
 };
