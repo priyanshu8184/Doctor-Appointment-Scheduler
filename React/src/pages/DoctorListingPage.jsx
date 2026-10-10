@@ -60,6 +60,15 @@ const DoctorListingPage = ({ navigate }) => {
   const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001/api'
 
   useEffect(() => {
+    if (isDoctor) {
+      if (navigate) navigate('/doctor-dashboard')
+      else window.location.href = '/doctor-dashboard'
+      return
+    }
+  }, [isDoctor, navigate])
+
+  useEffect(() => {
+    if (isDoctor) return
     const fetchDoctors = async () => {
       try {
         setLoading(true)

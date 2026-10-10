@@ -22,13 +22,15 @@ const App = () => {
       setRoute(window.location.pathname + window.location.search)
     }
 
-    // Listen to browser Back / Forward arrow navigation buttons
+    // Listen to browser Back / Forward arrow navigation buttons and custom events
     window.addEventListener('popstate', handleLocationChange)
     window.addEventListener('app-navigate', handleLocationChange)
+    window.addEventListener('user-auth-change', handleLocationChange)
 
     return () => {
       window.removeEventListener('popstate', handleLocationChange)
       window.removeEventListener('app-navigate', handleLocationChange)
+      window.removeEventListener('user-auth-change', handleLocationChange)
     }
   }, [])
 
@@ -41,38 +43,121 @@ const App = () => {
     }
   }
 
+  // Helper to safely get authenticated user & role
+  const getAuthUser = () => {
+    try {
+      const userStr = localStorage.getItem('user')
+      if (!userStr) return null
+      const parsed = JSON.parse(userStr)
+      return parsed && typeof parsed === 'object' ? parsed : null
+    } catch (e) {
+      return null
+    }
+  }
+
   const currentPage = () => {
+    const authUser = getAuthUser()
+    const role = (authUser?.role || '').toUpperCase()
+    const isDoctor = role === 'DOCTOR'
+    const isAdmin = role === 'ADMIN'
+    const isPatient = authUser && role === 'PATIENT'
+
     const basePath = (route || window.location.pathname).split('?')[0].replace(/\/$/, '')
+
+    // =========================================================================
+    // 1. Unauthenticated & Auth Portal Routes
+    // =========================================================================
     if (basePath === '/login') return <LoginPage navigate={navigate} />
     if (basePath === '/admin/login') return <AdminLoginPage navigate={navigate} />
     if (basePath === '/signup') return <SignupSelectionPage navigate={navigate} />
     if (basePath === '/signup/patient') return <PatientSignupPage navigate={navigate} />
     if (basePath === '/signup/doctor') return <DoctorSignupPage navigate={navigate} />
+
+    // =========================================================================
+    // 2. Role Guards: DOCTOR Authenticated
+    // =========================================================================
+    if (isDoctor) {
+      // If a doctor visits root '/', '/home', '/doctors' (find a doctor), or '/patient-dashboard', redirect to doctor dashboard
+      if (basePath === '' || basePath === '/' || basePath === '/home' || basePath === '/doctors' || basePath === '/patient-dashboard') {
+        return <DoctorDashboard navigate={navigate} />
+      }
+
+      // If doctor attempts to access admin routes, redirect to doctor dashboard
+      if (basePath.startsWith('/admin')) {
+        return <DoctorDashboard navigate={navigate} />
+      }
+
+      if (basePath === '/doctor-dashboard') {
+        return <DoctorDashboard navigate={navigate} />
+      }
+    }
+
+    // =========================================================================
+    // 3. Role Guards: ADMIN Authenticated
+    // =========================================================================
+    if (isAdmin) {
+      // If admin visits root '/', '/home', '/doctor-dashboard', or '/patient-dashboard', redirect to admin dashboard
+      if (basePath === '' || basePath === '/' || basePath === '/home' || basePath === '/doctor-dashboard' || basePath === '/patient-dashboard' || basePath === '/doctors') {
+        return <AdminDashboard navigate={navigate} initialTab="overview" />
+      }
+
+      // Admin sub-routes
+      if (basePath === '/admin' || basePath === '/admin/dashboard' || basePath === '/admin-dashboard') {
+        return <AdminDashboard navigate={navigate} initialTab="overview" />
+      }
+      if (basePath === '/admin/doctors') {
+        return <AdminDashboard navigate={navigate} initialTab="doctors" />
+      }
+      if (basePath === '/admin/patients') {
+        return <AdminDashboard navigate={navigate} initialTab="patients" />
+      }
+      if (basePath === '/admin/appointments') {
+        return <AdminDashboard navigate={navigate} initialTab="appointments" />
+      }
+      if (basePath === '/admin/reports') {
+        return <AdminDashboard navigate={navigate} initialTab="reports" />
+      }
+      if (basePath === '/admin/audit-logs') {
+        return <AdminDashboard navigate={navigate} initialTab="audit-logs" />
+      }
+    }
+
+    // =========================================================================
+    // 4. Role Guards: PATIENT Authenticated
+    // =========================================================================
+    if (isPatient) {
+      // If patient attempts to open doctor dashboard or admin dashboard
+      if (basePath === '/doctor-dashboard') {
+        return <PatientDashboard navigate={navigate} />
+      }
+      if (basePath.startsWith('/admin')) {
+        return <PatientDashboard navigate={navigate} />
+      }
+      if (basePath === '/patient-dashboard') {
+        return <PatientDashboard navigate={navigate} />
+      }
+    }
+
+    // =========================================================================
+    // 5. Unauthenticated User Guards for Protected Pages
+    // =========================================================================
+    if (!authUser) {
+      if (basePath === '/doctor-dashboard' || basePath === '/patient-dashboard') {
+        return <LoginPage navigate={navigate} />
+      }
+      if (basePath.startsWith('/admin')) {
+        return <AdminLoginPage navigate={navigate} />
+      }
+    }
+
+    // =========================================================================
+    // 6. Public Pages (Accessible to logged-out users & patients)
+    // =========================================================================
     if (basePath === '/doctors') return <DoctorListingPage navigate={navigate} />
     if (basePath === '/services') return <ServicesPage navigate={navigate} />
     if (basePath === '/about') return <AboutPage navigate={navigate} />
-    if (basePath === '/doctor-dashboard') return <DoctorDashboard navigate={navigate} />
     if (basePath === '/patient-dashboard') return <PatientDashboard navigate={navigate} />
-
-    // Admin Panel Routes
-    if (basePath === '/admin' || basePath === '/admin/dashboard' || basePath === '/admin-dashboard') {
-      return <AdminDashboard navigate={navigate} initialTab="overview" />
-    }
-    if (basePath === '/admin/doctors') {
-      return <AdminDashboard navigate={navigate} initialTab="doctors" />
-    }
-    if (basePath === '/admin/patients') {
-      return <AdminDashboard navigate={navigate} initialTab="patients" />
-    }
-    if (basePath === '/admin/appointments') {
-      return <AdminDashboard navigate={navigate} initialTab="appointments" />
-    }
-    if (basePath === '/admin/reports') {
-      return <AdminDashboard navigate={navigate} initialTab="reports" />
-    }
-    if (basePath === '/admin/audit-logs') {
-      return <AdminDashboard navigate={navigate} initialTab="audit-logs" />
-    }
+    if (basePath === '/doctor-dashboard') return <DoctorDashboard navigate={navigate} />
 
     return <Homepage navigate={navigate} />
   }

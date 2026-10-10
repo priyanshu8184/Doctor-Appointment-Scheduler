@@ -236,17 +236,24 @@ const PatientDashboard = ({ navigate }) => {
     }
 
     if (!loggedInUser) {
-      loggedInUser = {
-        user_id: 1,
-        email: 'demo.patient@healpoint.com',
-        first_name: 'Demo',
-        last_name: 'Patient',
-        role: 'PATIENT'
-      }
-      localStorage.setItem('user', JSON.stringify(loggedInUser))
+      if (navigate) navigate('/login')
+      else window.location.href = '/login'
+      return
     }
 
-    const patientId = loggedInUser.user_id
+    if (loggedInUser.role === 'DOCTOR') {
+      if (navigate) navigate('/doctor-dashboard')
+      else window.location.href = '/doctor-dashboard'
+      return
+    }
+
+    if (loggedInUser.role === 'ADMIN') {
+      if (navigate) navigate('/admin/dashboard')
+      else window.location.href = '/admin/dashboard'
+      return
+    }
+
+    const patientId = loggedInUser.user_id || 1
 
     try {
       // A. Fetch Patient Profile details

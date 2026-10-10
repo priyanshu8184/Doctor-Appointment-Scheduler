@@ -82,6 +82,37 @@ const LoginPage = ({ navigate }) => {
           if (cleanEmail.includes('doctor') || cleanEmail.includes('dr.')) role = 'DOCTOR'
           if (cleanEmail.includes('admin')) role = 'ADMIN'
 
+          // Block unapproved / pending doctors from logging in before admin verification
+          if (role === 'DOCTOR') {
+            let docs = []
+            try {
+              const cached = localStorage.getItem('healpoint_doctors')
+              if (cached) docs = JSON.parse(cached)
+            } catch (e) {}
+
+            const matchDoc = docs.find(d => 
+              (d.email && d.email.toLowerCase() === cleanEmail) ||
+              (d.first_name && cleanEmail.includes(d.first_name.toLowerCase()))
+            )
+
+            const isPending = matchDoc ? matchDoc.approval_status === 'PENDING' : (cleanEmail.includes('priya') || cleanEmail.includes('vikram') || cleanEmail.includes('pending'))
+            const isSuspended = matchDoc ? matchDoc.approval_status === 'SUSPENDED' : cleanEmail.includes('elena')
+            const isRejected = matchDoc ? matchDoc.approval_status === 'REJECTED' : false
+
+            if (isPending) {
+              setStatusMessage('Access Restricted: Your doctor account registration is currently PENDING clinical approval by HealPoint administrators. You will be able to log in once your medical license has been verified.')
+              return
+            }
+            if (isSuspended) {
+              setStatusMessage('Account Suspended: Your doctor account has been suspended by clinic administration. Please contact support.')
+              return
+            }
+            if (isRejected) {
+              setStatusMessage(`Application Rejected: Your doctor registration was not approved. Reason: ${matchDoc?.rejection_reason || 'Medical credentials did not meet verification criteria.'}`)
+              return
+            }
+          }
+
           response = {
             data: {
               message: 'Login successful (Offline Demo Session)',

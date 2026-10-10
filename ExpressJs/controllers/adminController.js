@@ -1111,3 +1111,5 @@ export const exportSingleAppointmentImage = async (req, res) => {
   }
 };
 
+export { mockDoctors, mockPatients, mockAppointments, mockAuditLogs };
+

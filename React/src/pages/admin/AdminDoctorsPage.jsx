@@ -23,11 +23,18 @@ const AdminDoctorsPage = ({
   onApproveDoctor, 
   onRejectDoctor, 
   onUpdateDoctorStatus,
-  loading = false 
+  loading = false,
+  initialStatusFilter = 'ALL'
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [statusFilter, setStatusFilter] = useState(initialStatusFilter || 'ALL');
   const [specialtyFilter, setSpecialtyFilter] = useState('ALL');
+
+  React.useEffect(() => {
+    if (initialStatusFilter) {
+      setStatusFilter(initialStatusFilter);
+    }
+  }, [initialStatusFilter]);
 
   // Modals state
   const [viewDoctorModal, setViewDoctorModal] = useState(null);

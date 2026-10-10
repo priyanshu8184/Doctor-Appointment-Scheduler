@@ -86,4 +86,28 @@ export const requirePatient = (req, res, next) => {
   next();
 };
 
+/**
+ * Middleware to optionally decode authentication token if provided
+ */
+export const optionalAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      req.user = decoded;
+    } catch (e) {}
+  } else {
+    const customUserId = req.headers['x-user-id'];
+    const customRole = req.headers['x-user-role'];
+    if (customUserId && customRole) {
+      req.user = {
+        user_id: Number(customUserId),
+        role: customRole.toUpperCase()
+      };
+    }
+  }
+  next();
+};
+
 export { JWT_SECRET };

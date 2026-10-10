@@ -15,6 +15,8 @@ import {
   rejectDoctor 
 } from '../controllers/otherControllers.js';
 
+import { optionalAuth, verifyToken, requirePatient, requireDoctor } from '../middleware/authMiddleware.js';
+
 const apiRouter = Router();
 
 // AI & Lab Report Routes
@@ -34,13 +36,14 @@ apiRouter.get('/doctors', getAllDoctors);
 apiRouter.get('/doctors/:id', getDoctorById);
 
 // Patients
-apiRouter.get('/patients/:id', getPatientProfile);
-apiRouter.put('/patients/:id', updatePatientProfile);
+apiRouter.get('/patients/:id', optionalAuth, getPatientProfile);
+apiRouter.put('/patients/:id', optionalAuth, updatePatientProfile);
 
 // Appointments
-apiRouter.get('/appointments', getAppointments);
-apiRouter.post('/appointments', createAppointment);
-apiRouter.put('/appointments/:id/status', updateAppointmentStatus);
+apiRouter.get('/appointments', optionalAuth, getAppointments);
+apiRouter.post('/appointments', optionalAuth, createAppointment);
+apiRouter.put('/appointments/:id/status', optionalAuth, updateAppointmentStatus);
+apiRouter.patch('/appointments/:id/status', optionalAuth, updateAppointmentStatus);
 
 // Payments & Reviews
 apiRouter.get('/payments/patient/:id', getPaymentsByPatient);

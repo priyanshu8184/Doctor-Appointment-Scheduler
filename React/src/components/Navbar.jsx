@@ -3,10 +3,12 @@ import {
   User as UserIcon, 
   LayoutDashboard, 
   Calendar, 
+  Clock, 
   LogOut, 
-  ChevronDown, 
   ShieldCheck, 
-  Stethoscope
+  Stethoscope,
+  Users,
+  FileCheck
 } from 'lucide-react'
 import './Navbar.css'
 
@@ -96,41 +98,41 @@ const Navbar = ({ onNavigate }) => {
     setDropdownOpen(false)
     setOpen(false)
     localStorage.removeItem('user')
+    localStorage.removeItem('adminToken')
     setUser(null)
     window.dispatchEvent(new Event('user-auth-change'))
     handleNavigate('/login')
   }
 
-  const isDoctor = user?.role === 'DOCTOR'
-  const isAdmin = user?.role === 'ADMIN'
-  const isPatient = !isDoctor && !isAdmin
+  const role = (user?.role || '').toUpperCase()
+  const isDoctor = role === 'DOCTOR'
+  const isAdmin = role === 'ADMIN'
+  const isPatient = user && role === 'PATIENT'
+  const isLoggedOut = !user
 
-  // Routes mapping based on role
-  const getDashboardPath = () => {
-    if (isAdmin) return '/admin/dashboard'
-    if (isDoctor) return '/doctor-dashboard'
-    return '/patient-dashboard'
-  }
-
-  const getProfilePath = () => {
-    if (isAdmin) return '/admin/dashboard'
-    if (isDoctor) return '/doctor-dashboard?tab=profile'
-    return '/patient-dashboard?tab=profile'
-  }
-
-  const getAppointmentsPath = () => {
-    if (isAdmin) return '/admin/appointments'
-    if (isDoctor) return '/doctor-dashboard?tab=today'
-    return '/patient-dashboard?tab=upcoming'
+  // Dynamic Display Name with Role prefix
+  const getDisplayName = () => {
+    if (!user) return 'Account'
+    if (isAdmin) return 'System Administrator'
+    if (user.first_name || user.last_name) {
+      const prefix = isDoctor && !user.first_name?.toLowerCase().startsWith('dr') ? 'Dr. ' : ''
+      return `${prefix}${user.first_name || ''} ${user.last_name || ''}`.trim()
+    }
+    if (user.name) {
+      const prefix = isDoctor && !user.name?.toLowerCase().startsWith('dr') ? 'Dr. ' : ''
+      return `${prefix}${user.name}`.trim()
+    }
+    return user.email?.split('@')[0] || (isDoctor ? 'Doctor' : 'User')
   }
 
   // Fallback initials calculation
   const getInitials = () => {
     if (!user) return 'U'
+    if (isAdmin) return 'SA'
     if (user.first_name || user.last_name) {
       const f = user.first_name ? user.first_name.trim()[0] : ''
       const l = user.last_name ? user.last_name.trim()[0] : ''
-      return (f + l).toUpperCase() || 'U'
+      return (f + l).toUpperCase() || (isDoctor ? 'DR' : 'U')
     }
     if (user.name) {
       const parts = user.name.trim().split(' ')
@@ -138,16 +140,7 @@ const Navbar = ({ onNavigate }) => {
       return user.name.slice(0, 2).toUpperCase()
     }
     if (user.email) return user.email.slice(0, 2).toUpperCase()
-    return 'U'
-  }
-
-  const getDisplayName = () => {
-    if (!user) return 'Account'
-    if (user.first_name || user.last_name) {
-      const prefix = isDoctor && !user.first_name?.toLowerCase().startsWith('dr') ? 'Dr. ' : ''
-      return `${prefix}${user.first_name || ''} ${user.last_name || ''}`.trim()
-    }
-    return user.name || user.email?.split('@')[0] || 'User'
+    return isDoctor ? 'DR' : 'U'
   }
 
   const getProfilePictureUrl = () => {
@@ -168,63 +161,150 @@ const Navbar = ({ onNavigate }) => {
     <header className="navbar-header" ref={containerRef}>
       <div className="navbar-container">
         {/* Brand Logo */}
-        <a className="brand" href="/" onClick={(e) => { e.preventDefault(); handleNavigate('/') }}>
+        <a 
+          className="brand" 
+          href={isDoctor ? "/doctor-dashboard" : (isAdmin ? "/admin/dashboard" : "/")} 
+          onClick={(e) => { 
+            e.preventDefault(); 
+            handleNavigate(isDoctor ? "/doctor-dashboard" : (isAdmin ? "/admin/dashboard" : "/")) 
+          }}
+        >
           <img src="/heelpoint_logo.png" alt="HealPoint" className="brand-logo" />
         </a>
 
-        {/* Primary Navigation Links */}
+        {/* Primary Navigation Links (Dynamic by Role) */}
         <nav className={`nav-links ${open ? 'open' : ''}`} aria-label="Primary navigation">
-          <a 
-            href="/" 
-            className={`nav-link ${isHomeActive ? 'active' : ''}`}
-            onClick={(e) => { e.preventDefault(); handleNavigate('/') }}
-          >
-            Home
-          </a>
-          <a 
-            href="/services" 
-            className={`nav-link ${currentPath === '/services' ? 'active' : ''}`}
-            onClick={(e) => { e.preventDefault(); handleNavigate('/services') }}
-          >
-            Services
-          </a>
-          <a 
-            href="/about" 
-            className={`nav-link ${currentPath === '/about' ? 'active' : ''}`}
-            onClick={(e) => { e.preventDefault(); handleNavigate('/about') }}
-          >
-            About
-          </a>
-
-          {/* Logged-Out: Login Link in Nav */}
-          {!user && (
-            <div className="nav-auth-group">
+          {/* 1. DOCTOR NAVIGATION */}
+          {isDoctor && (
+            <>
               <a 
-                href="/login" 
-                className={`nav-link nav-link-login ${currentPath === '/login' ? 'active' : ''}`} 
-                onClick={(e) => { e.preventDefault(); handleNavigate('/login') }}
+                href="/doctor-dashboard" 
+                className={`nav-link ${currentPath === '/doctor-dashboard' && !window.location.search ? 'active' : ''}`}
+                onClick={(e) => { e.preventDefault(); handleNavigate('/doctor-dashboard') }}
               >
-                Log in
+                Doctor Dashboard
               </a>
-            </div>
+              <a 
+                href="/doctor-dashboard?tab=today" 
+                className={`nav-link ${window.location.search.includes('tab=today') || window.location.search.includes('tab=upcoming') ? 'active' : ''}`}
+                onClick={(e) => { e.preventDefault(); handleNavigate('/doctor-dashboard?tab=today') }}
+              >
+                My Appointments
+              </a>
+              <a 
+                href="/doctor-dashboard?tab=availability" 
+                className={`nav-link ${window.location.search.includes('tab=availability') ? 'active' : ''}`}
+                onClick={(e) => { e.preventDefault(); handleNavigate('/doctor-dashboard?tab=availability') }}
+              >
+                My Availability
+              </a>
+              <a 
+                href="/doctor-dashboard?tab=profile" 
+                className={`nav-link ${window.location.search.includes('tab=profile') ? 'active' : ''}`}
+                onClick={(e) => { e.preventDefault(); handleNavigate('/doctor-dashboard?tab=profile') }}
+              >
+                My Profile
+              </a>
+            </>
           )}
 
-          {/* Mobile CTA */}
-          {isPatient && (
-            <a 
-              className="nav-cta mobile-cta" 
-              href="/doctors" 
-              onClick={(e) => { e.preventDefault(); handleNavigate('/doctors') }}
-            >
-              Book Appointment
-            </a>
+          {/* 2. ADMIN NAVIGATION */}
+          {isAdmin && (
+            <>
+              <a 
+                href="/admin/dashboard" 
+                className={`nav-link ${currentPath.includes('/admin/dashboard') || currentPath === '/admin' ? 'active' : ''}`}
+                onClick={(e) => { e.preventDefault(); handleNavigate('/admin/dashboard') }}
+              >
+                Admin Dashboard
+              </a>
+              <a 
+                href="/admin/doctors" 
+                className={`nav-link ${currentPath.includes('/admin/doctors') ? 'active' : ''}`}
+                onClick={(e) => { e.preventDefault(); handleNavigate('/admin/doctors') }}
+              >
+                Doctor Approvals
+              </a>
+              <a 
+                href="/admin/patients" 
+                className={`nav-link ${currentPath.includes('/admin/patients') ? 'active' : ''}`}
+                onClick={(e) => { e.preventDefault(); handleNavigate('/admin/patients') }}
+              >
+                Patients
+              </a>
+              <a 
+                href="/admin/appointments" 
+                className={`nav-link ${currentPath.includes('/admin/appointments') ? 'active' : ''}`}
+                onClick={(e) => { e.preventDefault(); handleNavigate('/admin/appointments') }}
+              >
+                Appointments
+              </a>
+            </>
+          )}
+
+          {/* 3. PATIENT & LOGGED-OUT NAVIGATION */}
+          {!isDoctor && !isAdmin && (
+            <>
+              <a 
+                href="/" 
+                className={`nav-link ${isHomeActive ? 'active' : ''}`}
+                onClick={(e) => { e.preventDefault(); handleNavigate('/') }}
+              >
+                Home
+              </a>
+              <a 
+                href="/services" 
+                className={`nav-link ${currentPath === '/services' ? 'active' : ''}`}
+                onClick={(e) => { e.preventDefault(); handleNavigate('/services') }}
+              >
+                Services
+              </a>
+              <a 
+                href="/about" 
+                className={`nav-link ${currentPath === '/about' ? 'active' : ''}`}
+                onClick={(e) => { e.preventDefault(); handleNavigate('/about') }}
+              >
+                About
+              </a>
+
+              {isPatient && (
+                <a 
+                  href="/patient-dashboard" 
+                  className={`nav-link ${currentPath === '/patient-dashboard' ? 'active' : ''}`}
+                  onClick={(e) => { e.preventDefault(); handleNavigate('/patient-dashboard') }}
+                >
+                  My Dashboard
+                </a>
+              )}
+
+              {isLoggedOut && (
+                <div className="nav-auth-group">
+                  <a 
+                    href="/login" 
+                    className={`nav-link nav-link-login ${currentPath === '/login' ? 'active' : ''}`} 
+                    onClick={(e) => { e.preventDefault(); handleNavigate('/login') }}
+                  >
+                    Log in
+                  </a>
+                </div>
+              )}
+
+              {/* Mobile CTA (Patients & Visitors only) */}
+              <a 
+                className="nav-cta mobile-cta" 
+                href="/doctors" 
+                onClick={(e) => { e.preventDefault(); handleNavigate('/doctors') }}
+              >
+                Book Appointment
+              </a>
+            </>
           )}
         </nav>
 
         {/* Right Section: Desktop CTA & Gmail-style Account Profile Menu */}
         <div className="navbar-right-cluster">
-          {/* Book Appointment CTA Button */}
-          {isPatient && (
+          {/* Book Appointment CTA Button (STRICTLY for Patients and Logged-Out Visitors) */}
+          {!isDoctor && !isAdmin && (
             <a 
               className="nav-cta desktop-cta" 
               href="/doctors" 
@@ -286,48 +366,135 @@ const Navbar = ({ onNavigate }) => {
                     </div>
                     <div className="dropdown-user-info">
                       <h4 className="dropdown-user-name">{getDisplayName()}</h4>
-                      <p className="dropdown-user-email">{user.email || 'user@healpoint.com'}</p>
+                      <p className="dropdown-user-email">{user.email || 'doctor@healpoint.com'}</p>
                       <div className="dropdown-role-badge">
                         <span className="role-dot" />
-                        <span>{isAdmin ? 'Administrator' : isDoctor ? 'Doctor Account' : 'Patient Account'}</span>
+                        <span>
+                          {isAdmin 
+                            ? 'Administrator' 
+                            : (isDoctor ? 'Doctor Account' : 'Patient Account')}
+                        </span>
                       </div>
                     </div>
                   </div>
 
                   <div className="dropdown-divider" />
 
-                  {/* Dropdown Navigation Links */}
+                  {/* Dropdown Navigation Links — Dynamic per Role */}
                   <div className="dropdown-menu-list">
-                    <button
-                      type="button"
-                      className="dropdown-menu-item"
-                      role="menuitem"
-                      onClick={() => handleNavigate(getProfilePath())}
-                    >
-                      <UserIcon size={16} className="item-icon" aria-hidden="true" />
-                      <span>My Profile</span>
-                    </button>
+                    {/* A. DOCTOR MENU */}
+                    {isDoctor && (
+                      <>
+                        <button
+                          type="button"
+                          className="dropdown-menu-item"
+                          role="menuitem"
+                          onClick={() => handleNavigate('/doctor-dashboard')}
+                        >
+                          <LayoutDashboard size={16} className="item-icon" aria-hidden="true" />
+                          <span>My Doctor Dashboard</span>
+                        </button>
 
-                    <button
-                      type="button"
-                      className="dropdown-menu-item"
-                      role="menuitem"
-                      onClick={() => handleNavigate(getDashboardPath())}
-                    >
-                      <LayoutDashboard size={16} className="item-icon" aria-hidden="true" />
-                      <span>My Dashboard</span>
-                    </button>
+                        <button
+                          type="button"
+                          className="dropdown-menu-item"
+                          role="menuitem"
+                          onClick={() => handleNavigate('/doctor-dashboard?tab=today')}
+                        >
+                          <Calendar size={16} className="item-icon" aria-hidden="true" />
+                          <span>My Appointments</span>
+                        </button>
 
-                    {!isAdmin && (
-                      <button
-                        type="button"
-                        className="dropdown-menu-item"
-                        role="menuitem"
-                        onClick={() => handleNavigate(getAppointmentsPath())}
-                      >
-                        <Calendar size={16} className="item-icon" aria-hidden="true" />
-                        <span>My Appointments</span>
-                      </button>
+                        <button
+                          type="button"
+                          className="dropdown-menu-item"
+                          role="menuitem"
+                          onClick={() => handleNavigate('/doctor-dashboard?tab=availability')}
+                        >
+                          <Clock size={16} className="item-icon" aria-hidden="true" />
+                          <span>My Availability</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="dropdown-menu-item"
+                          role="menuitem"
+                          onClick={() => handleNavigate('/doctor-dashboard?tab=profile')}
+                        >
+                          <UserIcon size={16} className="item-icon" aria-hidden="true" />
+                          <span>My Profile</span>
+                        </button>
+                      </>
+                    )}
+
+                    {/* B. ADMIN MENU */}
+                    {isAdmin && (
+                      <>
+                        <button
+                          type="button"
+                          className="dropdown-menu-item"
+                          role="menuitem"
+                          onClick={() => handleNavigate('/admin/dashboard')}
+                        >
+                          <LayoutDashboard size={16} className="item-icon" aria-hidden="true" />
+                          <span>Admin Dashboard</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="dropdown-menu-item"
+                          role="menuitem"
+                          onClick={() => handleNavigate('/admin/doctors')}
+                        >
+                          <FileCheck size={16} className="item-icon" aria-hidden="true" />
+                          <span>Doctor Approvals</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="dropdown-menu-item"
+                          role="menuitem"
+                          onClick={() => handleNavigate('/admin/audit-logs')}
+                        >
+                          <ShieldCheck size={16} className="item-icon" aria-hidden="true" />
+                          <span>Security Audit Logs</span>
+                        </button>
+                      </>
+                    )}
+
+                    {/* C. PATIENT MENU */}
+                    {!isDoctor && !isAdmin && (
+                      <>
+                        <button
+                          type="button"
+                          className="dropdown-menu-item"
+                          role="menuitem"
+                          onClick={() => handleNavigate('/patient-dashboard')}
+                        >
+                          <LayoutDashboard size={16} className="item-icon" aria-hidden="true" />
+                          <span>My Dashboard</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="dropdown-menu-item"
+                          role="menuitem"
+                          onClick={() => handleNavigate('/patient-dashboard?tab=profile')}
+                        >
+                          <UserIcon size={16} className="item-icon" aria-hidden="true" />
+                          <span>My Profile</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="dropdown-menu-item"
+                          role="menuitem"
+                          onClick={() => handleNavigate('/patient-dashboard?tab=upcoming')}
+                        >
+                          <Calendar size={16} className="item-icon" aria-hidden="true" />
+                          <span>My Appointments</span>
+                        </button>
+                      </>
                     )}
                   </div>
 
